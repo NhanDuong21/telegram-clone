@@ -3,6 +3,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ChatPage from "./pages/ChatPage";
 import { useAuth } from "./context/AuthContext";
+import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
   const { user, loading } = useAuth();
@@ -26,6 +27,7 @@ function App() {
           path="/"
           element={user ? <ChatPage /> : <Navigate to="/login" />}
         />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );

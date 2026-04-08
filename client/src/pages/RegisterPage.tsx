@@ -1,19 +1,21 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { registerApi } from "../api/authApi";
 
 const RegisterPage = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleRegister = async () => {
     try {
-      const res = await registerApi({ username, email, password });
-      console.log(res.data);
+      await registerApi({ username, email, password });
       alert("Register success");
+      navigate("/login");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      alert(err.response?.data?.message);
+      alert(err.response?.data?.message || "Register failed");
     }
   };
 

@@ -2,12 +2,15 @@ import axios from "axios";
 
 const API = "http://localhost:5000/api/auth";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const loginApi = (data: any) => {
+export const loginApi = (data: { email: string; password: string }) => {
     return axios.post(`${API}/login`, data);
 };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const registerApi = (data: any) => {
+
+export const registerApi = (data: {
+    username: string;
+    email: string;
+    password: string;
+}) => {
     return axios.post(`${API}/register`, data);
 };
 

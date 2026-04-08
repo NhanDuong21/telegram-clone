@@ -1,49 +1,31 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ChatPage from "./pages/ChatPage";
-import NotFound from "./pages/NotFoundPage";
+import { useAuth } from "./context/AuthContext";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+  const { user, loading } = useAuth();
 
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setIsLoggedIn(!!localStorage.getItem("token"));
-    };
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <BrowserRouter>
       <Routes>
         <Route
           path="/login"
-          element={
-            isLoggedIn ? (
-              <Navigate to="/" replace />
-            ) : (
-              <LoginPage setIsLoggedIn={setIsLoggedIn} />
-            )
-          }
+          element={user ? <Navigate to="/" /> : <LoginPage />}
         />
-
-        <Route path="/register" element={<RegisterPage />} />
-
+        <Route
+          path="/register"
+          element={user ? <Navigate to="/" /> : <RegisterPage />}
+        />
         <Route
           path="/"
-          element={
-            isLoggedIn ? (
-              <ChatPage setIsLoggedIn={setIsLoggedIn} />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
+          element={user ? <ChatPage /> : <Navigate to="/login" />}
         />
-
-        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/User";
 import { generateToken } from "../utils/generateToken";
 
-export const register = async (req: Request, res: Response) => {
+export async function register(req: Request, res: Response) {
     try {
         const { username, email, password } = req.body;
         if (!username || !email || !password) {
@@ -33,7 +33,7 @@ export const register = async (req: Request, res: Response) => {
             password: hashedPassword,
         });
 
-        const token = generateToken(newUser._id.toString());
+        const token = generateToken(String(newUser._id));
 
         return res.status(201).json({
             message: "Dang ky thanh cong",
@@ -51,9 +51,9 @@ export const register = async (req: Request, res: Response) => {
             message: "Server error",
         });
     }
-};
+}
 
-export const login = async (req: Request, res: Response) => {
+export async function login(req: Request, res: Response) {
     try {
         const { email, password } = req.body;
 
@@ -79,8 +79,8 @@ export const login = async (req: Request, res: Response) => {
             });
         }
 
-        const token = generateToken(user._id.toString());
-
+        const token = generateToken(String(user._id));
+        
         return res.status(200).json({
             message: "Dang nhap thanh cong",
             user: {
@@ -97,4 +97,4 @@ export const login = async (req: Request, res: Response) => {
             message: "Server error",
         });
     }
-};
+}

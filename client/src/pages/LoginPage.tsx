@@ -1,22 +1,26 @@
 import { useState } from "react";
-import { loginApi } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
+import { loginApi } from "../api/authApi";
 
-const LoginPage = () => {
+type LoginPageProps = {
+  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+const LoginPage = ({ setIsLoggedIn }: LoginPageProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
   const handleLogin = async () => {
     try {
       const res = await loginApi({ email, password });
-      console.log(res.data);
 
-      // lưu token
       localStorage.setItem("token", res.data.token);
+      setIsLoggedIn(true);
       navigate("/");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      alert(err.response?.data?.message);
+      alert(err.response?.data?.message || "Login failed");
     }
   };
 

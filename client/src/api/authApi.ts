@@ -10,3 +10,11 @@ export const loginApi = (data: any) => {
 export const registerApi = (data: any) => {
     return axios.post(`${API}/register`, data);
 };
+
+export const getMeApi = (token: string) => {
+    return axios.get(`${API}/me`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+};

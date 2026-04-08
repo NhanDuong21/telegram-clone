@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { loginApi } from "../api/authApi";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
+  const navigate = useNavigate();
   const handleLogin = async () => {
     try {
       const res = await loginApi({ email, password });
@@ -12,8 +13,7 @@ const LoginPage = () => {
 
       // lưu token
       localStorage.setItem("token", res.data.token);
-
-      alert("Login success");
+      navigate("/");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       alert(err.response?.data?.message);

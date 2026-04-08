@@ -4,12 +4,13 @@ import RegisterPage from "./pages/RegisterPage";
 import ChatPage from "./pages/ChatPage";
 
 function App() {
+  const isLoggedIn = !!localStorage.getItem("token");
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/" element={<ChatPage />} />
+        <Route path="/" element={isLoggedIn ? <ChatPage /> : <LoginPage />} />
       </Routes>
     </BrowserRouter>
   );

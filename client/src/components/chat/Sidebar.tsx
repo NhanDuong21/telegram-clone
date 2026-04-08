@@ -22,6 +22,7 @@ interface SidebarProps {
     conversations: Conversation[];
     selectedId: string | null;
     currentUserId: string;
+    onlineUsers: string[];
     onSelectConversation: (conv: Conversation) => void;
     onConversationCreated: (conv: Conversation) => void;
 }
@@ -30,6 +31,7 @@ const Sidebar = ({
     conversations,
     selectedId,
     currentUserId,
+    onlineUsers,
     onSelectConversation,
     onConversationCreated,
 }: SidebarProps) => {
@@ -147,22 +149,38 @@ const Sidebar = ({
                                 backgroundColor: "#f9f9f9",
                             }}
                         >
-                            <div
-                                style={{
-                                    width: "36px",
-                                    height: "36px",
-                                    borderRadius: "50%",
-                                    backgroundColor: "#0088cc",
-                                    color: "white",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontWeight: "bold",
-                                    fontSize: "14px",
-                                    flexShrink: 0,
-                                }}
-                            >
-                                {user.username.charAt(0).toUpperCase()}
+                            <div style={{ position: "relative" }}>
+                                <div
+                                    style={{
+                                        width: "36px",
+                                        height: "36px",
+                                        borderRadius: "50%",
+                                        backgroundColor: "#0088cc",
+                                        color: "white",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontWeight: "bold",
+                                        fontSize: "14px",
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    {user.username.charAt(0).toUpperCase()}
+                                </div>
+                                {onlineUsers.includes(user._id) && (
+                                    <div
+                                        style={{
+                                            position: "absolute",
+                                            bottom: -2,
+                                            right: -2,
+                                            width: "12px",
+                                            height: "12px",
+                                            backgroundColor: "#4caf50",
+                                            borderRadius: "50%",
+                                            border: "2px solid white",
+                                        }}
+                                    />
+                                )}
                             </div>
                             <div>
                                 <div style={{ fontWeight: 500, fontSize: "14px" }}>
@@ -201,22 +219,38 @@ const Sidebar = ({
                                 borderLeft: isSelected ? "3px solid #0088cc" : "3px solid transparent",
                             }}
                         >
-                            <div
-                                style={{
-                                    width: "40px",
-                                    height: "40px",
-                                    borderRadius: "50%",
-                                    backgroundColor: "#0088cc",
-                                    color: "white",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontWeight: "bold",
-                                    fontSize: "16px",
-                                    flexShrink: 0,
-                                }}
-                            >
-                                {other?.username.charAt(0).toUpperCase() ?? "?"}
+                            <div style={{ position: "relative" }}>
+                                <div
+                                    style={{
+                                        width: "40px",
+                                        height: "40px",
+                                        borderRadius: "50%",
+                                        backgroundColor: "#0088cc",
+                                        color: "white",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontWeight: "bold",
+                                        fontSize: "16px",
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    {other?.username.charAt(0).toUpperCase() ?? "?"}
+                                </div>
+                                {other && onlineUsers.includes(other._id) && (
+                                    <div
+                                        style={{
+                                            position: "absolute",
+                                            bottom: -2,
+                                            right: -2,
+                                            width: "12px",
+                                            height: "12px",
+                                            backgroundColor: "#4caf50",
+                                            borderRadius: "50%",
+                                            border: "2px solid white",
+                                        }}
+                                    />
+                                )}
                             </div>
                             <div style={{ overflow: "hidden" }}>
                                 <div style={{ fontWeight: 500, fontSize: "14px" }}>

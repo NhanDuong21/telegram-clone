@@ -1,19 +1,33 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { sendMessageApi } from "../../api/chatApi";
+import { getSocket } from "../../socket";
 import type { Message } from "./ChatBox";
 
 interface MessageInputProps {
     conversationId: string;
+    receiverId?: string;
     onMessageSent: (message: Message) => void;
 }
 
-const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
+const MessageInput = ({ conversationId, receiverId, onMessageSent }: MessageInputProps) => {
     const [text, setText] = useState("");
     const [sending, setSending] = useState(false);
+    const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const emitTyping = (isTyping: boolean) => {
+        if (!receiverId) return;
+        const socket = getSocket();
+        if (socket) {
+            socket.emit("typing", { receiverId, isTyping });
+        }
+    };
 
     const handleSend = async () => {
         const trimmed = text.trim();
         if (!trimmed || sending) return;
+
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        emitTyping(false);
 
         setSending(true);
         try {
@@ -25,6 +39,19 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
         } finally {
             setSending(false);
         }
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setText(e.target.value);
+        emitTyping(true);
+
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+
+        typingTimeoutRef.current = setTimeout(() => {
+            emitTyping(false);
+        }, 1500);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -48,7 +75,7 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
             <textarea
                 rows={1}
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Nhập tin nhắn... (Enter để gửi)"
                 style={{

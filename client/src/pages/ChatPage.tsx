@@ -18,6 +18,10 @@ const ChatPage = () => {
     useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
 
+  // States for UX presence tracking
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+
   // Ref to access latest selectedConversation inside socket callback
   const selectedConvRef = useRef(selectedConversation);
   selectedConvRef.current = selectedConversation;
@@ -37,12 +41,10 @@ const ChatPage = () => {
     socket.on("newMessage", (message: Message) => {
       const convId = (message as any).conversationId;
 
-      // If the user is viewing this conversation, add the message to the list
       if (selectedConvRef.current && selectedConvRef.current._id === convId) {
         setMessages((prev) => [...prev, message]);
       }
 
-      // Update sidebar lastMessage preview
       setConversations((prev) =>
         prev.map((c) =>
           c._id === convId
@@ -52,8 +54,23 @@ const ChatPage = () => {
       );
     });
 
+    socket.on("onlineUsers", (users: string[]) => {
+      setOnlineUsers(users);
+    });
+
+    socket.on("typing", ({ senderId, isTyping }: { senderId: string; isTyping: boolean }) => {
+      setTypingUsers((prev) => {
+        const next = new Set(prev);
+        if (isTyping) next.add(senderId);
+        else next.delete(senderId);
+        return next;
+      });
+    });
+
     return () => {
       socket.off("newMessage");
+      socket.off("onlineUsers");
+      socket.off("typing");
     };
   }, [user]);
 
@@ -109,6 +126,12 @@ const ChatPage = () => {
     }
   };
 
+  // Tính toán người nhận tin nhắn và trạng thái typing hiện tại
+  const otherParticipant = selectedConversation?.participants.find(
+    (p) => p._id !== user?._id
+  );
+  const isOtherParticipantTyping = otherParticipant && typingUsers.has(otherParticipant._id);
+
   return (
     <div style={{ display: "flex", height: "100vh", position: "relative" }}>
       <div
@@ -150,6 +173,7 @@ const ChatPage = () => {
           conversations={conversations}
           selectedId={selectedConversation?._id ?? null}
           currentUserId={user?._id ?? ""}
+          onlineUsers={onlineUsers}
           onSelectConversation={setSelectedConversation}
           onConversationCreated={handleConversationCreated}
         />
@@ -187,15 +211,28 @@ const ChatPage = () => {
                 backgroundColor: "#f9f9f9",
               }}
             >
-              {selectedConversation.participants.find(
-                (p) => p._id !== user?._id,
-              )?.username ?? "Chat"}
+              {otherParticipant?.username ?? "Chat"}
             </div>
 
             <ChatBox messages={messages} currentUserId={user?._id ?? ""} />
 
+            {/* Typing Indicator */}
+            {isOtherParticipantTyping && (
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#aaa",
+                  padding: "0 16px 8px 16px",
+                  fontStyle: "italic",
+                }}
+              >
+                {otherParticipant.username} đang soạn tin...
+              </div>
+            )}
+
             <MessageInput
               conversationId={selectedConversation._id}
+              receiverId={otherParticipant?._id}
               onMessageSent={handleMessageSent}
             />
           </>

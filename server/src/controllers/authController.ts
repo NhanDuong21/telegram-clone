@@ -80,7 +80,7 @@ export async function login(req: Request, res: Response) {
         }
 
         const token = generateToken(String(user._id));
-        
+
         return res.status(200).json({
             message: "Dang nhap thanh cong",
             user: {
@@ -98,3 +98,17 @@ export async function login(req: Request, res: Response) {
         });
     }
 }
+
+interface AuthRequest extends Request {
+    user?: any;
+}
+
+export const getMe = async (req: AuthRequest, res: Response) => {
+    try {
+        return res.status(200).json({
+            user: req.user,
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Server error" });
+    }
+};

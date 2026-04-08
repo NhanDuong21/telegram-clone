@@ -33,13 +33,17 @@ const ChatBox = ({ messages, currentUserId }: ChatBoxProps) => {
                 style={{
                     flex: 1,
                     display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#bbb",
-                    fontSize: "14px",
+                    color: "#b0b8c1",
+                    fontSize: "15px",
+                    gap: "6px",
+                    background: "#f7f9fb",
                 }}
             >
-                Chưa có tin nhắn nào. Hãy nói lời chào !!
+                <span style={{ fontSize: "32px" }}>👋</span>
+                Chưa có tin nhắn nào. Hãy nói lời chào!
             </div>
         );
     }
@@ -49,10 +53,11 @@ const ChatBox = ({ messages, currentUserId }: ChatBoxProps) => {
             style={{
                 flex: 1,
                 overflowY: "auto",
-                padding: "16px",
+                padding: "20px 16px",
                 display: "flex",
                 flexDirection: "column",
-                gap: "6px",
+                gap: "8px",
+                background: "#f7f9fb",
             }}
         >
             {messages.map((msg) => {
@@ -68,24 +73,30 @@ const ChatBox = ({ messages, currentUserId }: ChatBoxProps) => {
                         <div
                             style={{
                                 maxWidth: "65%",
-                                padding: "8px 12px",
+                                padding: "10px 14px",
                                 borderRadius: isMe
-                                    ? "16px 16px 4px 16px"
-                                    : "16px 16px 16px 4px",
-                                backgroundColor: isMe ? "#0088cc" : "#f0f0f0",
-                                color: isMe ? "white" : "#222",
+                                    ? "18px 18px 4px 18px"
+                                    : "18px 18px 18px 4px",
+                                background: isMe
+                                    ? "linear-gradient(135deg, #0088cc, #0077b5)"
+                                    : "#ffffff",
+                                color: isMe ? "#fff" : "#1a1a2e",
                                 fontSize: "14px",
-                                lineHeight: "1.4",
+                                lineHeight: "1.5",
                                 wordBreak: "break-word",
+                                boxShadow: isMe
+                                    ? "0 1px 4px rgba(0,136,204,0.25)"
+                                    : "0 1px 3px rgba(0,0,0,0.06)",
                             }}
                         >
                             {!isMe && (
                                 <div
                                     style={{
                                         fontSize: "11px",
-                                        fontWeight: 600,
+                                        fontWeight: 700,
                                         color: "#0088cc",
-                                        marginBottom: "2px",
+                                        marginBottom: "3px",
+                                        letterSpacing: "0.2px",
                                     }}
                                 >
                                     {msg.sender.username}
@@ -95,9 +106,9 @@ const ChatBox = ({ messages, currentUserId }: ChatBoxProps) => {
                             <div
                                 style={{
                                     fontSize: "10px",
-                                    marginTop: "4px",
+                                    marginTop: "5px",
                                     textAlign: "right",
-                                    opacity: 0.6,
+                                    opacity: 0.55,
                                 }}
                             >
                                 {formatTime(msg.createdAt)}

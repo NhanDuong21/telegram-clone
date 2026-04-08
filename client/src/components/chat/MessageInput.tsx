@@ -61,14 +61,16 @@ const MessageInput = ({ conversationId, receiverId, onMessageSent }: MessageInpu
         }
     };
 
+    const canSend = text.trim() && !sending;
+
     return (
         <div
             style={{
                 display: "flex",
-                gap: "8px",
-                padding: "10px 12px",
-                borderTop: "1px solid #eee",
-                backgroundColor: "white",
+                gap: "10px",
+                padding: "12px 16px",
+                borderTop: "1px solid #e8ecf0",
+                backgroundColor: "#ffffff",
                 alignItems: "flex-end",
             }}
         >
@@ -80,32 +82,48 @@ const MessageInput = ({ conversationId, receiverId, onMessageSent }: MessageInpu
                 placeholder="Nhập tin nhắn... (Enter để gửi)"
                 style={{
                     flex: 1,
-                    padding: "8px 12px",
-                    borderRadius: "20px",
-                    border: "1px solid #ccc",
+                    padding: "10px 16px",
+                    borderRadius: "22px",
+                    border: "1px solid #dce1e6",
                     fontSize: "14px",
                     resize: "none",
                     outline: "none",
                     fontFamily: "inherit",
                     maxHeight: "100px",
                     overflowY: "auto",
-                    lineHeight: "1.4",
+                    lineHeight: "1.5",
+                    backgroundColor: "#f7f9fb",
+                    transition: "border-color 0.2s, box-shadow 0.2s",
+                }}
+                onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "#0088cc";
+                    e.currentTarget.style.boxShadow = "0 0 0 2px rgba(0,136,204,0.12)";
+                }}
+                onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "#dce1e6";
+                    e.currentTarget.style.boxShadow = "none";
                 }}
             />
             <button
                 onClick={handleSend}
-                disabled={!text.trim() || sending}
+                disabled={!canSend}
                 style={{
-                    padding: "8px 18px",
-                    borderRadius: "20px",
+                    padding: "10px 20px",
+                    borderRadius: "22px",
                     border: "none",
-                    backgroundColor: text.trim() && !sending ? "#0088cc" : "#ccc",
+                    background: canSend
+                        ? "linear-gradient(135deg, #0088cc, #0077b5)"
+                        : "#dce1e6",
                     color: "white",
-                    cursor: text.trim() && !sending ? "pointer" : "not-allowed",
+                    cursor: canSend ? "pointer" : "not-allowed",
                     fontSize: "14px",
-                    fontWeight: 500,
+                    fontWeight: 600,
                     whiteSpace: "nowrap",
                     flexShrink: 0,
+                    transition: "background 0.2s, transform 0.1s",
+                    boxShadow: canSend
+                        ? "0 2px 6px rgba(0,136,204,0.3)"
+                        : "none",
                 }}
             >
                 {sending ? "..." : "Gửi"}

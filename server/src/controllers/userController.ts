@@ -13,10 +13,13 @@ export const searchUsers = async (req: AuthRequest, res: Response) => {
             return res.status(200).json({ users: [] });
         }
 
-        // Tìm user có username chứa keyword (case-insensitive)
+        // Tìm user có username HOẶC email chứa keyword (case-insensitive)
         // Loại trừ chính mình, không trả password
         const users = await User.find({
-            username: { $regex: q, $options: "i" },
+            $or: [
+                { username: { $regex: q, $options: "i" } },
+                { email: { $regex: q, $options: "i" } },
+            ],
             _id: { $ne: req.user._id },
         })
             .select("-password")

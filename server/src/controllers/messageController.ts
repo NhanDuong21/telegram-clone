@@ -2,10 +2,10 @@ import { Response } from "express";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import Message from "../models/Message";
 import Conversation from "../models/Conversation";
+import { getIO } from "../socket";
 
 // POST /api/messages
 // Body: { conversationId, text }
-// Gửi tin nhắn vào conversation
 export const sendMessage = async (req: AuthRequest, res: Response) => {
     try {
         const { conversationId, text } = req.body;
@@ -15,7 +15,6 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: "conversationId và text là bắt buộc" });
         }
 
-        // Kiểm tra conversation tồn tại và user là participant
         const conversation = await Conversation.findOne({
             _id: conversationId,
             participants: senderId,
@@ -25,19 +24,24 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ message: "Conversation không tồn tại" });
         }
 
-        // Tạo message mới
         const newMessage = await Message.create({
             conversationId,
             sender: senderId,
             text: text.trim(),
         });
 
-        // Cập nhật lastMessage và updatedAt của conversation
         conversation.lastMessage = newMessage._id;
         await conversation.save();
 
-        // Populate sender trước khi trả về
         const populated = await newMessage.populate("sender", "-password");
+
+        // Emit to the OTHER participant(s) in realtime
+        const io = getIO();
+        conversation.participants.forEach((participantId) => {
+            if (participantId.toString() !== senderId.toString()) {
+                io.to(participantId.toString()).emit("newMessage", populated);
+            }
+        });
 
         return res.status(201).json({ message: populated });
     } catch (error) {

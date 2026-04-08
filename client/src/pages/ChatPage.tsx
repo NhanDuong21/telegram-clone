@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -7,6 +7,7 @@ import ChatBox, { type Message } from "../components/chat/ChatBox";
 import MessageInput from "../components/chat/MessageInput";
 
 import { getConversationsApi, getMessagesApi } from "../api/chatApi";
+import { connectSocket, disconnectSocket } from "../socket";
 
 const ChatPage = () => {
   const { user, logout } = useAuth();
@@ -17,11 +18,46 @@ const ChatPage = () => {
     useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
 
+  // Ref to access latest selectedConversation inside socket callback
+  const selectedConvRef = useRef(selectedConversation);
+  selectedConvRef.current = selectedConversation;
+
   const handleLogout = () => {
+    disconnectSocket();
     logout();
     navigate("/login");
   };
 
+  // Connect socket after auth
+  useEffect(() => {
+    if (!user) return;
+
+    const socket = connectSocket(user._id);
+
+    socket.on("newMessage", (message: Message) => {
+      const convId = (message as any).conversationId;
+
+      // If the user is viewing this conversation, add the message to the list
+      if (selectedConvRef.current && selectedConvRef.current._id === convId) {
+        setMessages((prev) => [...prev, message]);
+      }
+
+      // Update sidebar lastMessage preview
+      setConversations((prev) =>
+        prev.map((c) =>
+          c._id === convId
+            ? { ...c, lastMessage: { _id: message._id, text: message.text } }
+            : c,
+        ),
+      );
+    });
+
+    return () => {
+      socket.off("newMessage");
+    };
+  }, [user]);
+
+  // Load conversations on mount
   useEffect(() => {
     const fetchConversations = async () => {
       try {
@@ -34,6 +70,7 @@ const ChatPage = () => {
     fetchConversations();
   }, []);
 
+  // Load messages when conversation changes
   useEffect(() => {
     if (!selectedConversation) {
       setMessages([]);

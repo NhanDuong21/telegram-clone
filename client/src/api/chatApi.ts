@@ -27,3 +27,14 @@ export const getMessagesApi = (conversationId: string, before?: string, limit: n
 
 export const sendMessageApi = (conversationId: string, data: { text?: string; imageUrl?: string }) =>
     axios.post(`${BASE}/messages`, { conversationId, ...data }, getAuthHeader());
+
+export const uploadImageApi = (file: File) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    return axios.post(`${BASE}/upload`, formData, {
+        headers: {
+            ...getAuthHeader().headers,
+            "Content-Type": "multipart/form-data"
+        }
+    });
+};

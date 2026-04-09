@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { sendMessageApi } from "../../api/chatApi";
+import { sendMessageApi, uploadImageApi } from "../../api/chatApi";
 import { getSocket } from "../../socket";
 import type { Message } from "./ChatBox";
 
@@ -14,7 +14,36 @@ const MessageInput = ({ conversationId, receiverId, onMessageSent }: MessageInpu
     const [imageUrl, setImageUrl] = useState("");
     const [showImageInput, setShowImageInput] = useState(false);
     const [sending, setSending] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        if (!file.type.startsWith("image/")) {
+            alert("Vui lòng chọn file ảnh hợp lệ.");
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            alert("File ảnh quá lớn (tối đa 5MB).");
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const res = await uploadImageApi(file);
+            setImageUrl(res.data.imageUrl);
+            setShowImageInput(true);
+        } catch (error: any) {
+            console.error("Upload failed:", error);
+            alert(error.response?.data?.message || "Lỗi upload ảnh.");
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
 
     const emitTyping = (isTyping: boolean) => {
         if (!receiverId) return;
@@ -100,6 +129,31 @@ const MessageInput = ({ conversationId, receiverId, onMessageSent }: MessageInpu
                     alignItems: "flex-end",
                 }}
             >
+                <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    style={{ display: "none" }}
+                />
+                <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    style={{
+                        padding: "8px",
+                        background: "transparent",
+                        border: "none",
+                        borderRadius: "50%",
+                        cursor: isUploading ? "not-allowed" : "pointer",
+                        fontSize: "18px",
+                        marginBottom: "4px",
+                        flexShrink: 0,
+                        opacity: isUploading ? 0.6 : 1,
+                    }}
+                    title="Upload ảnh"
+                >
+                    {isUploading ? "⏳" : "📎"}
+                </button>
                 <button
                     onClick={() => setShowImageInput(!showImageInput)}
                     style={{
@@ -112,9 +166,9 @@ const MessageInput = ({ conversationId, receiverId, onMessageSent }: MessageInpu
                         marginBottom: "4px",
                         flexShrink: 0
                     }}
-                    title="Đính kèm ảnh URL"
+                    title="Đính kèm ảnh từ URL"
                 >
-                    🖼️
+                    🔗
                 </button>
             <textarea
                 rows={1}

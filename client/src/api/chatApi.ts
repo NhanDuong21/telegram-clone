@@ -31,6 +31,12 @@ export const removeMemberApi = (conversationId: string, memberId: string) =>
 export const deleteGroupApi = (conversationId: string) =>
     axios.delete(`${BASE}/conversations/${conversationId}/group`, getAuthHeader());
     
+export const clearChatApi = (conversationId: string) =>
+    axios.delete(`${BASE}/conversations/${conversationId}/messages`, getAuthHeader());
+
+export const deleteConversationApi = (conversationId: string) =>
+    axios.delete(`${BASE}/conversations/${conversationId}`, getAuthHeader());
+
 export const getMessagesApi = (conversationId: string, before?: string, limit: number = 30) => {
     let url = `${BASE}/messages/${conversationId}?limit=${limit}`;
     if (before) url += `&before=${encodeURIComponent(before)}`;

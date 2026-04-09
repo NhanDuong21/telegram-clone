@@ -9,7 +9,7 @@ import Avatar from "../components/common/Avatar";
 import GroupSettingsModal from "../components/chat/GroupSettingsModal";
 import EditProfileModal from "../components/profile/EditProfileModal";
 
-import { getConversationsApi, getMessagesApi } from "../api/chatApi";
+import { getConversationsApi, getMessagesApi, clearChatApi, deleteConversationApi } from "../api/chatApi";
 import { connectSocket, disconnectSocket } from "../socket";
 
 const ChatPage = () => {
@@ -27,6 +27,7 @@ const ChatPage = () => {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
 
   // States for UX presence tracking
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
@@ -145,6 +146,23 @@ const ChatPage = () => {
       }
     });
 
+    socket.on("conversationCleared", ({ conversationId }: { conversationId: string }) => {
+      if (selectedIdRef.current === conversationId) {
+        setMessages([]);
+      }
+      setConversations(prev => prev.map(c => 
+        c._id === conversationId ? { ...c, lastMessage: null } : c
+      ));
+    });
+
+    socket.on("conversationDeleted", ({ conversationId }: { conversationId: string }) => {
+      setConversations(prev => prev.filter(c => c._id !== conversationId));
+      if (selectedIdRef.current === conversationId) {
+        setSelectedConversationId(null);
+        if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
+      }
+    });
+
     return () => {
       socket.off("connect");
       socket.off("newMessage");
@@ -152,6 +170,8 @@ const ChatPage = () => {
       socket.off("typing");
       socket.off("groupUpdated");
       socket.off("groupDeleted");
+      socket.off("conversationCleared");
+      socket.off("conversationDeleted");
     };
   }, [user]);
 
@@ -233,6 +253,28 @@ const ChatPage = () => {
             : c,
         ),
       );
+    }
+  };
+
+  const handleClearChat = async () => {
+    setShowOptionsMenu(false);
+    if (!confirm("Bạn có chắc chắn muốn xóa lịch sử trò chuyện?")) return;
+    try {
+      await clearChatApi(selectedConversationId!);
+    } catch (e) {
+      console.error("Clear chat error:", e);
+      alert("Không thể clear chat");
+    }
+  };
+
+  const handleDeleteConversation = async () => {
+    setShowOptionsMenu(false);
+    if (!confirm("Bọn có chắc chắn muốn Xóa hiển thị toàn bộ đoạn chat này?")) return;
+    try {
+      await deleteConversationApi(selectedConversationId!);
+    } catch (e) {
+      console.error("Delete conversation error:", e);
+      alert("Không thể xóa đoạn chat");
     }
   };
 
@@ -356,19 +398,27 @@ const ChatPage = () => {
                 </div>
               </div>
 
-              {selectedConversation.isGroup && (
+              <div style={{ position: "relative" }}>
                   <button
-                    onClick={() => setShowGroupSettings(true)}
-                    style={{
-                        background: "transparent", border: "none", cursor: "pointer",
-                        fontSize: "20px", color: "#0088cc",
-                        padding: "4px"
-                    }}
-                    title="Cài đặt nhóm"
+                    onClick={() => setShowOptionsMenu(p => !p)}
+                    style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "20px", color: "#0088cc", padding: "4px" }}
+                    title="Tuỳ chọn"
                   >
-                    =
+                    ⋮
                   </button>
-              )}
+                  
+                  {showOptionsMenu && (
+                     <div style={{ position: "absolute", right: 0, top: "100%", background: "white", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", borderRadius: "8px", zIndex: 10, minWidth: "150px", overflow: "hidden" }}>
+                         {selectedConversation.isGroup && (
+                             <div onClick={() => { setShowOptionsMenu(false); setShowGroupSettings(true); }} style={{ padding: "10px 16px", cursor: "pointer", borderBottom: "1px solid #eee", fontSize: "14px" }}>Cài đặt nhóm</div>
+                         )}
+                         <div onClick={handleClearChat} style={{ padding: "10px 16px", cursor: "pointer", borderBottom: selectedConversation.isGroup ? "none" : "1px solid #eee", fontSize: "14px", color: "#d63031" }}>Clear chat</div>
+                         {!selectedConversation.isGroup && (
+                             <div onClick={handleDeleteConversation} style={{ padding: "10px 16px", cursor: "pointer", color: "#d63031", fontSize: "14px", fontWeight: "bold" }}>Delete conversation</div>
+                         )}
+                     </div>
+                  )}
+              </div>
             </div>
 
             <ChatBox 

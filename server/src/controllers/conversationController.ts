@@ -253,3 +253,51 @@ export const getMyConversations = async (req: AuthRequest, res: Response) => {
         return res.status(500).json({ message: "Server error" });
     }
 };
+
+export const clearChat = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id.toString();
+
+        const conversation = await Conversation.findOne({ _id: id, participants: userId });
+        if (!conversation) return res.status(404).json({ message: "Conversation không tồn tại hoặc bạn không có quyền" });
+
+        await Message.deleteMany({ conversationId: id });
+        
+        conversation.lastMessage = undefined;
+        await conversation.save();
+
+        const io = getIO();
+        conversation.participants.forEach(p => {
+            io.to(p.toString()).emit("conversationCleared", { conversationId: id });
+        });
+
+        return res.status(200).json({ message: "Đã xóa toàn bộ tin nhắn", clearedConversationId: id });
+    } catch (error) {
+        console.error("Clear chat error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const deleteConversation = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id.toString();
+
+        const conversation = await Conversation.findOne({ _id: id, isGroup: false, participants: userId });
+        if (!conversation) return res.status(404).json({ message: "Chat không tồn tại, bạn không có quyền, hoặc đây là Group Chat" });
+
+        await Message.deleteMany({ conversationId: id });
+        await Conversation.findByIdAndDelete(id);
+
+        const io = getIO();
+        conversation.participants.forEach(p => {
+            io.to(p.toString()).emit("conversationDeleted", { conversationId: id });
+        });
+
+        return res.status(200).json({ message: "Đã xóa hiển thị chat", deletedConversationId: id });
+    } catch (error) {
+        console.error("Delete conversation error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};

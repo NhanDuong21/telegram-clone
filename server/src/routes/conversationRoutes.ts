@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { protect } from "../middlewares/authMiddleware";
-import { createOrGetConversation, getMyConversations, createGroupConversation, updateGroupSettings, addMembers, removeMember, deleteGroupConversation } from "../controllers/conversationController";
+import { createOrGetConversation, getMyConversations, createGroupConversation, updateGroupSettings, addMembers, removeMember, deleteGroupConversation, clearChat, deleteConversation } from "../controllers/conversationController";
 
 const router = Router();
 
@@ -16,5 +16,11 @@ router.post("/", protect, createOrGetConversation);
 
 // GET /api/conversations — danh sách conversations của user
 router.get("/", protect, getMyConversations);
+
+// Xóa toàn bộ message trong conversation (Clear history)
+router.delete("/:id/messages", protect, clearChat);
+
+// Xóa hẳn conversation 1-1
+router.delete("/:id", protect, deleteConversation);
 
 export default router;

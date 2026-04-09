@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -14,17 +14,22 @@ const ChatPage = () => {
   const navigate = useNavigate();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversation, setSelectedConversation] =
-    useState<Conversation | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
 
   // States for UX presence tracking
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
 
-  // Ref to access latest selectedConversation inside socket callback
-  const selectedConvRef = useRef(selectedConversation);
-  selectedConvRef.current = selectedConversation;
+  // Derive selectedConversation from list + id (stable: only changes when id or list changes)
+  const selectedConversation = useMemo(
+    () => conversations.find((c) => c._id === selectedConversationId) ?? null,
+    [conversations, selectedConversationId],
+  );
+
+  // Ref to access latest selectedConversationId inside socket callback
+  const selectedIdRef = useRef(selectedConversationId);
+  selectedIdRef.current = selectedConversationId;
 
   const handleLogout = () => {
     disconnectSocket();
@@ -56,7 +61,7 @@ const ChatPage = () => {
       const convId = (message as any).conversationId;
 
       // Append message to chat if this conversation is currently open
-      if (selectedConvRef.current && selectedConvRef.current._id === convId) {
+      if (selectedIdRef.current === convId) {
         setMessages((prev) => [...prev, message]);
       }
 
@@ -117,22 +122,22 @@ const ChatPage = () => {
     fetchConversations();
   }, []);
 
-  // Load messages when conversation changes
+  // Load messages when selected conversation ID changes
   useEffect(() => {
-    if (!selectedConversation) {
+    if (!selectedConversationId) {
       setMessages([]);
       return;
     }
     const fetchMessages = async () => {
       try {
-        const res = await getMessagesApi(selectedConversation._id);
+        const res = await getMessagesApi(selectedConversationId);
         setMessages(res.data.messages);
       } catch (error) {
         console.error("Failed to load messages:", error);
       }
     };
     fetchMessages();
-  }, [selectedConversation]);
+  }, [selectedConversationId]);
 
   const handleConversationCreated = (conv: Conversation) => {
     setConversations((prev) => {
@@ -142,13 +147,17 @@ const ChatPage = () => {
     });
   };
 
+  const handleSelectConversation = (conv: Conversation) => {
+    setSelectedConversationId(conv._id);
+  };
+
   const handleMessageSent = (message: Message) => {
     setMessages((prev) => [...prev, message]);
 
-    if (selectedConversation) {
+    if (selectedConversationId) {
       setConversations((prev) =>
         prev.map((c) =>
-          c._id === selectedConversation._id
+          c._id === selectedConversationId
             ? { ...c, lastMessage: { _id: message._id, text: message.text } }
             : c,
         ),
@@ -156,7 +165,7 @@ const ChatPage = () => {
     }
   };
 
-  // Tính toán người nhận tin nhắn và trạng thái typing hiện tại
+  // Derive other participant and typing status
   const otherParticipant = selectedConversation?.participants.find(
     (p) => p._id !== user?._id
   );
@@ -201,10 +210,10 @@ const ChatPage = () => {
 
         <Sidebar
           conversations={conversations}
-          selectedId={selectedConversation?._id ?? null}
+          selectedId={selectedConversationId}
           currentUserId={user?._id ?? ""}
           onlineUsers={onlineUsers}
-          onSelectConversation={setSelectedConversation}
+          onSelectConversation={handleSelectConversation}
           onConversationCreated={handleConversationCreated}
         />
       </div>

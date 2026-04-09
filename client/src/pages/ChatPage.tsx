@@ -5,6 +5,8 @@ import { useAuth } from "../context/AuthContext";
 import Sidebar, { type Conversation } from "../components/chat/Sidebar";
 import ChatBox, { type Message } from "../components/chat/ChatBox";
 import MessageInput from "../components/chat/MessageInput";
+import Avatar from "../components/common/Avatar";
+import EditProfileModal from "../components/profile/EditProfileModal";
 
 import { getConversationsApi, getMessagesApi } from "../api/chatApi";
 import { connectSocket, disconnectSocket } from "../socket";
@@ -20,6 +22,9 @@ const ChatPage = () => {
   // States for UX presence tracking
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+
+  // Profile modal state
+  const [showEditProfile, setShowEditProfile] = useState(false);
 
   // Derive selectedConversation from list + id (stable: only changes when id or list changes)
   const selectedConversation = useMemo(
@@ -192,7 +197,14 @@ const ChatPage = () => {
             backgroundColor: "#f5f5f5",
           }}
         >
-          <span style={{ fontWeight: 600 }}>{user?.username}</span>
+          <div 
+            style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }} 
+            onClick={() => setShowEditProfile(true)}
+            title="Edit Profile"
+          >
+            <Avatar user={user} size={32} />
+            <span style={{ fontWeight: 600, fontSize: "14px" }}>{user?.username}</span>
+          </div>
           <button
             onClick={handleLogout}
             style={{
@@ -248,8 +260,12 @@ const ChatPage = () => {
                 fontWeight: 600,
                 fontSize: "15px",
                 backgroundColor: "#f9f9f9",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
               }}
             >
+              <Avatar user={otherParticipant} size={36} />
               {otherParticipant?.username ?? "Chat"}
             </div>
 
@@ -277,6 +293,10 @@ const ChatPage = () => {
           </>
         )}
       </div>
+
+      {showEditProfile && (
+        <EditProfileModal onClose={() => setShowEditProfile(false)} />
+      )}
     </div>
   );
 };

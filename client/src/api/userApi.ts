@@ -13,3 +13,8 @@ const getAuthHeader = () => ({
 export const searchUsersApi = (query: string) => {
     return axios.get(`${API}/search?q=${encodeURIComponent(query)}`, getAuthHeader());
 };
+
+// PUT /api/users/me
+export const updateProfileApi = (data: { username: string; avatar: string }) => {
+    return axios.put(`${API}/me`, data, getAuthHeader());
+};

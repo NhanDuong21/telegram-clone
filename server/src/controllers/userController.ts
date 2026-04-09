@@ -31,3 +31,38 @@ export const searchUsers = async (req: AuthRequest, res: Response) => {
         return res.status(500).json({ message: "Server error" });
     }
 };
+
+// PUT /api/users/me
+// Cập nhật profile (username, avatar)
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+    try {
+        const { username, avatar } = req.body;
+        const userId = req.user._id;
+
+        if (!username || username.trim().length < 2) {
+            return res.status(400).json({ message: "Username không hợp lệ (ít nhất 2 ký tự)" });
+        }
+
+        // Check required uniqueness if username changes
+        if (username.trim() !== req.user.username) {
+            const existing = await User.findOne({ username: username.trim(), _id: { $ne: userId } });
+            if (existing) {
+                return res.status(400).json({ message: "Username đã tồn tại" });
+            }
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { 
+                username: username.trim(),
+                avatar: avatar ? avatar.trim() : ""
+            },
+            { new: true }
+        ).select("-password");
+
+        return res.status(200).json({ user: updatedUser });
+    } catch (error) {
+        console.error("Update profile error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};

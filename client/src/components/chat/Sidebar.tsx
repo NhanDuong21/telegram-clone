@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { searchUsersApi } from "../../api/userApi";
 import { createOrGetConversationApi } from "../../api/chatApi";
+import Avatar from "../common/Avatar";
 
 interface User {
     _id: string;
@@ -26,17 +27,6 @@ interface SidebarProps {
     onSelectConversation: (conv: Conversation) => void;
     onConversationCreated: (conv: Conversation) => void;
 }
-
-// Generate a stable color from a string (for unique avatar colors)
-const avatarColors = [
-    "#0088cc", "#e17055", "#00b894", "#6c5ce7",
-    "#fdcb6e", "#e84393", "#00cec9", "#d63031",
-];
-const getAvatarColor = (id: string) => {
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
-    return avatarColors[Math.abs(hash) % avatarColors.length];
-};
 
 const Sidebar = ({
     conversations,
@@ -166,23 +156,7 @@ const Sidebar = ({
                             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                         >
                             <div style={{ position: "relative", flexShrink: 0 }}>
-                                <div
-                                    style={{
-                                        width: "38px",
-                                        height: "38px",
-                                        borderRadius: "50%",
-                                        backgroundColor: getAvatarColor(user._id),
-                                        color: "white",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        fontWeight: 700,
-                                        fontSize: "15px",
-                                        textTransform: "uppercase",
-                                    }}
-                                >
-                                    {user.username.charAt(0)}
-                                </div>
+                                <Avatar user={user} size={38} />
                                 {onlineUsers.includes(user._id) && (
                                     <div
                                         style={{
@@ -251,23 +225,7 @@ const Sidebar = ({
                             }}
                         >
                             <div style={{ position: "relative", flexShrink: 0 }}>
-                                <div
-                                    style={{
-                                        width: "44px",
-                                        height: "44px",
-                                        borderRadius: "50%",
-                                        backgroundColor: other ? getAvatarColor(other._id) : "#ccc",
-                                        color: "white",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        fontWeight: 700,
-                                        fontSize: "17px",
-                                        textTransform: "uppercase",
-                                    }}
-                                >
-                                    {other?.username.charAt(0) ?? "?"}
-                                </div>
+                                <Avatar user={other} size={44} />
                                 {other && onlineUsers.includes(other._id) && (
                                     <div
                                         style={{

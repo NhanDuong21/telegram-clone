@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { searchUsersApi } from "../../api/userApi";
-import { updateGroupSettingsApi, addMembersApi, removeMemberApi } from "../../api/chatApi";
+import { updateGroupSettingsApi, addMembersApi, removeMemberApi, uploadImageApi } from "../../api/chatApi";
 import Avatar from "../common/Avatar";
 import type { Conversation } from "./Sidebar";
 import type { User } from "./CreateGroupModal";
@@ -16,6 +16,7 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
     const [name, setName] = useState(conversation.name || "");
     const [imageUrl, setImageUrl] = useState(conversation.imageUrl || "");
     const [isSaving, setIsSaving] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
 
     // Search state
     const [query, setQuery] = useState("");
@@ -37,6 +38,32 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
             alert("Lưu thông tin thất bại");
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        if (!file.type.startsWith("image/")) {
+            alert("Vui lòng chọn file ảnh hợp lệ.");
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            alert("File ảnh quá lớn (tối đa 5MB).");
+            return;
+        }
+
+        setIsUploading(true);
+        try {
+            const res = await uploadImageApi(file);
+            setImageUrl(res.data.imageUrl);
+        } catch (error: any) {
+            console.error("Upload failed:", error);
+            alert(error.response?.data?.message || "Lỗi upload ảnh.");
+        } finally {
+            setIsUploading(false);
+            e.target.value = ""; // Reset input
         }
     };
 
@@ -124,10 +151,48 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
                                style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", boxSizing: "border-box" }} />
                     </div>
                     <div>
-                        <label style={{ fontSize: "14px", fontWeight: 600, display: "block", marginBottom: "4px" }}>Ảnh nhóm (URL)</label>
-                        <input type="text" value={imageUrl} onChange={e => setImageUrl(e.target.value)} 
-                               placeholder="https://..."
-                               style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", boxSizing: "border-box" }} />
+                        <label style={{ fontSize: "14px", fontWeight: 600, display: "block", marginBottom: "8px" }}>Ảnh nhóm</label>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: "#e4eef7", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                                {imageUrl ? (
+                                    <img src={imageUrl} alt="preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                ) : (
+                                    <span style={{ fontSize: "18px", fontWeight: "bold", color: "#0088cc" }}>
+                                        {name ? name.substring(0, 1).toUpperCase() : "G"}
+                                    </span>
+                                )}
+                            </div>
+                            <div style={{ flex: 1, display: "flex", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={handleFileChange}
+                                    style={{ display: "none" }} 
+                                    id="group-avatar-upload" 
+                                    disabled={isUploading}
+                                />
+                                <label 
+                                    htmlFor="group-avatar-upload" 
+                                    style={{ 
+                                        display: "inline-flex", padding: "8px 14px", border: "1px solid #0088cc", 
+                                        color: "#0088cc", borderRadius: "8px", cursor: isUploading ? "not-allowed" : "pointer",
+                                        fontSize: "13px", fontWeight: 600, opacity: isUploading ? 0.6 : 1,
+                                        alignItems: "center", gap: "6px"
+                                    }}
+                                >
+                                    {isUploading && <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,136,204,0.3)", borderTopColor: "#0088cc", borderRadius: "50%", animation: "spin 1s linear infinite" }} />}
+                                    {isUploading ? "Đang tải lên..." : "Chọn ảnh"}
+                                </label>
+                                {imageUrl && !isUploading && (
+                                    <button 
+                                        onClick={() => setImageUrl("")} 
+                                        style={{ background: "transparent", border: "none", color: "#d63031", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}
+                                    >
+                                        Xóa ảnh
+                                    </button>
+                                )}
+                            </div>
+                        </div>
                     </div>
                     <button onClick={handleSaveInfo} disabled={isSaving || !name.trim()}
                             style={{ alignSelf: "flex-end", padding: "8px 16px", backgroundColor: "#0088cc", color: "white", border: "none", borderRadius: "6px", cursor: isSaving ? "not-allowed" : "pointer" }}>

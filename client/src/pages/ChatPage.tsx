@@ -38,20 +38,49 @@ const ChatPage = () => {
 
     const socket = connectSocket();
 
+    // Refetch conversations on reconnect (catches messages missed while offline)
+    // Socket.IO fires "connect" on initial connection AND on every reconnect
+    let isFirstConnect = true;
+    socket.on("connect", () => {
+      if (isFirstConnect) {
+        isFirstConnect = false;
+        return; // skip initial connect — conversations loaded by the other useEffect
+      }
+      // Reconnected — refetch conversations to sync sidebar
+      getConversationsApi()
+        .then((res) => setConversations(res.data.conversations))
+        .catch((err) => console.error("Reconnect refetch failed:", err));
+    });
+
     socket.on("newMessage", (message: Message) => {
       const convId = (message as any).conversationId;
 
+      // Append message to chat if this conversation is currently open
       if (selectedConvRef.current && selectedConvRef.current._id === convId) {
         setMessages((prev) => [...prev, message]);
       }
 
-      setConversations((prev) =>
-        prev.map((c) =>
-          c._id === convId
-            ? { ...c, lastMessage: { _id: message._id, text: message.text } }
-            : c,
-        ),
-      );
+      // Update sidebar: known conversation → update lastMessage in-place
+      // Unknown conversation (first message from new user) → refetch list
+      setConversations((prev) => {
+        const exists = prev.some((c) => c._id === convId);
+
+        if (exists) {
+          return prev.map((c) =>
+            c._id === convId
+              ? { ...c, lastMessage: { _id: message._id, text: message.text } }
+              : c,
+          );
+        }
+
+        // Not found — trigger a refetch outside of setState
+        getConversationsApi()
+          .then((res) => setConversations(res.data.conversations))
+          .catch((err) => console.error("Failed to refetch conversations:", err));
+
+        // Return prev unchanged for now; the refetch will update state
+        return prev;
+      });
     });
 
     socket.on("onlineUsers", (users: string[]) => {
@@ -68,6 +97,7 @@ const ChatPage = () => {
     });
 
     return () => {
+      socket.off("connect");
       socket.off("newMessage");
       socket.off("onlineUsers");
       socket.off("typing");

@@ -6,11 +6,14 @@ let socket: Socket | null = null;
 
 /**
  * Connect to Socket.IO server with JWT authentication.
- * Token is sent via handshake auth — server verifies it before allowing connection.
- * No need to emit "join" — server extracts userId from token automatically.
+ * - Singleton: returns existing socket if one is alive (connected OR reconnecting)
+ * - Only creates a new socket if none exists (first call or after manual disconnect)
+ * - Socket.IO handles reconnection automatically with the config below
  */
 export const connectSocket = (): Socket => {
-    if (socket && socket.connected) {
+    // Reuse existing socket — whether connected or mid-reconnect
+    // socket is only null after disconnectSocket() or on first call
+    if (socket) {
         return socket;
     }
 
@@ -22,18 +25,26 @@ export const connectSocket = (): Socket => {
 
     socket = io(SERVER_URL, {
         auth: { token },
+        reconnection: true,          // auto-reconnect on disconnect
+        reconnectionAttempts: 10,     // try up to 10 times
+        reconnectionDelay: 1000,      // start with 1s delay
+        reconnectionDelayMax: 5000,   // cap at 5s between attempts
     });
 
     socket.on("connect", () => {
-        console.log("Socket connected:", socket?.id);
+        console.log("[socket] connected:", socket?.id);
+    });
+
+    socket.on("reconnect", (attempt: number) => {
+        console.log(`[socket] reconnected after ${attempt} attempt(s)`);
     });
 
     socket.on("connect_error", (err) => {
-        console.error("Socket auth failed:", err.message);
+        console.error("[socket] connection error:", err.message);
     });
 
-    socket.on("disconnect", () => {
-        console.log("Socket disconnected");
+    socket.on("disconnect", (reason) => {
+        console.log("[socket] disconnected:", reason);
     });
 
     return socket;
@@ -43,6 +54,7 @@ export const getSocket = (): Socket | null => socket;
 
 export const disconnectSocket = () => {
     if (socket) {
+        socket.removeAllListeners(); // clean up all listeners from this module
         socket.disconnect();
         socket = null;
     }

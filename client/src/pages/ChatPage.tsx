@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -9,7 +10,12 @@ import Avatar from "../components/common/Avatar";
 import GroupSettingsModal from "../components/chat/GroupSettingsModal";
 import EditProfileModal from "../components/profile/EditProfileModal";
 
-import { getConversationsApi, getMessagesApi, clearChatApi, deleteConversationApi } from "../api/chatApi";
+import {
+  getConversationsApi,
+  getMessagesApi,
+  clearChatApi,
+  deleteConversationApi,
+} from "../api/chatApi";
 import { connectSocket, disconnectSocket } from "../socket";
 
 const ChatPage = () => {
@@ -17,11 +23,17 @@ const ChatPage = () => {
   const navigate = useNavigate();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(() => {
-      if (user?._id) {
-          try { return localStorage.getItem(`tg_sel_conv_${user._id}`); } catch { return null; }
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | null
+  >(() => {
+    if (user?._id) {
+      try {
+        return localStorage.getItem(`tg_sel_conv_${user._id}`);
+      } catch {
+        return null;
       }
-      return null;
+    }
+    return null;
   });
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasMore, setHasMore] = useState(false);
@@ -89,17 +101,20 @@ const ChatPage = () => {
         if (exists) {
           return prev.map((c) =>
             c._id === convId
-              ? { ...c, lastMessage: { _id: message._id, text: message.text } }
+              ? {
+                  ...c,
+                  lastMessage: { _id: message._id, text: message.text ?? "" },
+                }
               : c,
           );
         }
 
-        // Not found — trigger a refetch outside of setState
         getConversationsApi()
           .then((res) => setConversations(res.data.conversations))
-          .catch((err) => console.error("Failed to refetch conversations:", err));
+          .catch((err) =>
+            console.error("Failed to refetch conversations:", err),
+          );
 
-        // Return prev unchanged for now; the refetch will update state
         return prev;
       });
     });
@@ -108,60 +123,82 @@ const ChatPage = () => {
       setOnlineUsers(users);
     });
 
-    socket.on("typing", ({ senderId, isTyping }: { senderId: string; isTyping: boolean }) => {
-      setTypingUsers((prev) => {
-        const next = new Set(prev);
-        if (isTyping) next.add(senderId);
-        else next.delete(senderId);
-        return next;
-      });
-    });
+    socket.on(
+      "typing",
+      ({ senderId, isTyping }: { senderId: string; isTyping: boolean }) => {
+        setTypingUsers((prev) => {
+          const next = new Set(prev);
+          if (isTyping) next.add(senderId);
+          else next.delete(senderId);
+          return next;
+        });
+      },
+    );
 
     socket.on("groupUpdated", (updatedGroup: Conversation) => {
-      const isStillMember = updatedGroup.participants.some(p => p._id === user?._id);
-      
+      const isStillMember = updatedGroup.participants.some(
+        (p) => p._id === user?._id,
+      );
+
       if (!isStillMember) {
-        setConversations(prev => prev.filter(c => c._id !== updatedGroup._id));
+        setConversations((prev) =>
+          prev.filter((c) => c._id !== updatedGroup._id),
+        );
         if (selectedIdRef.current === updatedGroup._id) {
           setSelectedConversationId(null);
           if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
         }
         return;
       }
-      
-      setConversations(prev => {
-        const index = prev.findIndex(c => c._id === updatedGroup._id);
+
+      setConversations((prev) => {
+        const index = prev.findIndex((c) => c._id === updatedGroup._id);
         if (index === -1) {
           return [updatedGroup, ...prev];
         }
-        return prev.map(c => c._id === updatedGroup._id ? updatedGroup : c);
+        return prev.map((c) => (c._id === updatedGroup._id ? updatedGroup : c));
       });
     });
 
-    socket.on("groupDeleted", ({ conversationId }: { conversationId: string }) => {
-      setConversations(prev => prev.filter(c => c._id !== conversationId));
-      if (selectedIdRef.current === conversationId) {
-        setSelectedConversationId(null);
-        if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
-      }
-    });
+    socket.on(
+      "groupDeleted",
+      ({ conversationId }: { conversationId: string }) => {
+        setConversations((prev) =>
+          prev.filter((c) => c._id !== conversationId),
+        );
+        if (selectedIdRef.current === conversationId) {
+          setSelectedConversationId(null);
+          if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
+        }
+      },
+    );
 
-    socket.on("conversationCleared", ({ conversationId }: { conversationId: string }) => {
-      if (selectedIdRef.current === conversationId) {
-        setMessages([]);
-      }
-      setConversations(prev => prev.map(c => 
-        c._id === conversationId ? { ...c, lastMessage: null } : c
-      ));
-    });
+    socket.on(
+      "conversationCleared",
+      ({ conversationId }: { conversationId: string }) => {
+        if (selectedIdRef.current === conversationId) {
+          setMessages([]);
+        }
+        setConversations((prev) =>
+          prev.map((c) =>
+            c._id === conversationId ? { ...c, lastMessage: null } : c,
+          ),
+        );
+      },
+    );
 
-    socket.on("conversationDeleted", ({ conversationId }: { conversationId: string }) => {
-      setConversations(prev => prev.filter(c => c._id !== conversationId));
-      if (selectedIdRef.current === conversationId) {
-        setSelectedConversationId(null);
-        if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
-      }
-    });
+    socket.on(
+      "conversationDeleted",
+      ({ conversationId }: { conversationId: string }) => {
+        setConversations((prev) =>
+          prev.filter((c) => c._id !== conversationId),
+        );
+        if (selectedIdRef.current === conversationId) {
+          setSelectedConversationId(null);
+          if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
+        }
+      },
+    );
 
     return () => {
       socket.off("connect");
@@ -203,8 +240,8 @@ const ChatPage = () => {
       } catch (error: any) {
         console.error("Failed to load messages:", error);
         if (error.response?.status === 404) {
-            setSelectedConversationId(null);
-            if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
+          setSelectedConversationId(null);
+          if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
         }
       }
     };
@@ -212,18 +249,27 @@ const ChatPage = () => {
   }, [selectedConversationId, user?._id]);
 
   const loadOlderMessages = async () => {
-    if (!selectedConversationId || messages.length === 0 || loadingMore || !hasMore) return;
-    
+    if (
+      !selectedConversationId ||
+      messages.length === 0 ||
+      loadingMore ||
+      !hasMore
+    )
+      return;
+
     setLoadingMore(true);
     try {
-        const oldestMessageTime = messages[0].createdAt;
-        const res = await getMessagesApi(selectedConversationId, oldestMessageTime);
-        setMessages((prev) => [...res.data.messages, ...prev]);
-        setHasMore(res.data.hasMore);
+      const oldestMessageTime = messages[0].createdAt;
+      const res = await getMessagesApi(
+        selectedConversationId,
+        oldestMessageTime,
+      );
+      setMessages((prev) => [...res.data.messages, ...prev]);
+      setHasMore(res.data.hasMore);
     } catch (error) {
-        console.error("Failed to load older messages:", error);
+      console.error("Failed to load older messages:", error);
     } finally {
-        setLoadingMore(false);
+      setLoadingMore(false);
     }
   };
 
@@ -238,7 +284,7 @@ const ChatPage = () => {
   const handleSelectConversation = (conv: Conversation) => {
     setSelectedConversationId(conv._id);
     if (user?._id) {
-        localStorage.setItem(`tg_sel_conv_${user._id}`, conv._id);
+      localStorage.setItem(`tg_sel_conv_${user._id}`, conv._id);
     }
   };
 
@@ -249,7 +295,10 @@ const ChatPage = () => {
       setConversations((prev) =>
         prev.map((c) =>
           c._id === selectedConversationId
-            ? { ...c, lastMessage: { _id: message._id, text: message.text } }
+            ? {
+                ...c,
+                lastMessage: { _id: message._id, text: message.text ?? "" },
+              }
             : c,
         ),
       );
@@ -269,7 +318,8 @@ const ChatPage = () => {
 
   const handleDeleteConversation = async () => {
     setShowOptionsMenu(false);
-    if (!confirm("Bọn có chắc chắn muốn Xóa hiển thị toàn bộ đoạn chat này?")) return;
+    if (!confirm("Bọn có chắc chắn muốn Xóa hiển thị toàn bộ đoạn chat này?"))
+      return;
     try {
       await deleteConversationApi(selectedConversationId!);
     } catch (e) {
@@ -280,9 +330,10 @@ const ChatPage = () => {
 
   // Derive other participant and typing status
   const otherParticipant = selectedConversation?.participants.find(
-    (p) => p._id !== user?._id
+    (p) => p._id !== user?._id,
   );
-  const isOtherParticipantTyping = otherParticipant && typingUsers.has(otherParticipant._id);
+  const isOtherParticipantTyping =
+    otherParticipant && typingUsers.has(otherParticipant._id);
 
   return (
     <div className="app-container">
@@ -297,13 +348,20 @@ const ChatPage = () => {
             backgroundColor: "#f5f5f5",
           }}
         >
-          <div 
-            style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }} 
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              cursor: "pointer",
+            }}
             onClick={() => setShowEditProfile(true)}
             title="Edit Profile"
           >
             <Avatar user={user} size={32} />
-            <span style={{ fontWeight: 600, fontSize: "14px" }}>{user?.username}</span>
+            <span style={{ fontWeight: 600, fontSize: "14px" }}>
+              {user?.username}
+            </span>
           </div>
           <button
             onClick={handleLogout}
@@ -330,7 +388,9 @@ const ChatPage = () => {
         />
       </div>
 
-      <div className={`chat-wrapper ${selectedConversation ? "is-active" : ""}`}>
+      <div
+        className={`chat-wrapper ${selectedConversation ? "is-active" : ""}`}
+      >
         {!selectedConversation ? (
           <div
             style={{
@@ -366,9 +426,11 @@ const ChatPage = () => {
                 justifyContent: "space-between",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <button 
-                  className="mobile-back-btn" 
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              >
+                <button
+                  className="mobile-back-btn"
                   onClick={() => {
                     setSelectedConversationId(null);
                   }}
@@ -377,53 +439,141 @@ const ChatPage = () => {
                   ←
                 </button>
                 {selectedConversation.isGroup ? (
-                    selectedConversation.imageUrl ? (
-                        <img src={selectedConversation.imageUrl} alt={selectedConversation.name} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }} />
-                    ) : (
-                        <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "#0088cc", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>
-                        👥
-                        </div>
-                    )
+                  selectedConversation.imageUrl ? (
+                    <img
+                      src={selectedConversation.imageUrl}
+                      alt={selectedConversation.name}
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "50%",
+                        backgroundColor: "#0088cc",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "16px",
+                      }}
+                    >
+                      👥
+                    </div>
+                  )
                 ) : (
                   <Avatar user={otherParticipant} size={36} />
                 )}
-                
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span>{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
+
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span>
+                    {selectedConversation.isGroup
+                      ? selectedConversation.name
+                      : (otherParticipant?.username ?? "Chat")}
+                  </span>
                   {selectedConversation.isGroup && (
-                      <span style={{ fontSize: "12px", color: "#666", fontWeight: "normal", marginTop: "2px" }}>
-                        {selectedConversation.participants.length} thành viên
-                      </span>
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        color: "#666",
+                        fontWeight: "normal",
+                        marginTop: "2px",
+                      }}
+                    >
+                      {selectedConversation.participants.length} thành viên
+                    </span>
                   )}
                 </div>
               </div>
 
               <div style={{ position: "relative" }}>
-                  <button
-                    onClick={() => setShowOptionsMenu(p => !p)}
-                    style={{ background: "transparent", border: "none", cursor: "pointer", fontSize: "20px", color: "#0088cc", padding: "4px" }}
-                    title="Tuỳ chọn"
+                <button
+                  onClick={() => setShowOptionsMenu((p) => !p)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "20px",
+                    color: "#0088cc",
+                    padding: "4px",
+                  }}
+                  title="Tuỳ chọn"
+                >
+                  ⋮
+                </button>
+
+                {showOptionsMenu && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      right: 0,
+                      top: "100%",
+                      background: "white",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                      borderRadius: "8px",
+                      zIndex: 10,
+                      minWidth: "150px",
+                      overflow: "hidden",
+                    }}
                   >
-                    ⋮
-                  </button>
-                  
-                  {showOptionsMenu && (
-                     <div style={{ position: "absolute", right: 0, top: "100%", background: "white", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", borderRadius: "8px", zIndex: 10, minWidth: "150px", overflow: "hidden" }}>
-                         {selectedConversation.isGroup && (
-                             <div onClick={() => { setShowOptionsMenu(false); setShowGroupSettings(true); }} style={{ padding: "10px 16px", cursor: "pointer", borderBottom: "1px solid #eee", fontSize: "14px" }}>Cài đặt nhóm</div>
-                         )}
-                         <div onClick={handleClearChat} style={{ padding: "10px 16px", cursor: "pointer", borderBottom: selectedConversation.isGroup ? "none" : "1px solid #eee", fontSize: "14px", color: "#d63031" }}>Clear chat</div>
-                         {!selectedConversation.isGroup && (
-                             <div onClick={handleDeleteConversation} style={{ padding: "10px 16px", cursor: "pointer", color: "#d63031", fontSize: "14px", fontWeight: "bold" }}>Delete conversation</div>
-                         )}
-                     </div>
-                  )}
+                    {selectedConversation.isGroup && (
+                      <div
+                        onClick={() => {
+                          setShowOptionsMenu(false);
+                          setShowGroupSettings(true);
+                        }}
+                        style={{
+                          padding: "10px 16px",
+                          cursor: "pointer",
+                          borderBottom: "1px solid #eee",
+                          fontSize: "14px",
+                        }}
+                      >
+                        Cài đặt nhóm
+                      </div>
+                    )}
+                    <div
+                      onClick={handleClearChat}
+                      style={{
+                        padding: "10px 16px",
+                        cursor: "pointer",
+                        borderBottom: selectedConversation.isGroup
+                          ? "none"
+                          : "1px solid #eee",
+                        fontSize: "14px",
+                        color: "#d63031",
+                      }}
+                    >
+                      Clear chat
+                    </div>
+                    {!selectedConversation.isGroup && (
+                      <div
+                        onClick={handleDeleteConversation}
+                        style={{
+                          padding: "10px 16px",
+                          cursor: "pointer",
+                          color: "#d63031",
+                          fontSize: "14px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Delete conversation
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
-            <ChatBox 
-              messages={messages} 
-              currentUserId={user?._id ?? ""} 
+            <ChatBox
+              messages={messages}
+              currentUserId={user?._id ?? ""}
               onLoadMore={loadOlderMessages}
               hasMore={hasMore}
               loadingMore={loadingMore}
@@ -451,14 +601,18 @@ const ChatPage = () => {
             />
 
             {showGroupSettings && selectedConversation.isGroup && (
-                <GroupSettingsModal
-                    conversation={selectedConversation}
-                    currentUserId={user?._id ?? ""}
-                    onClose={() => setShowGroupSettings(false)}
-                    onUpdated={(updatedConv) => {
-                        setConversations(prev => prev.map(c => c._id === updatedConv._id ? updatedConv : c));
-                    }}
-                />
+              <GroupSettingsModal
+                conversation={selectedConversation}
+                currentUserId={user?._id ?? ""}
+                onClose={() => setShowGroupSettings(false)}
+                onUpdated={(updatedConv) => {
+                  setConversations((prev) =>
+                    prev.map((c) =>
+                      c._id === updatedConv._id ? updatedConv : c,
+                    ),
+                  );
+                }}
+              />
             )}
           </>
         )}

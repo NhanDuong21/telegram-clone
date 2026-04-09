@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { searchUsersApi } from "../../api/userApi";
 import { updateGroupSettingsApi, addMembersApi, removeMemberApi, uploadImageApi, deleteGroupApi } from "../../api/chatApi";

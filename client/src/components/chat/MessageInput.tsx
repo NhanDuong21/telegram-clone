@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef } from "react";
 import { sendMessageApi, uploadImageApi } from "../../api/chatApi";
 import { getSocket } from "../../socket";

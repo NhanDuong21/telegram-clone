@@ -309,6 +309,7 @@ const ChatPage = () => {
               onLoadMore={loadOlderMessages}
               hasMore={hasMore}
               loadingMore={loadingMore}
+              isGroup={selectedConversation.isGroup}
             />
 
             {/* Typing Indicator */}

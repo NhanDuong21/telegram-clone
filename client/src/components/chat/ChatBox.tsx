@@ -18,6 +18,7 @@ interface ChatBoxProps {
     onLoadMore?: () => void;
     hasMore?: boolean;
     loadingMore?: boolean;
+    isGroup?: boolean;
 }
 
 const formatTime = (iso: string) => {
@@ -25,7 +26,7 @@ const formatTime = (iso: string) => {
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
-const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore }: ChatBoxProps) => {
+const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup }: ChatBoxProps) => {
     const bottomRef = useRef<HTMLDivElement>(null);
     const lastMessageId = useRef<string | null>(null);
 
@@ -125,7 +126,7 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore }: 
                                     : "0 1px 3px rgba(0,0,0,0.06)",
                             }}
                         >
-                            {!isMe && (
+                            {!isMe && isGroup && (
                                 <div
                                     style={{
                                         fontSize: "11px",

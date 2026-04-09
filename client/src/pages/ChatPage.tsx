@@ -285,8 +285,22 @@ const ChatPage = () => {
                 gap: "10px",
               }}
             >
-              <Avatar user={otherParticipant} size={36} />
-              {otherParticipant?.username ?? "Chat"}
+              {selectedConversation.isGroup ? (
+                <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "#0088cc", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>
+                  👥
+                </div>
+              ) : (
+                <Avatar user={otherParticipant} size={36} />
+              )}
+              
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                 <span>{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
+                 {selectedConversation.isGroup && (
+                    <span style={{ fontSize: "12px", color: "#666", fontWeight: "normal", marginTop: "2px" }}>
+                       {selectedConversation.participants.length} thành viên
+                    </span>
+                 )}
+              </div>
             </div>
 
             <ChatBox 
@@ -298,7 +312,7 @@ const ChatPage = () => {
             />
 
             {/* Typing Indicator */}
-            {isOtherParticipantTyping && (
+            {isOtherParticipantTyping && !selectedConversation.isGroup && (
               <div
                 style={{
                   fontSize: "12px",
@@ -307,7 +321,7 @@ const ChatPage = () => {
                   fontStyle: "italic",
                 }}
               >
-                {otherParticipant.username} đang soạn tin...
+                {otherParticipant?.username} đang soạn tin...
               </div>
             )}
 

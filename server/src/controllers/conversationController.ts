@@ -2,6 +2,44 @@ import { Response } from "express";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import Conversation from "../models/Conversation";
 
+// POST /api/conversations/group
+// Body: { name: string, participantIds: string[] }
+// Tạo một group chat mới
+export const createGroupConversation = async (req: AuthRequest, res: Response) => {
+    try {
+        const { name, participantIds } = req.body;
+        const senderId = req.user._id.toString();
+
+        if (!name || name.trim() === "") {
+            return res.status(400).json({ message: "Tên nhóm là bắt buộc" });
+        }
+
+        if (!participantIds || !Array.isArray(participantIds)) {
+            return res.status(400).json({ message: "participantIds phải là một array" });
+        }
+
+        // Đảm bảo không duplicate và current user luôn là một thành viên
+        const allParticipants = new Set([...participantIds, senderId]);
+
+        if (allParticipants.size < 3) {
+            return res.status(400).json({ message: "Group phải có ít nhất 3 thành viên" });
+        }
+
+        const newGroup = await Conversation.create({
+            isGroup: true,
+            name: name.trim(),
+            participants: Array.from(allParticipants),
+        });
+
+        const populated = await newGroup.populate("participants", "-password");
+
+        return res.status(201).json({ conversation: populated });
+    } catch (error) {
+        console.error("Create group error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
 // POST /api/conversations
 // Body: { receiverId }
 // Tạo conversation mới hoặc trả về conversation đã tồn tại

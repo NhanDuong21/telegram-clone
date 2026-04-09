@@ -15,6 +15,9 @@ export const getConversationsApi = () =>
 export const createOrGetConversationApi = (receiverId: string) =>
     axios.post(`${BASE}/conversations`, { receiverId }, getAuthHeader());
 
+export const createGroupConversationApi = (name: string, participantIds: string[]) =>
+    axios.post(`${BASE}/conversations/group`, { name, participantIds }, getAuthHeader());
+
 
 export const getMessagesApi = (conversationId: string, before?: string, limit: number = 30) => {
     let url = `${BASE}/messages/${conversationId}?limit=${limit}`;

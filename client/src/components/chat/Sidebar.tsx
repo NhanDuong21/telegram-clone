@@ -2,6 +2,7 @@ import { useState } from "react";
 import { searchUsersApi } from "../../api/userApi";
 import { createOrGetConversationApi } from "../../api/chatApi";
 import Avatar from "../common/Avatar";
+import CreateGroupModal from "./CreateGroupModal";
 
 interface User {
     _id: string;
@@ -12,6 +13,8 @@ interface User {
 export interface Conversation {
     _id: string;
     participants: User[];
+    isGroup?: boolean;
+    name?: string;
     lastMessage?: {
         _id: string;
         text: string;
@@ -40,6 +43,7 @@ const Sidebar = ({
     const [results, setResults] = useState<User[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
     const [startingChat, setStartingChat] = useState<string | null>(null);
+    const [showGroupModal, setShowGroupModal] = useState(false);
 
     const handleSearch = async () => {
         const trimmed = query.trim();
@@ -84,12 +88,12 @@ const Sidebar = ({
 
     return (
         <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fafbfc" }}>
-            {/* Search bar */}
-            <div style={{ padding: "10px 12px", borderBottom: "1px solid #e8ecf0" }}>
-                <div style={{ display: "flex", gap: "8px" }}>
+            {/* Search bar & Create Group Header */}
+            <div style={{ padding: "10px 12px", borderBottom: "1px solid #e8ecf0", display: "flex", gap: "8px", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "4px", flex: 1 }}>
                     <input
                         type="text"
-                        placeholder="Tìm user để nhắn tin..."
+                        placeholder="Tìm user..."
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -109,20 +113,39 @@ const Sidebar = ({
                     <button
                         onClick={handleSearch}
                         style={{
-                            padding: "8px 14px",
+                            padding: "8px",
                             borderRadius: "20px",
                             border: "none",
-                            background: "linear-gradient(135deg, #0088cc, #0077b5)",
-                            color: "white",
+                            background: "transparent",
+                            color: "#0088cc",
                             cursor: "pointer",
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            boxShadow: "0 1px 4px rgba(0,136,204,0.2)",
+                            fontSize: "16px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                         }}
+                        title="Tìm kiếm"
                     >
                         🔍
                     </button>
                 </div>
+                <button
+                    onClick={() => setShowGroupModal(true)}
+                    style={{
+                        padding: "8px",
+                        borderRadius: "20px",
+                        border: "1px solid #0088cc",
+                        background: "#e4eef7",
+                        color: "#0088cc",
+                        cursor: "pointer",
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        whiteSpace: "nowrap"
+                    }}
+                    title="Tạo nhóm chat"
+                >
+                    👥
+                </button>
             </div>
 
             {/* Search results */}
@@ -225,8 +248,16 @@ const Sidebar = ({
                             }}
                         >
                             <div style={{ position: "relative", flexShrink: 0 }}>
-                                <Avatar user={other} size={44} />
-                                {other && onlineUsers.includes(other._id) && (
+                                {conv.isGroup ? (
+                                    <div style={{
+                                        width: "44px", height: "44px", borderRadius: "50%",
+                                        backgroundColor: "#0088cc", color: "white", display: "flex",
+                                        alignItems: "center", justifyContent: "center", fontSize: "20px"
+                                    }}>👥</div>
+                                ) : (
+                                    other && <Avatar user={other} size={44} />
+                                )}
+                                {other && !conv.isGroup && onlineUsers.includes(other._id) && (
                                     <div
                                         style={{
                                             position: "absolute",
@@ -243,7 +274,7 @@ const Sidebar = ({
                             </div>
                             <div style={{ overflow: "hidden", flex: 1 }}>
                                 <div style={{ fontWeight: 600, fontSize: "14px", color: "#1a1a2e" }}>
-                                    {other?.username ?? "Unknown"}
+                                    {conv.isGroup ? conv.name : (other?.username ?? "Unknown")}
                                 </div>
                                 <div
                                     style={{
@@ -262,6 +293,17 @@ const Sidebar = ({
                     );
                 })}
             </div>
+
+            {showGroupModal && (
+                <CreateGroupModal
+                    onClose={() => setShowGroupModal(false)}
+                    onGroupCreated={(conv) => {
+                        onConversationCreated(conv);
+                        onSelectConversation(conv);
+                        setShowGroupModal(false);
+                    }}
+                />
+            )}
         </div>
     );
 };

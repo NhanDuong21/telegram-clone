@@ -8,11 +8,15 @@ import { getIO } from "../socket";
 // Body: { conversationId, text }
 export const sendMessage = async (req: AuthRequest, res: Response) => {
     try {
-        const { conversationId, text } = req.body;
+        const { conversationId, text, imageUrl } = req.body;
         const senderId = req.user._id;
 
-        if (!conversationId || !text?.trim()) {
-            return res.status(400).json({ message: "conversationId và text là bắt buộc" });
+        if (!conversationId) {
+            return res.status(400).json({ message: "conversationId là bắt buộc" });
+        }
+        
+        if (!text?.trim() && !imageUrl?.trim()) {
+            return res.status(400).json({ message: "Cần ít nhất text hoặc hình ảnh" });
         }
 
         const conversation = await Conversation.findOne({
@@ -27,7 +31,8 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
         const newMessage = await Message.create({
             conversationId,
             sender: senderId,
-            text: text.trim(),
+            text: text ? text.trim() : "",
+            imageUrl: imageUrl ? imageUrl.trim() : "",
         });
 
         conversation.lastMessage = newMessage._id;

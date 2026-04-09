@@ -11,6 +11,8 @@ interface MessageInputProps {
 
 const MessageInput = ({ conversationId, receiverId, onMessageSent }: MessageInputProps) => {
     const [text, setText] = useState("");
+    const [imageUrl, setImageUrl] = useState("");
+    const [showImageInput, setShowImageInput] = useState(false);
     const [sending, setSending] = useState(false);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -23,17 +25,20 @@ const MessageInput = ({ conversationId, receiverId, onMessageSent }: MessageInpu
     };
 
     const handleSend = async () => {
-        const trimmed = text.trim();
-        if (!trimmed || sending) return;
+        const trimmedText = text.trim();
+        const trimmedImage = imageUrl.trim();
+        if ((!trimmedText && !trimmedImage) || sending) return;
 
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         emitTyping(false);
 
         setSending(true);
         try {
-            const res = await sendMessageApi(conversationId, trimmed);
+            const res = await sendMessageApi(conversationId, { text: trimmedText, imageUrl: trimmedImage });
             onMessageSent(res.data.message); 
             setText("");
+            setImageUrl("");
+            setShowImageInput(false);
         } catch (error) {
             console.error("Send message failed:", error);
         } finally {
@@ -54,26 +59,63 @@ const MessageInput = ({ conversationId, receiverId, onMessageSent }: MessageInpu
         }, 1500);
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSend();
         }
     };
 
-    const canSend = text.trim() && !sending;
+    const canSend = (text.trim() || imageUrl.trim()) && !sending;
 
     return (
-        <div
-            style={{
-                display: "flex",
-                gap: "10px",
-                padding: "12px 16px",
-                borderTop: "1px solid #e8ecf0",
-                backgroundColor: "#ffffff",
-                alignItems: "flex-end",
-            }}
-        >
+        <div style={{ display: "flex", flexDirection: "column" }}>
+            {showImageInput && (
+                <div style={{ padding: "8px 16px", backgroundColor: "#f0f2f5", borderTop: "1px solid #e8ecf0" }}>
+                    <input
+                        type="text"
+                        placeholder="Dán image URL cập nhật vào đây (e.g. https://domain.com/img.png)"
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        style={{
+                            width: "100%", 
+                            padding: "8px 12px", 
+                            borderRadius: "16px", 
+                            border: "1px solid #dce1e6", 
+                            fontSize: "13px", 
+                            outline: "none",
+                            boxSizing: "border-box"
+                        }}
+                    />
+                </div>
+            )}
+            <div
+                style={{
+                    display: "flex",
+                    gap: "10px",
+                    padding: "12px 16px",
+                    borderTop: "1px solid #e8ecf0",
+                    backgroundColor: "#ffffff",
+                    alignItems: "flex-end",
+                }}
+            >
+                <button
+                    onClick={() => setShowImageInput(!showImageInput)}
+                    style={{
+                        padding: "8px",
+                        background: showImageInput ? "#e4eef7" : "transparent",
+                        border: "none",
+                        borderRadius: "50%",
+                        cursor: "pointer",
+                        fontSize: "18px",
+                        marginBottom: "4px",
+                        flexShrink: 0
+                    }}
+                    title="Đính kèm ảnh URL"
+                >
+                    🖼️
+                </button>
             <textarea
                 rows={1}
                 value={text}
@@ -128,6 +170,7 @@ const MessageInput = ({ conversationId, receiverId, onMessageSent }: MessageInpu
             >
                 {sending ? "..." : "Gửi"}
             </button>
+            </div>
         </div>
     );
 };

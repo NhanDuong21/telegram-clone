@@ -19,5 +19,5 @@ export const createOrGetConversationApi = (receiverId: string) =>
 export const getMessagesApi = (conversationId: string) =>
     axios.get(`${BASE}/messages/${conversationId}`, getAuthHeader());
 
-export const sendMessageApi = (conversationId: string, text: string) =>
-    axios.post(`${BASE}/messages`, { conversationId, text }, getAuthHeader());
+export const sendMessageApi = (conversationId: string, data: { text?: string; imageUrl?: string }) =>
+    axios.post(`${BASE}/messages`, { conversationId, ...data }, getAuthHeader());

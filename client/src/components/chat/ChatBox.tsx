@@ -3,7 +3,8 @@ import { useEffect, useRef } from "react";
 export interface Message {
     _id: string;
     conversationId: string;
-    text: string;
+    text?: string;
+    imageUrl?: string;
     sender: {
         _id: string;
         username: string;
@@ -103,7 +104,28 @@ const ChatBox = ({ messages, currentUserId }: ChatBoxProps) => {
                                     {msg.sender.username}
                                 </div>
                             )}
-                            <div>{msg.text}</div>
+                            
+                            {msg.imageUrl && (
+                                <img
+                                    src={msg.imageUrl}
+                                    alt="Attached image"
+                                    style={{
+                                        maxWidth: "100%",
+                                        borderRadius: "8px",
+                                        marginBottom: msg.text ? "6px" : "0",
+                                        display: "block",
+                                        maxHeight: "300px",
+                                        objectFit: "contain",
+                                        backgroundColor: isMe ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.03)"
+                                    }}
+                                    onError={(e) => {
+                                        e.currentTarget.style.display = "none";
+                                    }}
+                                />
+                            )}
+                            
+                            {msg.text && <div>{msg.text}</div>}
+
                             <div
                                 style={{
                                     fontSize: "10px",

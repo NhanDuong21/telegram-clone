@@ -3,7 +3,8 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IMessage extends Document {
     conversationId: mongoose.Types.ObjectId;
     sender: mongoose.Types.ObjectId;
-    text: string;
+    text?: string;
+    imageUrl?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -22,8 +23,13 @@ const messageSchema = new Schema<IMessage>(
         },
         text: {
             type: String,
-            required: true,
             trim: true,
+            default: "",
+        },
+        imageUrl: {
+            type: String,
+            trim: true,
+            default: "",
         },
     },
     {

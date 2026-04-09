@@ -18,6 +18,8 @@ const ChatPage = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // States for UX presence tracking
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
@@ -131,18 +133,36 @@ const ChatPage = () => {
   useEffect(() => {
     if (!selectedConversationId) {
       setMessages([]);
+      setHasMore(false);
       return;
     }
     const fetchMessages = async () => {
       try {
         const res = await getMessagesApi(selectedConversationId);
         setMessages(res.data.messages);
+        setHasMore(res.data.hasMore);
       } catch (error) {
         console.error("Failed to load messages:", error);
       }
     };
     fetchMessages();
   }, [selectedConversationId]);
+
+  const loadOlderMessages = async () => {
+    if (!selectedConversationId || messages.length === 0 || loadingMore || !hasMore) return;
+    
+    setLoadingMore(true);
+    try {
+        const oldestMessageTime = messages[0].createdAt;
+        const res = await getMessagesApi(selectedConversationId, oldestMessageTime);
+        setMessages((prev) => [...res.data.messages, ...prev]);
+        setHasMore(res.data.hasMore);
+    } catch (error) {
+        console.error("Failed to load older messages:", error);
+    } finally {
+        setLoadingMore(false);
+    }
+  };
 
   const handleConversationCreated = (conv: Conversation) => {
     setConversations((prev) => {
@@ -269,7 +289,13 @@ const ChatPage = () => {
               {otherParticipant?.username ?? "Chat"}
             </div>
 
-            <ChatBox messages={messages} currentUserId={user?._id ?? ""} />
+            <ChatBox 
+              messages={messages} 
+              currentUserId={user?._id ?? ""} 
+              onLoadMore={loadOlderMessages}
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+            />
 
             {/* Typing Indicator */}
             {isOtherParticipantTyping && (

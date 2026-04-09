@@ -15,6 +15,9 @@ export interface Message {
 interface ChatBoxProps {
     messages: Message[];
     currentUserId: string;
+    onLoadMore?: () => void;
+    hasMore?: boolean;
+    loadingMore?: boolean;
 }
 
 const formatTime = (iso: string) => {
@@ -22,11 +25,20 @@ const formatTime = (iso: string) => {
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
-const ChatBox = ({ messages, currentUserId }: ChatBoxProps) => {
+const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore }: ChatBoxProps) => {
     const bottomRef = useRef<HTMLDivElement>(null);
+    const lastMessageId = useRef<string | null>(null);
 
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (messages.length === 0) {
+            lastMessageId.current = null;
+            return;
+        }
+        const currentLastMessage = messages[messages.length - 1];
+        if (currentLastMessage._id !== lastMessageId.current) {
+            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+            lastMessageId.current = currentLastMessage._id;
+        }
     }, [messages]);
 
     if (messages.length === 0) {
@@ -62,6 +74,28 @@ const ChatBox = ({ messages, currentUserId }: ChatBoxProps) => {
                 background: "#f7f9fb",
             }}
         >
+            {hasMore && (
+                <div style={{ textAlign: "center", margin: "10px 0" }}>
+                    <button
+                        onClick={onLoadMore}
+                        disabled={loadingMore}
+                        style={{
+                            padding: "6px 16px",
+                            borderRadius: "16px",
+                            border: "none",
+                            background: "#e4eef7",
+                            color: "#0088cc",
+                            cursor: loadingMore ? "not-allowed" : "pointer",
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            opacity: loadingMore ? 0.7 : 1,
+                        }}
+                    >
+                        {loadingMore ? "Đang tải..." : "Tải thêm tin nhắn cũ"}
+                    </button>
+                </div>
+            )}
+            
             {messages.map((msg) => {
                 const isMe = msg.sender._id === currentUserId;
                 return (

@@ -62,6 +62,9 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
         const { conversationId } = req.params;
         const userId = req.user._id;
 
+        const { before } = req.query;
+        const limit = parseInt(req.query.limit as string) || 30;
+
         // Kiểm tra user là participant của conversation
         const conversation = await Conversation.findOne({
             _id: conversationId,
@@ -72,12 +75,26 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ message: "Conversation không tồn tại" });
         }
 
-        // Lấy messages, sắp xếp theo thời gian tạo (cũ → mới)
-        const messages = await Message.find({ conversationId })
-            .populate("sender", "-password")
-            .sort({ createdAt: 1 });
+        const query: any = { conversationId };
+        if (before) {
+            query.createdAt = { $lt: new Date(before as string) };
+        }
 
-        return res.status(200).json({ messages });
+        // Lấy messages, sắp xếp theo thời gian tạo (mới -> cũ) để lấy những tin nhắn gần nhất
+        const messages = await Message.find(query)
+            .populate("sender", "-password")
+            .sort({ createdAt: -1 })
+            .limit(limit + 1); // +1 để kiểm tra xem còn data cũ hơn không
+
+        const hasMore = messages.length > limit;
+        if (hasMore) {
+            messages.pop(); // loại bỏ phần tử thừa
+        }
+
+        // Đảo ngược array để trả về đúng thứ tự cũ -> mới cho UI
+        messages.reverse();
+
+        return res.status(200).json({ messages, hasMore });
     } catch (error) {
         console.error("Get messages error:", error);
         return res.status(500).json({ message: "Server error" });

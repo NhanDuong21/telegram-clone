@@ -16,8 +16,11 @@ export const createOrGetConversationApi = (receiverId: string) =>
     axios.post(`${BASE}/conversations`, { receiverId }, getAuthHeader());
 
 
-export const getMessagesApi = (conversationId: string) =>
-    axios.get(`${BASE}/messages/${conversationId}`, getAuthHeader());
+export const getMessagesApi = (conversationId: string, before?: string, limit: number = 30) => {
+    let url = `${BASE}/messages/${conversationId}?limit=${limit}`;
+    if (before) url += `&before=${encodeURIComponent(before)}`;
+    return axios.get(url, getAuthHeader());
+};
 
 export const sendMessageApi = (conversationId: string, data: { text?: string; imageUrl?: string }) =>
     axios.post(`${BASE}/messages`, { conversationId, ...data }, getAuthHeader());

@@ -234,16 +234,8 @@ const ChatPage = () => {
   const isOtherParticipantTyping = otherParticipant && typingUsers.has(otherParticipant._id);
 
   return (
-    <div style={{ display: "flex", height: "100vh", position: "relative" }}>
-      <div
-        style={{
-          width: "320px",
-          borderRight: "1px solid #ddd",
-          display: "flex",
-          flexDirection: "column",
-          flexShrink: 0,
-        }}
-      >
+    <div className="app-container">
+      <div className="sidebar-wrapper">
         <div
           style={{
             padding: "10px 12px",
@@ -287,7 +279,7 @@ const ChatPage = () => {
         />
       </div>
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <div className={`chat-wrapper ${selectedConversation ? "is-active" : ""}`}>
         {!selectedConversation ? (
           <div
             style={{
@@ -324,6 +316,15 @@ const ChatPage = () => {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <button 
+                  className="mobile-back-btn" 
+                  onClick={() => {
+                    setSelectedConversationId(null);
+                  }}
+                  title="Quay lại"
+                >
+                  ←
+                </button>
                 {selectedConversation.isGroup ? (
                     selectedConversation.imageUrl ? (
                         <img src={selectedConversation.imageUrl} alt={selectedConversation.name} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }} />

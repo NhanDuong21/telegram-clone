@@ -16,6 +16,7 @@ export interface Conversation {
     isGroup?: boolean;
     name?: string;
     imageUrl?: string;
+    owner?: string;
     lastMessage?: {
         _id: string;
         text: string;

@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Response } from "express";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import Conversation from "../models/Conversation";
@@ -30,6 +31,7 @@ export const createGroupConversation = async (req: AuthRequest, res: Response) =
             isGroup: true,
             name: name.trim(),
             participants: Array.from(allParticipants),
+            owner: new mongoose.Types.ObjectId(senderId)
         });
 
         const populated = await newGroup.populate("participants", "-password");
@@ -49,6 +51,10 @@ export const updateGroupSettings = async (req: AuthRequest, res: Response) => {
 
         const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
         if (!conversation) return res.status(404).json({ message: "Group không tồn tại hoặc bạn không có quyền" });
+
+        if (conversation.owner && conversation.owner.toString() !== userId) {
+            return res.status(403).json({ message: "Chỉ Group Owner mới có quyền thay đổi thông tin nhóm" });
+        }
 
         if (name !== undefined) {
             if (name.trim() === "") return res.status(400).json({ message: "Tên group không hợp lệ" });
@@ -86,6 +92,10 @@ export const addMembers = async (req: AuthRequest, res: Response) => {
         const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
         if (!conversation) return res.status(404).json({ message: "Group không tồn tại hoặc bạn không có quyền" });
 
+        if (conversation.owner && conversation.owner.toString() !== userId) {
+            return res.status(403).json({ message: "Chỉ Group Owner mới có quyền thêm thành viên" });
+        }
+
         const currentIds = conversation.participants.map((p: any) => p.toString());
         const newSet = new Set([...currentIds, ...participantIds]);
 
@@ -113,6 +123,14 @@ export const removeMember = async (req: AuthRequest, res: Response) => {
 
         const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
         if (!conversation) return res.status(404).json({ message: "Group không tồn tại hoặc bạn không có quyền" });
+
+        if (conversation.owner && conversation.owner.toString() !== userId) {
+            return res.status(403).json({ message: "Chỉ Group Owner mới có quyền kick thành viên" });
+        }
+
+        if (memberId === conversation.owner?.toString()) {
+            return res.status(400).json({ message: "Không thể kick Group Owner" });
+        }
 
         const currentIds = conversation.participants.map((p: any) => p.toString());
         if (!currentIds.includes(memberId)) {

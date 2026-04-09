@@ -292,11 +292,7 @@ const ChatPage = () => {
               gap: "8px",
             }}
           >
-            <div style={{ padding: "20px", display: "flex", justifyContent: "center" }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: "64px", height: "64px", opacity: 0.3, color: "#0088cc" }}>
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-              </svg>
-            </div>
+            <div style={{ fontSize: "36px" }}>💬</div>
             <div style={{ fontSize: "16px" }}>
               Chọn một cuộc trò chuyện để bắt đầu
             </div>
@@ -333,8 +329,8 @@ const ChatPage = () => {
                     selectedConversation.imageUrl ? (
                         <img src={selectedConversation.imageUrl} alt={selectedConversation.name} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }} />
                     ) : (
-                        <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "#0088cc", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: "bold" }}>
-                          {selectedConversation.name ? selectedConversation.name.substring(0, 1).toUpperCase() : "G"}
+                        <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "#0088cc", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>
+                        👥
                         </div>
                     )
                 ) : (
@@ -361,11 +357,7 @@ const ChatPage = () => {
                     }}
                     title="Cài đặt nhóm"
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: "22px", height: "22px" }}>
-                       <circle cx="12" cy="12" r="1.5"></circle>
-                       <circle cx="12" cy="5" r="1.5"></circle>
-                       <circle cx="12" cy="19" r="1.5"></circle>
-                    </svg>
+                    ⚙️
                   </button>
               )}
             </div>

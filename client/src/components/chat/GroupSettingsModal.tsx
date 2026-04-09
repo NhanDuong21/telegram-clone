@@ -18,6 +18,8 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
+    const isOwner = conversation.owner === currentUserId;
+
     // Search state
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<User[]>([]);
@@ -147,8 +149,8 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "16px", backgroundColor: "#f9f9f9", borderRadius: "8px" }}>
                     <div>
                         <label style={{ fontSize: "14px", fontWeight: 600, display: "block", marginBottom: "4px" }}>Tên nhóm</label>
-                        <input type="text" value={name} onChange={e => setName(e.target.value)} 
-                               style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", boxSizing: "border-box" }} />
+                        <input type="text" value={name} onChange={e => setName(e.target.value)} disabled={!isOwner}
+                               style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", boxSizing: "border-box", backgroundColor: !isOwner ? "#f0f0f0" : "white" }} />
                     </div>
                     <div>
                         <label style={{ fontSize: "14px", fontWeight: 600, display: "block", marginBottom: "8px" }}>Ảnh nhóm</label>
@@ -163,64 +165,74 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
                                 )}
                             </div>
                             <div style={{ flex: 1, display: "flex", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                                <input 
-                                    type="file" 
-                                    accept="image/*" 
-                                    onChange={handleFileChange}
-                                    style={{ display: "none" }} 
-                                    id="group-avatar-upload" 
-                                    disabled={isUploading}
-                                />
-                                <label 
-                                    htmlFor="group-avatar-upload" 
-                                    style={{ 
-                                        display: "inline-flex", padding: "8px 14px", border: "1px solid #0088cc", 
-                                        color: "#0088cc", borderRadius: "8px", cursor: isUploading ? "not-allowed" : "pointer",
-                                        fontSize: "13px", fontWeight: 600, opacity: isUploading ? 0.6 : 1,
-                                        alignItems: "center", gap: "6px"
-                                    }}
-                                >
-                                    {isUploading && <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,136,204,0.3)", borderTopColor: "#0088cc", borderRadius: "50%", animation: "spin 1s linear infinite" }} />}
-                                    {isUploading ? "Đang tải lên..." : "Chọn ảnh"}
-                                </label>
-                                {imageUrl && !isUploading && (
-                                    <button 
-                                        onClick={() => setImageUrl("")} 
-                                        style={{ background: "transparent", border: "none", color: "#d63031", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}
-                                    >
-                                        Xóa ảnh
-                                    </button>
+                                {isOwner ? (
+                                    <>
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            onChange={handleFileChange}
+                                            style={{ display: "none" }} 
+                                            id="group-avatar-upload" 
+                                            disabled={isUploading}
+                                        />
+                                        <label 
+                                            htmlFor="group-avatar-upload" 
+                                            style={{ 
+                                                display: "inline-flex", padding: "8px 14px", border: "1px solid #0088cc", 
+                                                color: "#0088cc", borderRadius: "8px", cursor: isUploading ? "not-allowed" : "pointer",
+                                                fontSize: "13px", fontWeight: 600, opacity: isUploading ? 0.6 : 1,
+                                                alignItems: "center", gap: "6px"
+                                            }}
+                                        >
+                                            {isUploading && <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,136,204,0.3)", borderTopColor: "#0088cc", borderRadius: "50%", animation: "spin 1s linear infinite" }} />}
+                                            {isUploading ? "Đang tải lên..." : "Chọn ảnh"}
+                                        </label>
+                                        {imageUrl && !isUploading && (
+                                            <button 
+                                                onClick={() => setImageUrl("")} 
+                                                style={{ background: "transparent", border: "none", color: "#d63031", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}
+                                            >
+                                                Xóa ảnh
+                                            </button>
+                                        )}
+                                    </>
+                                ) : (
+                                    <span style={{ fontSize: "13px", color: "#666" }}>Chỉ Owner mới có thể thay đổi ảnh</span>
                                 )}
                             </div>
                         </div>
                     </div>
-                    <button onClick={handleSaveInfo} disabled={isSaving || !name.trim()}
-                            style={{ alignSelf: "flex-end", padding: "8px 16px", backgroundColor: "#0088cc", color: "white", border: "none", borderRadius: "6px", cursor: isSaving ? "not-allowed" : "pointer" }}>
-                        {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
-                    </button>
-                </div>
-
-                <div>
-                    <h4 style={{ margin: "0 0 10px 0" }}>Thêm thành viên</h4>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                        <input type="text" placeholder="Tìm bằng username..." value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSearch()}
-                               style={{ flex: 1, padding: "8px", borderRadius: "6px", border: "1px solid #ccc" }} />
-                        <button onClick={handleSearch} disabled={isSearching} style={{ padding: "8px 16px", backgroundColor: "#0088cc", color: "white", border: "none", borderRadius: "6px", cursor: "pointer" }}>Tìm</button>
-                    </div>
-                    {results.length > 0 && (
-                        <div style={{ marginTop: "10px", border: "1px solid #eee", borderRadius: "6px", padding: "4px", maxHeight: "150px", overflowY: "auto" }}>
-                            {results.map(user => (
-                                <div key={user._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px", borderBottom: "1px solid #eee" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                        <Avatar user={user as any} size={28} />
-                                        <span>{user.username}</span>
-                                    </div>
-                                    <button onClick={() => handleAddMember(user)} disabled={opLoading} style={{ padding: "4px 8px", backgroundColor: "#00b894", color: "white", border: "none", borderRadius: "4px", fontSize: "12px", cursor: "pointer" }}>+ Thêm</button>
-                                </div>
-                            ))}
-                        </div>
+                    {isOwner && (
+                        <button onClick={handleSaveInfo} disabled={isSaving || !name.trim()}
+                                style={{ alignSelf: "flex-end", padding: "8px 16px", backgroundColor: "#0088cc", color: "white", border: "none", borderRadius: "6px", cursor: isSaving ? "not-allowed" : "pointer" }}>
+                            {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
+                        </button>
                     )}
                 </div>
+
+                {isOwner && (
+                    <div>
+                        <h4 style={{ margin: "0 0 10px 0" }}>Thêm thành viên</h4>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                            <input type="text" placeholder="Tìm bằng username..." value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSearch()}
+                                   style={{ flex: 1, padding: "8px", borderRadius: "6px", border: "1px solid #ccc" }} />
+                            <button onClick={handleSearch} disabled={isSearching} style={{ padding: "8px 16px", backgroundColor: "#0088cc", color: "white", border: "none", borderRadius: "6px", cursor: "pointer" }}>Tìm</button>
+                        </div>
+                        {results.length > 0 && (
+                            <div style={{ marginTop: "10px", border: "1px solid #eee", borderRadius: "6px", padding: "4px", maxHeight: "150px", overflowY: "auto" }}>
+                                {results.map(user => (
+                                    <div key={user._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px", borderBottom: "1px solid #eee" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                            <Avatar user={user as any} size={28} />
+                                            <span>{user.username}</span>
+                                        </div>
+                                        <button onClick={() => handleAddMember(user)} disabled={opLoading} style={{ padding: "4px 8px", backgroundColor: "#00b894", color: "white", border: "none", borderRadius: "4px", fontSize: "12px", cursor: "pointer" }}>+ Thêm</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div>
                     <h4 style={{ margin: "0 0 10px 0" }}>Thành viên ({conversation.participants.length})</h4>
@@ -229,9 +241,12 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
                             <div key={p._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px", backgroundColor: "#fdfdfd", borderRadius: "4px" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                     <Avatar user={p as any} size={32} />
-                                    <span>{p.username} {p._id === currentUserId && "(Bạn)"}</span>
+                                    <span>
+                                        {p.username} {p._id === currentUserId && "(Bạn)"}
+                                        {conversation.owner === p._id && <span style={{ marginLeft: "8px", fontSize: "11px", backgroundColor: "#3390ec", color: "white", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold" }}>Owner</span>}
+                                    </span>
                                 </div>
-                                {p._id !== currentUserId && (
+                                {isOwner && p._id !== currentUserId && (
                                     <button onClick={() => handleRemoveMember(p._id)} disabled={opLoading} style={{ padding: "4px 8px", backgroundColor: "#d63031", color: "white", border: "none", borderRadius: "4px", fontSize: "12px", cursor: "pointer" }}>Kick</button>
                                 )}
                             </div>

@@ -6,6 +6,7 @@ export interface IConversation extends Document {
     isGroup: boolean;
     name?: string;
     imageUrl?: string;
+    owner?: mongoose.Types.ObjectId;
     lastMessage?: mongoose.Types.ObjectId;   // Tin nhắn cuối cùng (để hiển thị preview)
     createdAt: Date;
     updatedAt: Date;
@@ -31,6 +32,11 @@ const conversationSchema = new Schema<IConversation>(
         imageUrl: {
             type: String,
             default: "",
+        },
+        owner: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
         },
         lastMessage: {
             type: Schema.Types.ObjectId,

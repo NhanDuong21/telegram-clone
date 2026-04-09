@@ -167,7 +167,12 @@ const CreateGroupModal = ({ onClose, onGroupCreated }: CreateGroupModalProps) =>
                             {selectedUsers.map(user => (
                                 <div key={user._id} style={{ display: "flex", alignItems: "center", gap: "6px", backgroundColor: "#e4eef7", padding: "4px 8px", borderRadius: "16px", fontSize: "12px" }}>
                                     <span>{user.username}</span>
-                                    <span onClick={() => removeUser(user._id)} style={{ cursor: "pointer", color: "#d63031", fontWeight: "bold" }}>✕</span>
+                                    <span onClick={() => removeUser(user._id)} style={{ cursor: "pointer", color: "#d63031", display: "flex", alignItems: "center" }}>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ width: "12px", height: "12px" }}>
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                    </span>
                                 </div>
                             ))}
                         </div>

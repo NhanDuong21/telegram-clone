@@ -109,7 +109,12 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
             }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <h3 style={{ margin: 0, fontSize: "20px" }}>Cài đặt nhóm</h3>
-                    <button onClick={onClose} style={{ border: "none", background: "transparent", fontSize: "20px", cursor: "pointer" }}>✕</button>
+                    <button onClick={onClose} style={{ border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center" }}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: "20px", height: "20px" }}>
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "16px", backgroundColor: "#f9f9f9", borderRadius: "8px" }}>

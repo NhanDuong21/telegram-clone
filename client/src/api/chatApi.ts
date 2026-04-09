@@ -19,6 +19,15 @@ export const createGroupConversationApi = (name: string, participantIds: string[
     axios.post(`${BASE}/conversations/group`, { name, participantIds }, getAuthHeader());
 
 
+export const updateGroupSettingsApi = (conversationId: string, data: { name?: string; imageUrl?: string }) =>
+    axios.put(`${BASE}/conversations/${conversationId}/group-settings`, data, getAuthHeader());
+
+export const addMembersApi = (conversationId: string, participantIds: string[]) =>
+    axios.put(`${BASE}/conversations/${conversationId}/members`, { participantIds }, getAuthHeader());
+
+export const removeMemberApi = (conversationId: string, memberId: string) =>
+    axios.delete(`${BASE}/conversations/${conversationId}/members/${memberId}`, getAuthHeader());
+    
 export const getMessagesApi = (conversationId: string, before?: string, limit: number = 30) => {
     let url = `${BASE}/messages/${conversationId}?limit=${limit}`;
     if (before) url += `&before=${encodeURIComponent(before)}`;

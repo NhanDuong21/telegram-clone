@@ -5,6 +5,7 @@ export interface IConversation extends Document {
     participants: mongoose.Types.ObjectId[];
     isGroup: boolean;
     name?: string;
+    imageUrl?: string;
     lastMessage?: mongoose.Types.ObjectId;   // Tin nhắn cuối cùng (để hiển thị preview)
     createdAt: Date;
     updatedAt: Date;
@@ -24,6 +25,10 @@ const conversationSchema = new Schema<IConversation>(
             default: false,
         },
         name: {
+            type: String,
+            default: "",
+        },
+        imageUrl: {
             type: String,
             default: "",
         },

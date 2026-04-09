@@ -15,6 +15,7 @@ export interface Conversation {
     participants: User[];
     isGroup?: boolean;
     name?: string;
+    imageUrl?: string;
     lastMessage?: {
         _id: string;
         text: string;
@@ -249,11 +250,15 @@ const Sidebar = ({
                         >
                             <div style={{ position: "relative", flexShrink: 0 }}>
                                 {conv.isGroup ? (
-                                    <div style={{
-                                        width: "44px", height: "44px", borderRadius: "50%",
-                                        backgroundColor: "#0088cc", color: "white", display: "flex",
-                                        alignItems: "center", justifyContent: "center", fontSize: "20px"
-                                    }}>👥</div>
+                                    conv.imageUrl ? (
+                                        <img src={conv.imageUrl} alt={conv.name} style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }} />
+                                    ) : (
+                                        <div style={{
+                                            width: "44px", height: "44px", borderRadius: "50%",
+                                            backgroundColor: "#0088cc", color: "white", display: "flex",
+                                            alignItems: "center", justifyContent: "center", fontSize: "20px"
+                                        }}>👥</div>
+                                    )
                                 ) : (
                                     other && <Avatar user={other} size={44} />
                                 )}

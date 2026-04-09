@@ -1,11 +1,14 @@
 import { Router } from "express";
 import { protect } from "../middlewares/authMiddleware";
-import { createOrGetConversation, getMyConversations, createGroupConversation } from "../controllers/conversationController";
+import { createOrGetConversation, getMyConversations, createGroupConversation, updateGroupSettings, addMembers, removeMember } from "../controllers/conversationController";
 
 const router = Router();
 
-// POST /api/conversations/group — tạo group chat
+// Group management endpoints
 router.post("/group", protect, createGroupConversation);
+router.put("/:id/group-settings", protect, updateGroupSettings);
+router.put("/:id/members", protect, addMembers);
+router.delete("/:id/members/:memberId", protect, removeMember);
 
 // POST /api/conversations — tạo hoặc lấy conversation 1-1
 router.post("/", protect, createOrGetConversation);

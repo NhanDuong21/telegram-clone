@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import Conversation from "../models/Conversation";
+import { getIO } from "../socket";
 
 // POST /api/conversations/group
 // Body: { name: string, participantIds: string[] }
@@ -36,6 +37,108 @@ export const createGroupConversation = async (req: AuthRequest, res: Response) =
         return res.status(201).json({ conversation: populated });
     } catch (error) {
         console.error("Create group error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const updateGroupSettings = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { name, imageUrl } = req.body;
+        const userId = req.user._id.toString();
+
+        const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
+        if (!conversation) return res.status(404).json({ message: "Group không tồn tại hoặc bạn không có quyền" });
+
+        if (name !== undefined) {
+            if (name.trim() === "") return res.status(400).json({ message: "Tên group không hợp lệ" });
+            conversation.name = name.trim();
+        }
+        if (imageUrl !== undefined) {
+            conversation.imageUrl = imageUrl.trim();
+        }
+
+        await conversation.save();
+        const populated = await conversation.populate("participants", "-password");
+
+        const io = getIO();
+        populated.participants.forEach((p: any) => {
+            io.to(p._id.toString()).emit("groupUpdated", populated);
+        });
+
+        return res.status(200).json({ conversation: populated });
+    } catch (error) {
+        console.error("Update group error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const addMembers = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { participantIds } = req.body;
+        const userId = req.user._id.toString();
+
+        if (!participantIds || !Array.isArray(participantIds) || participantIds.length === 0) {
+            return res.status(400).json({ message: "Danh sách member không hợp lệ" });
+        }
+
+        const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
+        if (!conversation) return res.status(404).json({ message: "Group không tồn tại hoặc bạn không có quyền" });
+
+        const currentIds = conversation.participants.map((p: any) => p.toString());
+        const newSet = new Set([...currentIds, ...participantIds]);
+
+        conversation.participants = Array.from(newSet) as any;
+        await conversation.save();
+        
+        const populated = await conversation.populate("participants", "-password");
+
+        const io = getIO();
+        populated.participants.forEach((p: any) => {
+            io.to(p._id.toString()).emit("groupUpdated", populated);
+        });
+
+        return res.status(200).json({ conversation: populated });
+    } catch (error) {
+        console.error("Add members error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const removeMember = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id, memberId } = req.params;
+        const userId = req.user._id.toString();
+
+        const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
+        if (!conversation) return res.status(404).json({ message: "Group không tồn tại hoặc bạn không có quyền" });
+
+        const currentIds = conversation.participants.map((p: any) => p.toString());
+        if (!currentIds.includes(memberId)) {
+            return res.status(400).json({ message: "Member không có trong group" });
+        }
+
+        if (currentIds.length <= 3) {
+            return res.status(400).json({ message: "Group phải có ít nhất 3 người. Không thể kick thêm." });
+        }
+
+        conversation.participants = currentIds.filter(pid => pid !== memberId) as any;
+        await conversation.save();
+
+        const populated = await conversation.populate("participants", "-password");
+
+        const io = getIO();
+        populated.participants.forEach((p: any) => {
+            io.to(p._id.toString()).emit("groupUpdated", populated);
+        });
+        
+        // Important: also emit to the member who was just removed!
+        io.to(memberId).emit("groupUpdated", populated);
+
+        return res.status(200).json({ conversation: populated });
+    } catch (error) {
+        console.error("Remove member error:", error);
         return res.status(500).json({ message: "Server error" });
     }
 };

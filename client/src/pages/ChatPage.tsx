@@ -6,6 +6,7 @@ import Sidebar, { type Conversation } from "../components/chat/Sidebar";
 import ChatBox, { type Message } from "../components/chat/ChatBox";
 import MessageInput from "../components/chat/MessageInput";
 import Avatar from "../components/common/Avatar";
+import GroupSettingsModal from "../components/chat/GroupSettingsModal";
 import EditProfileModal from "../components/profile/EditProfileModal";
 
 import { getConversationsApi, getMessagesApi } from "../api/chatApi";
@@ -20,6 +21,7 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
 
   // States for UX presence tracking
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
@@ -108,11 +110,32 @@ const ChatPage = () => {
       });
     });
 
+    socket.on("groupUpdated", (updatedGroup: Conversation) => {
+      const isStillMember = updatedGroup.participants.some(p => p._id === user?._id);
+      
+      if (!isStillMember) {
+        setConversations(prev => prev.filter(c => c._id !== updatedGroup._id));
+        if (selectedIdRef.current === updatedGroup._id) {
+          setSelectedConversationId(null);
+        }
+        return;
+      }
+      
+      setConversations(prev => {
+        const index = prev.findIndex(c => c._id === updatedGroup._id);
+        if (index === -1) {
+          return [updatedGroup, ...prev];
+        }
+        return prev.map(c => c._id === updatedGroup._id ? updatedGroup : c);
+      });
+    });
+
     return () => {
       socket.off("connect");
       socket.off("newMessage");
       socket.off("onlineUsers");
       socket.off("typing");
+      socket.off("groupUpdated");
     };
   }, [user]);
 
@@ -283,24 +306,45 @@ const ChatPage = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: "10px",
+                justifyContent: "space-between",
               }}
             >
-              {selectedConversation.isGroup ? (
-                <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "#0088cc", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>
-                  👥
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {selectedConversation.isGroup ? (
+                    selectedConversation.imageUrl ? (
+                        <img src={selectedConversation.imageUrl} alt={selectedConversation.name} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }} />
+                    ) : (
+                        <div style={{ width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "#0088cc", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>
+                        👥
+                        </div>
+                    )
+                ) : (
+                  <Avatar user={otherParticipant} size={36} />
+                )}
+                
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span>{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
+                  {selectedConversation.isGroup && (
+                      <span style={{ fontSize: "12px", color: "#666", fontWeight: "normal", marginTop: "2px" }}>
+                        {selectedConversation.participants.length} thành viên
+                      </span>
+                  )}
                 </div>
-              ) : (
-                <Avatar user={otherParticipant} size={36} />
-              )}
-              
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                 <span>{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
-                 {selectedConversation.isGroup && (
-                    <span style={{ fontSize: "12px", color: "#666", fontWeight: "normal", marginTop: "2px" }}>
-                       {selectedConversation.participants.length} thành viên
-                    </span>
-                 )}
               </div>
+
+              {selectedConversation.isGroup && (
+                  <button
+                    onClick={() => setShowGroupSettings(true)}
+                    style={{
+                        background: "transparent", border: "none", cursor: "pointer",
+                        fontSize: "20px", color: "#0088cc",
+                        padding: "4px"
+                    }}
+                    title="Cài đặt nhóm"
+                  >
+                    ⚙️
+                  </button>
+              )}
             </div>
 
             <ChatBox 
@@ -331,6 +375,17 @@ const ChatPage = () => {
               receiverId={otherParticipant?._id}
               onMessageSent={handleMessageSent}
             />
+
+            {showGroupSettings && selectedConversation.isGroup && (
+                <GroupSettingsModal
+                    conversation={selectedConversation}
+                    currentUserId={user?._id ?? ""}
+                    onClose={() => setShowGroupSettings(false)}
+                    onUpdated={(updatedConv) => {
+                        setConversations(prev => prev.map(c => c._id === updatedConv._id ? updatedConv : c));
+                    }}
+                />
+            )}
           </>
         )}
       </div>

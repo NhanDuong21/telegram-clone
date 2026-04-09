@@ -17,7 +17,12 @@ const ChatPage = () => {
   const navigate = useNavigate();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(() => {
+      if (user?._id) {
+          try { return localStorage.getItem(`tg_sel_conv_${user._id}`); } catch { return null; }
+      }
+      return null;
+  });
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -42,6 +47,7 @@ const ChatPage = () => {
 
   const handleLogout = () => {
     disconnectSocket();
+    if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
     logout();
     navigate("/login");
   };
@@ -117,6 +123,7 @@ const ChatPage = () => {
         setConversations(prev => prev.filter(c => c._id !== updatedGroup._id));
         if (selectedIdRef.current === updatedGroup._id) {
           setSelectedConversationId(null);
+          if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
         }
         return;
       }
@@ -164,12 +171,16 @@ const ChatPage = () => {
         const res = await getMessagesApi(selectedConversationId);
         setMessages(res.data.messages);
         setHasMore(res.data.hasMore);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to load messages:", error);
+        if (error.response?.status === 404) {
+            setSelectedConversationId(null);
+            if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
+        }
       }
     };
     fetchMessages();
-  }, [selectedConversationId]);
+  }, [selectedConversationId, user?._id]);
 
   const loadOlderMessages = async () => {
     if (!selectedConversationId || messages.length === 0 || loadingMore || !hasMore) return;
@@ -197,6 +208,9 @@ const ChatPage = () => {
 
   const handleSelectConversation = (conv: Conversation) => {
     setSelectedConversationId(conv._id);
+    if (user?._id) {
+        localStorage.setItem(`tg_sel_conv_${user._id}`, conv._id);
+    }
   };
 
   const handleMessageSent = (message: Message) => {

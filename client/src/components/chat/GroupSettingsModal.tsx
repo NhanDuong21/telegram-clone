@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { searchUsersApi } from "../../api/userApi";
-import { updateGroupSettingsApi, addMembersApi, removeMemberApi, uploadImageApi } from "../../api/chatApi";
+import { updateGroupSettingsApi, addMembersApi, removeMemberApi, uploadImageApi, deleteGroupApi } from "../../api/chatApi";
 import Avatar from "../common/Avatar";
 import type { Conversation } from "./Sidebar";
 import type { User } from "./CreateGroupModal";
@@ -118,6 +118,21 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
             onUpdated(res.data.conversation);
         } catch (error) {
             console.error("Remove member failed", error);
+        } finally {
+            setOpLoading(false);
+        }
+    };
+
+    const handleDeleteGroup = async () => {
+        if (!confirm("CẢNH BÁO: Bọn có chắc chắn muốn XÓA VĨNH VIỄN nhóm này không? Hành động này không thể hoàn tác.")) return;
+        
+        setOpLoading(true);
+        try {
+            await deleteGroupApi(conversation._id);
+            onClose();
+        } catch (error: any) {
+            console.error("Delete group failed", error);
+            alert(error.response?.data?.message || "Không thể xóa nhóm");
         } finally {
             setOpLoading(false);
         }
@@ -253,6 +268,14 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
                         ))}
                     </div>
                 </div>
+
+                {isOwner && (
+                    <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #ffcccc", display: "flex", justifyContent: "center" }}>
+                        <button onClick={handleDeleteGroup} disabled={opLoading} style={{ padding: "10px 24px", backgroundColor: "#ff4d4f", color: "white", border: "none", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", width: "100%", opacity: opLoading ? 0.6 : 1 }}>
+                            {opLoading ? "Đang xử lý..." : "Xóa vĩnh viễn Group"}
+                        </button>
+                    </div>
+                )}
 
             </div>
         </div>

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { Response } from "express";
 import { AuthRequest } from "../middlewares/authMiddleware";
 import Conversation from "../models/Conversation";
+import Message from "../models/Message";
 import { getIO } from "../socket";
 
 // POST /api/conversations/group
@@ -157,6 +158,37 @@ export const removeMember = async (req: AuthRequest, res: Response) => {
         return res.status(200).json({ conversation: populated });
     } catch (error) {
         console.error("Remove member error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const deleteGroupConversation = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id.toString();
+
+        const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
+        if (!conversation) return res.status(404).json({ message: "Group không tồn tại hoặc bạn không có quyền" });
+
+        // Only group owner can delete
+        if (conversation.owner && conversation.owner.toString() !== userId) {
+            return res.status(403).json({ message: "Chỉ Group Owner mới có quyền xóa vĩnh viễn nhóm" });
+        }
+
+        const participantIds = conversation.participants.map(p => p.toString());
+
+        // Delete all grouped messages and the group itself
+        await Message.deleteMany({ conversationId: id });
+        await Conversation.findByIdAndDelete(id);
+
+        const io = getIO();
+        participantIds.forEach(p => {
+            io.to(p).emit("groupDeleted", { conversationId: id });
+        });
+
+        return res.status(200).json({ message: "Xóa group thành công", deletedConversationId: id });
+    } catch (error) {
+        console.error("Delete group error:", error);
         return res.status(500).json({ message: "Server error" });
     }
 };

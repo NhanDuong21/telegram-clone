@@ -137,12 +137,21 @@ const ChatPage = () => {
       });
     });
 
+    socket.on("groupDeleted", ({ conversationId }: { conversationId: string }) => {
+      setConversations(prev => prev.filter(c => c._id !== conversationId));
+      if (selectedIdRef.current === conversationId) {
+        setSelectedConversationId(null);
+        if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
+      }
+    });
+
     return () => {
       socket.off("connect");
       socket.off("newMessage");
       socket.off("onlineUsers");
       socket.off("typing");
       socket.off("groupUpdated");
+      socket.off("groupDeleted");
     };
   }, [user]);
 
@@ -357,7 +366,7 @@ const ChatPage = () => {
                     }}
                     title="Cài đặt nhóm"
                   >
-                    ⚙️
+                    =
                   </button>
               )}
             </div>

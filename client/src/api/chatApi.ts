@@ -27,6 +27,9 @@ export const addMembersApi = (conversationId: string, participantIds: string[]) 
 
 export const removeMemberApi = (conversationId: string, memberId: string) =>
     axios.delete(`${BASE}/conversations/${conversationId}/members/${memberId}`, getAuthHeader());
+
+export const deleteGroupApi = (conversationId: string) =>
+    axios.delete(`${BASE}/conversations/${conversationId}/group`, getAuthHeader());
     
 export const getMessagesApi = (conversationId: string, before?: string, limit: number = 30) => {
     let url = `${BASE}/messages/${conversationId}?limit=${limit}`;

@@ -92,7 +92,122 @@ body {
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
+  to { transform: rotate(360deg); }
+}
+
+/* Telegram Auth Redesign Classes */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  background: white;
+  padding: 40px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* very light shadow */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 480px) {
+  .auth-page {
+    background-color: white;
+    align-items: flex-start;
   }
+  .auth-card {
+    box-shadow: none;
+    padding: 30px 20px;
+    max-width: 100%;
+  }
+}
+
+.auth-msg-error {
+  width: 100%;
+  background: #fff2f2;
+  color: #e53935;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.auth-msg-success {
+  width: 100%;
+  background: #f1f8e9;
+  color: #43a047;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #dfe1e5;
+  border-radius: 10px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.auth-input:focus {
+  border-color: #3390ec;
+  box-shadow: inset 0 0 0 1px #3390ec;
+}
+
+.auth-button {
+  width: 100%;
+  padding: 14px;
+  background-color: #3390ec;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 8px;
+}
+
+.auth-button:hover {
+  background-color: #2b7bc9;
+}
+
+.auth-button:disabled {
+  background-color: #9cbde2;
+  cursor: not-allowed;
+}
+
+.auth-link {
+  color: #3390ec;
+  background: transparent;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 24px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
 }

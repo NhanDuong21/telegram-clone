@@ -24,54 +24,67 @@ const LoginPage = () => {
       navigate("/");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(err.response?.data?.message || "Đăng nhập thất bại");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm flex flex-col gap-4">
-        <h2 className="text-2xl font-bold text-center text-gray-800">Login</h2>
+    <div className="auth-page">
+      <div className="auth-card">
+        {/* Telegram paper plane logo */}
+        <div style={{ width: "120px", height: "120px", borderRadius: "50%", backgroundColor: "#3390ec", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "24px" }}>
+            <svg viewBox="0 0 24 24" style={{ width: "64px", height: "64px", fill: "white", marginLeft: "-4px" }}>
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+            </svg>
+        </div>
+
+        <h2 style={{ fontSize: "24px", fontWeight: "600", color: "#222", marginBottom: "8px", marginTop: "0" }}>Đăng nhập vào Telegram</h2>
+        <p style={{ fontSize: "15px", color: "#707579", textAlign: "center", marginBottom: "32px", lineHeight: "1.4" }}>
+            Vui lòng nhập Email và Mật khẩu<br />của bạn.
+        </p>
         
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
+          <div className="auth-msg-error">
             {error}
           </div>
         )}
 
-        <input
-          className="border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-        />
+        <div className="auth-form">
+            <div className="auth-input-group">
+                <input
+                className="auth-input"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                />
+            </div>
 
-        <input
-          className="border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-        />
+            <div className="auth-input-group">
+                <input
+                className="auth-input"
+                placeholder="Password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                />
+            </div>
 
-        <button 
-          className="bg-blue-500 text-white rounded-lg p-2.5 font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          onClick={handleLogin}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Logging in..." : "Login"}
-        </button>
-        
-        <div className="text-center text-sm text-gray-500 mt-2">
-          Don't have an account?{" "}
-          <button onClick={() => navigate("/register")} className="text-blue-500 hover:underline">
-            Register here
-          </button>
+            <button 
+                className="auth-button"
+                onClick={handleLogin}
+                disabled={isSubmitting}
+            >
+                {isSubmitting ? "Đang đăng nhập..." : "ĐĂNG NHẬP"}
+            </button>
         </div>
+        
+        <button onClick={() => navigate("/register")} className="auth-link">
+            Tạo tài khoản mới
+        </button>
       </div>
     </div>
   );

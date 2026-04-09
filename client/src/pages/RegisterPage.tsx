@@ -24,7 +24,7 @@ const RegisterPage = () => {
     try {
       const res = await registerApi({ username, email, password });
       
-      setSuccessMessage("Registration successful! Logging you in...");
+      setSuccessMessage("Đăng ký thành công! Đang đăng nhập...");
       
       // Backend authController's register already returns { message, user, token }
       // Auto-login for better UX
@@ -37,68 +37,82 @@ const RegisterPage = () => {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err.response?.data?.message || "Registration failed");
+      setError(err.response?.data?.message || "Đăng ký thất bại");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm flex flex-col gap-4">
-        <h2 className="text-2xl font-bold text-center text-gray-800">Register</h2>
+    <div className="auth-page">
+      <div className="auth-card">
+        {/* Telegram paper plane logo */}
+        <div style={{ width: "120px", height: "120px", borderRadius: "50%", backgroundColor: "#3390ec", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "24px" }}>
+            <svg viewBox="0 0 24 24" style={{ width: "64px", height: "64px", fill: "white", marginLeft: "-4px" }}>
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+            </svg>
+        </div>
+
+        <h2 style={{ fontSize: "24px", fontWeight: "600", color: "#222", marginBottom: "8px", marginTop: "0" }}>Tạo tài khoản mới</h2>
+        <p style={{ fontSize: "15px", color: "#707579", textAlign: "center", marginBottom: "32px", lineHeight: "1.4" }}>
+            Vui lòng nhập tên hiển thị và thông tin đăng nhập của bạn.
+        </p>
         
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
+          <div className="auth-msg-error">
             {error}
           </div>
         )}
 
         {successMessage && (
-          <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm text-center">
+          <div className="auth-msg-success">
             {successMessage}
           </div>
         )}
 
-        <input
-          className="border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleRegister()}
-        />
+        <div className="auth-form">
+            <div className="auth-input-group">
+                <input
+                className="auth-input"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleRegister()}
+                />
+            </div>
+            <div className="auth-input-group">
+                <input
+                className="auth-input"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleRegister()}
+                />
+            </div>
 
-        <input
-          className="border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleRegister()}
-        />
+            <div className="auth-input-group">
+                <input
+                className="auth-input"
+                placeholder="Password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleRegister()}
+                />
+            </div>
 
-        <input
-          className="border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleRegister()}
-        />
-
-        <button 
-          className="bg-blue-500 text-white rounded-lg p-2.5 font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          onClick={handleRegister}
-          disabled={isSubmitting || !!successMessage}
-        >
-          {isSubmitting ? "Creating account..." : "Register"}
-        </button>
-        
-        <div className="text-center text-sm text-gray-500 mt-2">
-          Already have an account?{" "}
-          <button onClick={() => navigate("/login")} className="text-blue-500 hover:underline">
-            Login here
-          </button>
+            <button 
+                className="auth-button"
+                onClick={handleRegister}
+                disabled={isSubmitting || !!successMessage}
+            >
+                {isSubmitting ? "Đang tạo..." : "ĐĂNG KÝ"}
+            </button>
         </div>
+        
+        <button onClick={() => navigate("/login")} className="auth-link">
+            Đã có tài khoản? Đăng nhập
+        </button>
       </div>
     </div>
   );

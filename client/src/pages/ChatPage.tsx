@@ -36,7 +36,7 @@ const ChatPage = () => {
   useEffect(() => {
     if (!user) return;
 
-    const socket = connectSocket(user._id);
+    const socket = connectSocket();
 
     socket.on("newMessage", (message: Message) => {
       const convId = (message as any).conversationId;

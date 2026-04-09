@@ -4,16 +4,32 @@ const SERVER_URL = "http://localhost:5000";
 
 let socket: Socket | null = null;
 
-export const connectSocket = (userId: string): Socket => {
+/**
+ * Connect to Socket.IO server with JWT authentication.
+ * Token is sent via handshake auth — server verifies it before allowing connection.
+ * No need to emit "join" — server extracts userId from token automatically.
+ */
+export const connectSocket = (): Socket => {
     if (socket && socket.connected) {
         return socket;
     }
 
-    socket = io(SERVER_URL);
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        throw new Error("Cannot connect socket: no auth token");
+    }
+
+    socket = io(SERVER_URL, {
+        auth: { token },
+    });
 
     socket.on("connect", () => {
         console.log("Socket connected:", socket?.id);
-        socket?.emit("join", userId);
+    });
+
+    socket.on("connect_error", (err) => {
+        console.error("Socket auth failed:", err.message);
     });
 
     socket.on("disconnect", () => {

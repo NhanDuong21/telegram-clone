@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 
 export interface Message {
     _id: string;
+    conversationId: string;
     text: string;
     sender: {
         _id: string;

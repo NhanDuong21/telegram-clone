@@ -58,7 +58,7 @@ const ChatPage = () => {
     });
 
     socket.on("newMessage", (message: Message) => {
-      const convId = (message as any).conversationId;
+      const convId = message.conversationId;
 
       // Append message to chat if this conversation is currently open
       if (selectedIdRef.current === convId) {

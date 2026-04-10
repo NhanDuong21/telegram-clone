@@ -8,7 +8,13 @@ import messageRoutes from "./routes/messageRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
 const app = express();
 
-app.use(cors());
+app.use(
+    cors({
+        origin: process.env.CLIENT_URL || "*",
+        credentials: true,
+    })
+);
+
 app.use(express.json());
 
 // Serve uploads folder as static

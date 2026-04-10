@@ -1,6 +1,4 @@
-import axios from "axios";
-
-const BASE = "http://localhost:5000/api";
+import axiosClient from "./axiosClient";
 
 const getAuthHeader = () => ({
     headers: {
@@ -8,51 +6,81 @@ const getAuthHeader = () => ({
     },
 });
 
-
 export const getConversationsApi = () =>
-    axios.get(`${BASE}/conversations`, getAuthHeader());
+    axiosClient.get(`/conversations`, getAuthHeader());
 
 export const createOrGetConversationApi = (receiverId: string) =>
-    axios.post(`${BASE}/conversations`, { receiverId }, getAuthHeader());
+    axiosClient.post(`/conversations`, { receiverId }, getAuthHeader());
 
-export const createGroupConversationApi = (name: string, participantIds: string[]) =>
-    axios.post(`${BASE}/conversations/group`, { name, participantIds }, getAuthHeader());
+export const createGroupConversationApi = (
+    name: string,
+    participantIds: string[]
+) =>
+    axiosClient.post(
+        `/conversations/group`,
+        { name, participantIds },
+        getAuthHeader()
+    );
 
-
-export const updateGroupSettingsApi = (conversationId: string, data: { name?: string; imageUrl?: string }) =>
-    axios.put(`${BASE}/conversations/${conversationId}/group-settings`, data, getAuthHeader());
+export const updateGroupSettingsApi = (
+    conversationId: string,
+    data: { name?: string; imageUrl?: string }
+) =>
+    axiosClient.put(
+        `/conversations/${conversationId}/group-settings`,
+        data,
+        getAuthHeader()
+    );
 
 export const addMembersApi = (conversationId: string, participantIds: string[]) =>
-    axios.put(`${BASE}/conversations/${conversationId}/members`, { participantIds }, getAuthHeader());
+    axiosClient.put(
+        `/conversations/${conversationId}/members`,
+        { participantIds },
+        getAuthHeader()
+    );
 
 export const removeMemberApi = (conversationId: string, memberId: string) =>
-    axios.delete(`${BASE}/conversations/${conversationId}/members/${memberId}`, getAuthHeader());
+    axiosClient.delete(
+        `/conversations/${conversationId}/members/${memberId}`,
+        getAuthHeader()
+    );
 
 export const deleteGroupApi = (conversationId: string) =>
-    axios.delete(`${BASE}/conversations/${conversationId}/group`, getAuthHeader());
-    
+    axiosClient.delete(`/conversations/${conversationId}/group`, getAuthHeader());
+
 export const clearChatApi = (conversationId: string) =>
-    axios.delete(`${BASE}/conversations/${conversationId}/messages`, getAuthHeader());
+    axiosClient.delete(
+        `/conversations/${conversationId}/messages`,
+        getAuthHeader()
+    );
 
 export const deleteConversationApi = (conversationId: string) =>
-    axios.delete(`${BASE}/conversations/${conversationId}`, getAuthHeader());
+    axiosClient.delete(`/conversations/${conversationId}`, getAuthHeader());
 
-export const getMessagesApi = (conversationId: string, before?: string, limit: number = 30) => {
-    let url = `${BASE}/messages/${conversationId}?limit=${limit}`;
+export const getMessagesApi = (
+    conversationId: string,
+    before?: string,
+    limit: number = 30
+) => {
+    let url = `/messages/${conversationId}?limit=${limit}`;
     if (before) url += `&before=${encodeURIComponent(before)}`;
-    return axios.get(url, getAuthHeader());
+    return axiosClient.get(url, getAuthHeader());
 };
 
-export const sendMessageApi = (conversationId: string, data: { text?: string; imageUrl?: string }) =>
-    axios.post(`${BASE}/messages`, { conversationId, ...data }, getAuthHeader());
+export const sendMessageApi = (
+    conversationId: string,
+    data: { text?: string; imageUrl?: string }
+) =>
+    axiosClient.post(`/messages`, { conversationId, ...data }, getAuthHeader());
 
 export const uploadImageApi = (file: File) => {
     const formData = new FormData();
     formData.append("image", file);
-    return axios.post(`${BASE}/upload`, formData, {
+
+    return axiosClient.post(`/upload`, formData, {
         headers: {
             ...getAuthHeader().headers,
-            "Content-Type": "multipart/form-data"
-        }
+            "Content-Type": "multipart/form-data",
+        },
     });
 };

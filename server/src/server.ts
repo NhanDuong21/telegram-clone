@@ -7,14 +7,14 @@ import connectDB from "./config/db";
 import { initSocket } from "./socket";
 
 const PORT = process.env.PORT || 5000;
-
-const startServer = async () => {
-    try {
-        await connectDB();
-        console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
+     console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
         console.log("JWT_SECRET exists:", !!process.env.JWT_SECRET);
         console.log("CLIENT_URL exists:", !!process.env.CLIENT_URL);
         console.log("PORT:", process.env.PORT);
+const startServer = async () => {
+    try {
+        await connectDB();
+   
         const httpServer = http.createServer(app);
         initSocket(httpServer);
 

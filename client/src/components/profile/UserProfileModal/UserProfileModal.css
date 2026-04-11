@@ -11,7 +11,7 @@
 }
 
 .profile-modal {
-    background-color: #18222d;
+    background-color: #17212b;
     border: 1px solid rgba(255, 255, 255, 0.08);
     width: 100%;
     max-width: 400px;
@@ -65,7 +65,7 @@
 
 .profile-avatar-inner {
     padding: 4px;
-    background-color: #18222d;
+    background-color: #17212b;
     border-radius: 50%;
 }
 
@@ -223,7 +223,7 @@
 
 
 .loading-modal {
-    background-color: #18222d;
+    background-color: #17212b;
     padding: 32px;
     border-radius: 16px;
     display: flex;

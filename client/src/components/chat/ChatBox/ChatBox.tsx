@@ -78,27 +78,26 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                                 className="message-avatar"
                                 onClick={() => onProfileClick?.(msg.sender._id)}
                             >
-                                {msg.sender.avatar ? (
+                                {(msg.sender?.avatar || (msg as any).senderId?.avatar) ? (
                                     <img 
-                                        src={msg.sender.avatar} 
-                                        alt={msg.sender.username} 
-                                        className="w-full h-full object-cover"
+                                        src={msg.sender?.avatar || (msg as any).senderId?.avatar} 
+                                        alt={msg.sender?.username || "Avatar"} 
+                                        className="message-avatar-img"
                                         onError={(e) => {
-                                            // replace broken image with fallback div
                                             const target = e.currentTarget;
                                             target.style.display = 'none';
                                             const parent = target.parentElement;
                                             if (parent) {
                                                 const fallback = document.createElement('div');
                                                 fallback.className = 'message-avatar-fallback';
-                                                fallback.innerText = msg.sender.username.substring(0, 1).toUpperCase();
+                                                fallback.innerText = (msg.sender?.username || "?").substring(0, 1).toUpperCase();
                                                 parent.appendChild(fallback);
                                             }
                                         }}
                                     />
                                 ) : (
                                     <div className="message-avatar-fallback">
-                                        {msg.sender.username.substring(0, 1).toUpperCase()}
+                                        {(msg.sender?.username || "?").substring(0, 1).toUpperCase()}
                                     </div>
                                 )}
                             </div>

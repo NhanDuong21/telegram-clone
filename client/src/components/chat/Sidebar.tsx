@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { searchUsersApi } from "../../api/userApi";
 import { createOrGetConversationApi } from "../../api/chatApi";
 import Avatar from "../common/Avatar";
@@ -29,6 +29,7 @@ interface SidebarProps {
     selectedId: string | null;
     currentUserId: string;
     onlineUsers: string[];
+    unreadCounts: Record<string, number>;
     onSelectConversation: (conv: Conversation) => void;
     onConversationCreated: (conv: Conversation) => void;
 }
@@ -38,6 +39,7 @@ const Sidebar = ({
     selectedId,
     currentUserId,
     onlineUsers,
+    unreadCounts,
     onSelectConversation,
     onConversationCreated,
 }: SidebarProps) => {
@@ -47,8 +49,11 @@ const Sidebar = ({
     const [startingChat, setStartingChat] = useState<string | null>(null);
     const [showGroupModal, setShowGroupModal] = useState(false);
 
-    const handleSearch = async () => {
-        const trimmed = query.trim();
+    // Debounce timer ID
+    const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleSearch = async (searchTerm: string) => {
+        const trimmed = searchTerm.trim();
         if (!trimmed) {
             setResults([]);
             return;
@@ -65,8 +70,14 @@ const Sidebar = ({
         }
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter") handleSearch();
+    const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        setQuery(val);
+
+        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+        searchTimeout.current = setTimeout(() => {
+            handleSearch(val);
+        }, 300);
     };
 
     const handleStartChat = async (user: User) => {
@@ -97,8 +108,7 @@ const Sidebar = ({
                         type="text"
                         placeholder="Tìm user..."
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        onKeyDown={handleKeyDown}
+                        onChange={handleQueryChange}
                         style={{
                             flex: 1,
                             padding: "9px 12px",
@@ -112,27 +122,6 @@ const Sidebar = ({
                         onFocus={(e) => { e.currentTarget.style.borderColor = "#0088cc"; }}
                         onBlur={(e) => { e.currentTarget.style.borderColor = "#dce1e6"; }}
                     />
-                    <button
-                        onClick={handleSearch}
-                        style={{
-                            padding: "8px",
-                            borderRadius: "20px",
-                            border: "none",
-                            background: "transparent",
-                            color: "#0088cc",
-                            cursor: "pointer",
-                            fontSize: "16px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                        title="Tìm kiếm"
-                    >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: "16px", height: "16px" }}>
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                    </button>
                 </div>
                 <button
                     onClick={() => setShowGroupModal(true)}
@@ -289,13 +278,35 @@ const Sidebar = ({
                                 )}
                             </div>
                             <div style={{ overflow: "hidden", flex: 1 }}>
-                                <div style={{ fontWeight: 600, fontSize: "14px", color: "#1a1a2e" }}>
-                                    {conv.isGroup ? conv.name : (other?.username ?? "Unknown")}
+                                <div style={{ 
+                                    fontWeight: unreadCounts[conv._id] > 0 ? 800 : 600, 
+                                    fontSize: "14px", 
+                                    color: unreadCounts[conv._id] > 0 ? "#0088cc" : "#1a1a2e",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center"
+                                }}>
+                                    <span>{conv.isGroup ? conv.name : (other?.username ?? "Unknown")}</span>
+                                    {unreadCounts[conv._id] > 0 && (
+                                        <div style={{
+                                            background: "#0088cc",
+                                            color: "white",
+                                            fontSize: "11px",
+                                            fontWeight: "bold",
+                                            borderRadius: "10px",
+                                            padding: "2px 6px",
+                                            minWidth: "18px",
+                                            textAlign: "center"
+                                        }}>
+                                            {unreadCounts[conv._id]}
+                                        </div>
+                                    )}
                                 </div>
                                 <div
                                     style={{
                                         fontSize: "12px",
-                                        color: "#8a9bae",
+                                        color: unreadCounts[conv._id] > 0 ? "#1a1a2e" : "#8a9bae",
+                                        fontWeight: unreadCounts[conv._id] > 0 ? 600 : "normal",
                                         whiteSpace: "nowrap",
                                         overflow: "hidden",
                                         textOverflow: "ellipsis",

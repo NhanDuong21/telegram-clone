@@ -38,6 +38,7 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
 
@@ -95,6 +96,12 @@ const ChatPage = () => {
           if (prev.some((m) => m._id === message._id)) return prev;
           return [...prev, message];
         });
+      } else {
+        // Increment unread count for sidebar badge
+        setUnreadCounts((prev) => ({
+            ...prev,
+            [convId]: (prev[convId] || 0) + 1
+        }));
       }
 
       // Update sidebar: known conversation → update lastMessage in-place
@@ -323,15 +330,19 @@ const ChatPage = () => {
 
   const handleSelectConversation = (conv: Conversation) => {
     setSelectedConversationId(conv._id);
+    setUnreadCounts((prev) => {
+        const copy = { ...prev };
+        delete copy[conv._id];
+        return copy;
+    });
     if (user?._id) {
       localStorage.setItem(`tg_sel_conv_${user._id}`, conv._id);
     }
   };
 
   const handleMessageSent = (message: Message) => {
-    // Add us as having read our own message safely
-    const sentMsg = { ...message, readBy: [user?._id] };
-    setMessages((prev) => [...prev, sentMsg]);
+    // Only rely on Socket.IO for self-appending now to completely prevent duplicates
+    // Removing the optimistic `setMessages` override from here!
 
     if (selectedConversationId) {
       setConversations((prev) =>
@@ -339,7 +350,7 @@ const ChatPage = () => {
           c._id === selectedConversationId
             ? {
                 ...c,
-                lastMessage: { _id: sentMsg._id, text: sentMsg.text ?? "" },
+                lastMessage: { _id: message._id, text: message.text ?? "" },
               }
             : c,
         ),
@@ -422,6 +433,7 @@ const ChatPage = () => {
           selectedId={selectedConversationId}
           currentUserId={user?._id ?? ""}
           onlineUsers={onlineUsers}
+          unreadCounts={unreadCounts}
           onSelectConversation={handleSelectConversation}
           onConversationCreated={handleConversationCreated}
         />

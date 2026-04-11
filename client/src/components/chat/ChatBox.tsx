@@ -31,14 +31,23 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
     const bottomRef = useRef<HTMLDivElement>(null);
     const lastMessageId = useRef<string | null>(null);
 
+    const prevConvId = useRef<string | null>(null);
+
     useEffect(() => {
         if (messages.length === 0) {
             lastMessageId.current = null;
             return;
         }
+
+        const currentConvId = messages[0].conversationId;
+        const isSwitch = prevConvId.current !== currentConvId;
+        if (isSwitch) {
+            prevConvId.current = currentConvId;
+        }
+
         const currentLastMessage = messages[messages.length - 1];
         if (currentLastMessage._id !== lastMessageId.current) {
-            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+            bottomRef.current?.scrollIntoView({ behavior: isSwitch ? "auto" : "smooth" });
             lastMessageId.current = currentLastMessage._id;
         }
     }, [messages]);

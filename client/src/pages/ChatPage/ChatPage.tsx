@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +14,7 @@ import UserProfileModal from "../../components/profile/UserProfileModal/UserProf
 import { disconnectSocket, getSocket } from "../../socket";
 import { useChatSocket } from "../../hooks/useChatSocket";
 import { useChatActions } from "../../hooks/useChatActions";
-import type { Conversation, Message } from "../../types/chat";
+import type { Conversation, Message, User } from "../../types";
 import { SOCKET_EVENTS } from "../../constants/socketEvents";
 import './ChatPage.css';
 
@@ -243,7 +242,7 @@ const ChatPage = () => {
                   <TypingDots />
                   <span className="ml-2">
                     {Array.from(typingUsers)
-                      .map(id => selectedConversation.participants.find(p => p._id === id)?.username)
+                      .map(id => selectedConversation.participants.find((p: User) => p._id === id)?.username)
                       .filter(Boolean).join(", ")} đang soạn tin...
                   </span>
                 </div>

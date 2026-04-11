@@ -1,4 +1,4 @@
-import Message from "../models/Message";
+import Message, { IMessage } from "../models/Message";
 import Conversation from "../models/Conversation";
 import { getIO } from "../socket";
 import { SOCKET_EVENTS } from "../utils/socketEvents";
@@ -42,7 +42,7 @@ export const getMessagesService = async (conversationId: string, userId: string,
         throw new Error("Conversation không tồn tại");
     }
 
-    const query: any = { conversationId };
+    const query: { conversationId: string; createdAt?: { $lt: Date } } = { conversationId };
     if (before) {
         query.createdAt = { $lt: new Date(before) };
     }

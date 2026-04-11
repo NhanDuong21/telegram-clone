@@ -5,7 +5,7 @@ import * as conversationService from "../services/conversationService";
 export const createGroupConversation = async (req: AuthRequest, res: Response) => {
     try {
         const { name, participantIds } = req.body;
-        const senderId = req.user._id.toString();
+        const senderId = req.user!._id.toString();
 
         if (!name || name.trim() === "") {
             return res.status(400).json({ message: "Tên nhóm là bắt buộc" });
@@ -17,9 +17,10 @@ export const createGroupConversation = async (req: AuthRequest, res: Response) =
 
         const conversation = await conversationService.createGroupService(name, participantIds, senderId);
         return res.status(201).json({ conversation });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Create group error:", error);
-        return res.status(error.message.includes("ít nhất 3") ? 400 : 500).json({ message: error.message || "Server error" });
+        const err = error as Error;
+        return res.status(err.message.includes("ít nhất 3") ? 400 : 500).json({ message: err.message || "Server error" });
     }
 };
 
@@ -31,10 +32,11 @@ export const updateGroupSettings = async (req: AuthRequest, res: Response) => {
 
         const conversation = await conversationService.updateGroupSettingsService(id as string, userId, { name, imageUrl });
         return res.status(200).json({ conversation });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Update group error:", error);
-        const status = error.message.includes("không tồn tại") ? 404 : error.message.includes("không có quyền") ? 403 : 400;
-        return res.status(status).json({ message: error.message || "Server error" });
+        const err = error as Error;
+        const status = err.message.includes("không tồn tại") ? 404 : err.message.includes("không có quyền") ? 403 : 400;
+        return res.status(status).json({ message: err.message || "Server error" });
     }
 };
 
@@ -50,9 +52,10 @@ export const addMembers = async (req: AuthRequest, res: Response) => {
 
         const conversation = await conversationService.addMembersService(id as string, userId, participantIds);
         return res.status(200).json({ conversation });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Add members error:", error);
-        return res.status(500).json({ message: error.message || "Server error" });
+        const err = error as Error;
+        return res.status(500).json({ message: err.message || "Server error" });
     }
 };
 
@@ -63,9 +66,10 @@ export const removeMember = async (req: AuthRequest, res: Response) => {
 
         const conversation = await conversationService.removeMemberService(id as string, userId, memberId as string);
         return res.status(200).json({ conversation });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Remove member error:", error);
-        return res.status(400).json({ message: error.message || "Server error" });
+        const err = error as Error;
+        return res.status(400).json({ message: err.message || "Server error" });
     }
 };
 
@@ -76,9 +80,10 @@ export const deleteGroupConversation = async (req: AuthRequest, res: Response) =
 
         const deletedId = await conversationService.deleteGroupService(id as string, userId);
         return res.status(200).json({ message: "Xóa group thành công", deletedConversationId: deletedId });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Delete group error:", error);
-        return res.status(500).json({ message: error.message || "Server error" });
+        const err = error as Error;
+        return res.status(500).json({ message: err.message || "Server error" });
     }
 };
 
@@ -93,9 +98,10 @@ export const createOrGetConversation = async (req: AuthRequest, res: Response) =
 
         const conversation = await conversationService.createOrGetConversationService(senderId, receiverId);
         return res.status(201).json({ conversation });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Create conversation error:", error);
-        return res.status(400).json({ message: error.message || "Server error" });
+        const err = error as Error;
+        return res.status(400).json({ message: err.message || "Server error" });
     }
 };
 
@@ -104,7 +110,7 @@ export const getMyConversations = async (req: AuthRequest, res: Response) => {
         const userId = req.user._id.toString();
         const conversations = await conversationService.getMyConversationsService(userId);
         return res.status(200).json({ conversations });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Get conversations error:", error);
         return res.status(500).json({ message: "Server error" });
     }
@@ -117,9 +123,10 @@ export const clearChat = async (req: AuthRequest, res: Response) => {
 
         const clearedId = await conversationService.clearChatService(id as string, userId);
         return res.status(200).json({ message: "Đã xóa toàn bộ tin nhắn", clearedConversationId: clearedId });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Clear chat error:", error);
-        return res.status(500).json({ message: error.message || "Server error" });
+        const err = error as Error;
+        return res.status(500).json({ message: err.message || "Server error" });
     }
 };
 
@@ -130,8 +137,9 @@ export const deleteConversation = async (req: AuthRequest, res: Response) => {
 
         const deletedId = await conversationService.deleteConversationService(id as string, userId);
         return res.status(200).json({ message: "Đã xóa hiển thị chat", deletedConversationId: deletedId });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Delete conversation error:", error);
-        return res.status(500).json({ message: error.message || "Server error" });
+        const err = error as Error;
+        return res.status(500).json({ message: err.message || "Server error" });
     }
 };

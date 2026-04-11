@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-export interface IUser extends Document {
+export interface IUser extends mongoose.Document {
     username: string;
     email: string;
     password: string;

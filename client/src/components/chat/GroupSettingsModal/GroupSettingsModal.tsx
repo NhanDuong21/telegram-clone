@@ -3,7 +3,7 @@ import { useState } from "react";
 import { searchUsersApi } from "../../../api/userApi";
 import { updateGroupSettingsApi, addMembersApi, removeMemberApi, uploadImageApi, deleteGroupApi } from "../../../api/chatApi";
 import Avatar from "../../common/Avatar";
-import type { Conversation, User } from "../../../types/chat";
+import type { Conversation, User } from "../../../types";
 import './GroupSettingsModal.css';
 
 interface GroupSettingsModalProps {
@@ -58,9 +58,10 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
         try {
             const res = await uploadImageApi(file);
             setImageUrl(res.data.imageUrl);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Upload failed:", error);
-            alert(error.response?.data?.message || "Lỗi upload ảnh.");
+            const err = error as { response?: { data?: { message?: string } } };
+            alert(err.response?.data?.message || "Lỗi upload ảnh.");
         } finally {
             setIsUploading(false);
             e.target.value = "";
@@ -127,9 +128,10 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
         try {
             await deleteGroupApi(conversation._id);
             onClose();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Delete group failed", error);
-            alert(error.response?.data?.message || "Không thể xóa nhóm");
+            const err = error as { response?: { data?: { message?: string } } };
+            alert(err.response?.data?.message || "Không thể xóa nhóm");
         } finally {
             setOpLoading(false);
         }
@@ -277,7 +279,7 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
                         {conversation.participants.map(p => (
                             <div key={p._id} className="member-item">
                                 <div className="member-main-info">
-                                    <Avatar user={p as any} size={32} />
+                                    <Avatar user={p} size={32} />
                                     <span className="user-name">
                                         {p.username} {p._id === currentUserId && "(Bạn)"}
                                         {conversation.owner === p._id && <span className="owner-badge">Owner</span>}

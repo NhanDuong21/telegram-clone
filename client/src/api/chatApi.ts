@@ -1,4 +1,6 @@
+import type { AxiosResponse } from "axios";
 import axiosClient from "./axiosClient";
+import type { Conversation, Message } from "../types";
 
 const getAuthHeader = () => ({
     headers: {
@@ -6,16 +8,16 @@ const getAuthHeader = () => ({
     },
 });
 
-export const getConversationsApi = () =>
+export const getConversationsApi = (): Promise<AxiosResponse<{ conversations: Conversation[] }>> =>
     axiosClient.get(`/conversations`, getAuthHeader());
 
-export const createOrGetConversationApi = (receiverId: string) =>
+export const createOrGetConversationApi = (receiverId: string): Promise<AxiosResponse<{ conversation: Conversation }>> =>
     axiosClient.post(`/conversations`, { receiverId }, getAuthHeader());
 
 export const createGroupConversationApi = (
     name: string,
     participantIds: string[]
-) =>
+): Promise<AxiosResponse<{ conversation: Conversation }>> =>
     axiosClient.post(
         `/conversations/group`,
         { name, participantIds },
@@ -25,7 +27,7 @@ export const createGroupConversationApi = (
 export const updateGroupSettingsApi = (
     conversationId: string,
     data: { name?: string; imageUrl?: string }
-) =>
+): Promise<AxiosResponse<{ conversation: Conversation }>> =>
     axiosClient.put(
         `/conversations/${conversationId}/group-settings`,
         data,
@@ -61,7 +63,7 @@ export const getMessagesApi = (
     conversationId: string,
     before?: string,
     limit: number = 30
-) => {
+): Promise<AxiosResponse<{ messages: Message[]; hasMore: boolean }>> => {
     let url = `/messages/${conversationId}?limit=${limit}`;
     if (before) url += `&before=${encodeURIComponent(before)}`;
     return axiosClient.get(url, getAuthHeader());
@@ -70,7 +72,7 @@ export const getMessagesApi = (
 export const sendMessageApi = (
     conversationId: string,
     data: { text?: string; imageUrl?: string }
-) =>
+): Promise<AxiosResponse<{ message: Message }>> =>
     axiosClient.post(`/messages`, { conversationId, ...data }, getAuthHeader());
 
 export const uploadImageApi = (file: File) => {

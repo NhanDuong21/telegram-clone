@@ -11,6 +11,16 @@ interface AuthenticatedSocket extends Socket {
     userId?: string;
 }
 
+interface TypingPayload {
+    conversationId: string;
+    isTyping: boolean;
+}
+
+interface MarkAsReadPayload {
+    messageId: string;
+    conversationId: string;
+}
+
 export const initSocket = (httpServer: HttpServer) => {
     const isProd = process.env.NODE_ENV === "production";
     const clientUrl = isProd ? process.env.CLIENT_URL_PROD : process.env.CLIENT_URL_DEV;
@@ -48,7 +58,7 @@ export const initSocket = (httpServer: HttpServer) => {
         userSocketMap.set(socket.id, userId);
         emitOnlineUsers();
 
-        socket.on(SOCKET_EVENTS.TYPING, ({ conversationId, isTyping }) => {
+        socket.on(SOCKET_EVENTS.TYPING, ({ conversationId, isTyping }: TypingPayload) => {
             if (userId && conversationId) {
                 socket.to(conversationId).emit(SOCKET_EVENTS.TYPING, { senderId: userId, isTyping });
             }
@@ -58,11 +68,11 @@ export const initSocket = (httpServer: HttpServer) => {
             socket.join(roomId);
         });
 
-        socket.on(SOCKET_EVENTS.MARK_AS_READ, async ({ messageId, conversationId }) => {
+        socket.on(SOCKET_EVENTS.MARK_AS_READ, async ({ messageId, conversationId }: MarkAsReadPayload) => {
             if (userId && messageId && conversationId) {
                 try {
                     await messageService.markAsReadService(messageId, conversationId, userId);
-                } catch (error) {
+                } catch (error: unknown) {
                     console.error("markAsRead error:", error);
                 }
             }

@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { connectSocket } from "../socket";
-import type { Message, Conversation } from "../types/chat";
+import type { Message, Conversation, User } from "../types";
 import { getConversationsApi } from "../api/chatApi";
 import { SOCKET_EVENTS } from "../constants/socketEvents";
 
 interface UseChatSocketProps {
-  user: any;
+  user: User | null;
   selectedConversationId: string | null;
   setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>;
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
@@ -114,7 +114,7 @@ export const useChatSocket = ({
     });
 
     socket.on(SOCKET_EVENTS.GROUP_UPDATED, (updatedGroup: Conversation) => {
-      const isStillMember = updatedGroup.participants.some((p) => p._id === user?._id);
+      const isStillMember = updatedGroup.participants.some((p: User) => p._id === user?._id);
 
       if (!isStillMember) {
         setConversations((prev) => prev.filter((c) => c._id !== updatedGroup._id));

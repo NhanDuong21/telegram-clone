@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
-import User from "../models/User";
+import User, { IUser } from "../models/User";
 import { generateToken } from "../utils/generateToken";
 
 export async function register(req: Request, res: Response) {
@@ -45,11 +45,9 @@ export async function register(req: Request, res: Response) {
             },
             token,
         });
-    } catch (error) {
-        console.error("Register error:", error);
-        return res.status(500).json({
-            message: "Server error",
-        });
+    } catch (error: unknown) {
+        console.error("Register failed:", error);
+        res.status(500).json({ message: "Server error during registration" });
     }
 }
 
@@ -91,16 +89,14 @@ export async function login(req: Request, res: Response) {
             },
             token,
         });
-    } catch (error) {
-        console.error("Login error:", error);
-        return res.status(500).json({
-            message: "Server error",
-        });
+    } catch (error: unknown) {
+        console.error("Login failed:", error);
+        res.status(500).json({ message: "Server error during login" });
     }
 }
 
 interface AuthRequest extends Request {
-    user?: any;
+    user?: IUser;
 }
 
 export const getMe = async (req: AuthRequest, res: Response) => {

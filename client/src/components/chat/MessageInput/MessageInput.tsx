@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef } from "react";
 import { sendMessageApi, uploadImageApi } from "../../../api/chatApi";
 import { getSocket } from "../../../socket";
-import type { Message } from "../../../types/chat";
+import type { Message } from "../../../types";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
 import './MessageInput.css';
 
@@ -37,9 +36,10 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
             const uploadedImageUrl = res.data.imageUrl;
             const sendRes = await sendMessageApi(conversationId, { text: "", imageUrl: uploadedImageUrl });
             onMessageSent(sendRes.data.message);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Upload and send failed:", error);
-            alert(error.response?.data?.message || "Lỗi upload ảnh.");
+            const err = error as { response?: { data?: { message?: string } } };
+            alert(err.response?.data?.message || "Lỗi upload ảnh.");
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";

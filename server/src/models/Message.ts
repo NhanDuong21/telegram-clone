@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import { IMessage } from "../types/chat";
+export type { IMessage };
 
 const messageSchema = new Schema<IMessage>(
     {

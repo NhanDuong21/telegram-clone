@@ -5,7 +5,7 @@ import * as messageService from "../services/messageService";
 export const sendMessage = async (req: AuthRequest, res: Response) => {
     try {
         const { conversationId, text, imageUrl } = req.body;
-        const senderId = req.user._id;
+        const senderId = req.user!._id;
 
         if (!conversationId) {
             return res.status(400).json({ message: "conversationId là bắt buộc" });
@@ -17,10 +17,11 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
 
         const message = await messageService.sendMessageService(conversationId, senderId, text, imageUrl);
         return res.status(201).json({ message });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Send message error:", error);
-        if (error.message === "Conversation không tồn tại") {
-            return res.status(404).json({ message: error.message });
+        const err = error as Error;
+        if (err.message === "Conversation không tồn tại") {
+            return res.status(404).json({ message: err.message });
         }
         return res.status(500).json({ message: "Server error" });
     }
@@ -29,16 +30,17 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
 export const getMessages = async (req: AuthRequest, res: Response) => {
     try {
         const { conversationId } = req.params;
-        const userId = req.user._id;
+        const userId = req.user!._id;
         const { before } = req.query;
         const limit = parseInt(req.query.limit as string) || 30;
 
         const result = await messageService.getMessagesService(conversationId as string, userId, before as string, limit);
         return res.status(200).json(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Get messages error:", error);
-        if (error.message === "Conversation không tồn tại") {
-            return res.status(404).json({ message: error.message });
+        const err = error as Error;
+        if (err.message === "Conversation không tồn tại") {
+            return res.status(404).json({ message: err.message });
         }
         return res.status(500).json({ message: "Server error" });
     }

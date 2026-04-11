@@ -3,6 +3,7 @@ import Conversation from "../models/Conversation";
 import Message from "../models/Message";
 import { getIO } from "../socket";
 import { SOCKET_EVENTS } from "../utils/socketEvents";
+import { IUser } from "../models/User";
 
 export const createGroupService = async (name: string, participantIds: string[], ownerId: string) => {
     const allParticipants = new Set([...participantIds, ownerId]);
@@ -41,7 +42,7 @@ export const updateGroupSettingsService = async (id: string, userId: string, dat
     const populated = await conversation.populate("participants", "-password");
 
     const io = getIO();
-    populated.participants.forEach((p: any) => {
+    (populated.participants as unknown as IUser[]).forEach((p) => {
         io.to(p._id.toString()).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
     });
 
@@ -56,16 +57,16 @@ export const addMembersService = async (id: string, userId: string, participantI
         throw new Error("Chỉ Group Owner mới có quyền thêm thành viên");
     }
 
-    const currentIds = conversation.participants.map((p: any) => p.toString());
+    const currentIds = conversation.participants.map((p) => p.toString());
     const newSet = new Set([...currentIds, ...participantIds]);
 
-    conversation.participants = Array.from(newSet) as any;
+    conversation.participants = Array.from(newSet) as any[];
     await conversation.save();
     
     const populated = await conversation.populate("participants", "-password");
 
     const io = getIO();
-    populated.participants.forEach((p: any) => {
+    (populated.participants as unknown as IUser[]).forEach((p) => {
         io.to(p._id.toString()).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
     });
 
@@ -89,13 +90,13 @@ export const removeMemberService = async (id: string, userId: string, memberId: 
 
     if (currentIds.length <= 3) throw new Error("Group phải có ít nhất 3 người. Không thể kick thêm.");
 
-    conversation.participants = currentIds.filter(pid => pid !== memberId) as any;
+    conversation.participants = currentIds.filter(pid => pid !== memberId) as any[];
     await conversation.save();
 
     const populated = await conversation.populate("participants", "-password");
 
     const io = getIO();
-    populated.participants.forEach((p: any) => {
+    (populated.participants as unknown as IUser[]).forEach((p) => {
         io.to(p._id.toString()).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
     });
     io.to(memberId).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);

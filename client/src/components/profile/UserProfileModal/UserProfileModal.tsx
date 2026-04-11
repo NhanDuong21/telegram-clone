@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getUserProfileApi } from "../../../api/userApi";
 import Avatar from "../../common/Avatar";
+import type { User } from "../../../types";
 import './UserProfileModal.css';
 
 interface UserProfileModalProps {
@@ -10,7 +11,7 @@ interface UserProfileModalProps {
 }
 
 const UserProfileModal = ({ userId, onClose }: UserProfileModalProps) => {
-    const [profileData, setProfileData] = useState<any>(null);
+    const [profileData, setProfileData] = useState<{ user: User } | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -18,7 +19,7 @@ const UserProfileModal = ({ userId, onClose }: UserProfileModalProps) => {
             try {
                 const res = await getUserProfileApi(userId);
                 setProfileData(res.data);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error("Failed to load profile:", err);
             } finally {
                 setLoading(false);
@@ -39,7 +40,7 @@ const UserProfileModal = ({ userId, onClose }: UserProfileModalProps) => {
         return `truy cập vào ${date.toLocaleDateString()}`;
     };
 
-    if (loading) {
+    if (loading || !profileData) {
         return (
             <motion.div 
                 initial={{ opacity: 0 }}
@@ -48,14 +49,20 @@ const UserProfileModal = ({ userId, onClose }: UserProfileModalProps) => {
                 className="profile-overlay"
             >
                 <div className="loading-modal">
-                    <div className="spinner"></div>
-                    <span className="text-gray-400 text-sm font-medium">Đang tải profile...</span>
+                    {loading ? (
+                        <>
+                            <div className="spinner"></div>
+                            <span className="text-gray-400 text-sm font-medium">Đang tải profile...</span>
+                        </>
+                    ) : (
+                        <span className="text-red-400 text-sm font-medium">Không thể tải profile</span>
+                    )}
                 </div>
             </motion.div>
         );
     }
 
-    const { user } = profileData || {};
+    const { user } = profileData;
 
     return (
         <motion.div 
@@ -132,7 +139,7 @@ const UserProfileModal = ({ userId, onClose }: UserProfileModalProps) => {
 
 // --- Helper Components ---
 
-const ActionButton = ({ icon, label, primary }: { icon: any, label: string, primary?: boolean }) => (
+const ActionButton = ({ icon, label, primary }: { icon: React.ReactNode, label: string, primary?: boolean }) => (
     <div className="action-btn group">
         <div className={`action-btn__icon-box ${primary ? 'action-btn__icon-box--primary' : ''}`}>
             {icon}
@@ -141,7 +148,7 @@ const ActionButton = ({ icon, label, primary }: { icon: any, label: string, prim
     </div>
 );
 
-const InfoSection = ({ icon, label, value }: { icon: any, label: string, value: string }) => (
+const InfoSection = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) => (
     <div className="info-row">
         <div className="info-row__icon">{icon}</div>
         <div className="info-row__content">

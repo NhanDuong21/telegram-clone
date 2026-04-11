@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Message } from "../../../types/chat";
+import type { Message, User } from "../../../types";
 import './ChatBox.css';
 
 interface ChatBoxProps {
@@ -73,7 +73,8 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
             
             <AnimatePresence initial={false} mode="popLayout">
                 {messages.map((msg) => {
-                    const isMe = msg.sender?._id === currentUserId || (msg as any).senderId?._id === currentUserId;
+                    const senderObj = msg.sender as unknown as User;
+                    const isMe = senderObj?._id === currentUserId;
                     const isRead = (msg.readBy || []).some(id => id !== currentUserId);
 
                     return (
@@ -94,12 +95,12 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                             {!isMe && (
                                 <div 
                                     className="message-avatar"
-                                    onClick={() => onProfileClick?.(msg.sender?._id || (msg as any).senderId?._id)}
+                                    onClick={() => onProfileClick?.(senderObj?._id)}
                                 >
-                                    {(msg.sender?.avatar || (msg as any).senderId?.avatar) ? (
+                                    {senderObj?.avatar ? (
                                         <img 
-                                            src={msg.sender?.avatar || (msg as any).senderId?.avatar} 
-                                            alt={msg.sender?.username || (msg as any).senderId?.username || "Avatar"} 
+                                            src={senderObj.avatar} 
+                                            alt={senderObj.username || "Avatar"} 
                                             className="message-avatar-img"
                                             onError={(e) => {
                                                 const target = e.currentTarget;
@@ -124,9 +125,9 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                                 {!isMe && isGroup && (
                                     <div
                                         className="message-sender"
-                                        onClick={() => onProfileClick?.(msg.sender?._id || (msg as any).senderId?._id)}
+                                        onClick={() => onProfileClick?.(senderObj?._id)}
                                     >
-                                        {msg.sender?.username || (msg as any).senderId?.username}
+                                        {senderObj?.username}
                                     </div>
                                 )}
                                 

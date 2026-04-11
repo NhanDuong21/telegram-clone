@@ -1,4 +1,6 @@
+import type { AxiosResponse } from "axios";
 import axiosClient from "./axiosClient";
+import type { User } from "../types";
 
 const API = `/users`;
 
@@ -8,11 +10,11 @@ const getAuthHeader = () => ({
     },
 });
 
-export const searchUsersApi = (query: string) => {
+export const searchUsersApi = (query: string): Promise<AxiosResponse<{ users: User[] }>> => {
     return axiosClient.get(`${API}/search?q=${encodeURIComponent(query)}`, getAuthHeader());
 };
 
-export const updateProfileApi = (data: any) => {
+export const updateProfileApi = (data: FormData): Promise<AxiosResponse<{ user: User }>> => {
     return axiosClient.put(`${API}/me`, data, getAuthHeader());
 };
 

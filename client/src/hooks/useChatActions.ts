@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import type { Message, Conversation, User } from "../types/chat";
+import type { Message, Conversation, User } from "../types";
 import {
   getConversationsApi,
   getMessagesApi,
@@ -33,7 +33,7 @@ export const useChatActions = (user: User | null) => {
 
       const socket = getSocket();
       if (socket && user?._id) {
-        fetchedMessages.forEach((m: any) => {
+        fetchedMessages.forEach((m: Message) => {
           if (m.sender._id !== user._id && !(m.readBy || []).includes(user._id)) {
             socket.emit(SOCKET_EVENTS.MARK_AS_READ, { messageId: m._id, conversationId: m.conversationId });
           }

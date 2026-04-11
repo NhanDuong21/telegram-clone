@@ -3,17 +3,12 @@ import { useState } from "react";
 import { searchUsersApi } from "../../../api/userApi";
 import { createGroupConversationApi } from "../../../api/chatApi";
 import Avatar from "../../common/Avatar";
+import type { User, Conversation } from "../../../types";
 import './CreateGroupModal.css';
-
-export interface User {
-    _id: string;
-    username: string;
-    avatar?: string;
-}
 
 interface CreateGroupModalProps {
     onClose: () => void;
-    onGroupCreated: (group: any) => void;
+    onGroupCreated: (group: Conversation) => void;
 }
 
 const CreateGroupModal = ({ onClose, onGroupCreated }: CreateGroupModalProps) => {

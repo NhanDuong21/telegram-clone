@@ -20,13 +20,13 @@ export const searchUsers = async (req: AuthRequest, res: Response) => {
                 { username: { $regex: q, $options: "i" } },
                 { email: { $regex: q, $options: "i" } },
             ],
-            _id: { $ne: req.user._id },
+            _id: { $ne: req.user!._id },
         })
             .select("-password")
             .limit(10);
 
         return res.status(200).json({ users });
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("Search users error:", error);
         return res.status(500).json({ message: "Server error" });
     }
@@ -37,14 +37,14 @@ export const searchUsers = async (req: AuthRequest, res: Response) => {
 export const updateProfile = async (req: AuthRequest, res: Response) => {
     try {
         const { username, avatar } = req.body;
-        const userId = req.user._id;
+        const userId = req.user!._id;
 
         if (!username || username.trim().length < 2) {
             return res.status(400).json({ message: "Username không hợp lệ (ít nhất 2 ký tự)" });
         }
 
         // Check required uniqueness if username changes
-        if (username.trim() !== req.user.username) {
+        if (username.trim() !== req.user!.username) {
             const existing = await User.findOne({ username: username.trim(), _id: { $ne: userId } });
             if (existing) {
                 return res.status(400).json({ message: "Username đã tồn tại" });
@@ -60,13 +60,13 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
             userId,
             { 
                 username: username.trim(),
-                avatar: avatarUrl !== undefined ? avatarUrl.trim() : req.user.avatar
+                avatar: avatarUrl !== undefined ? avatarUrl.trim() : req.user!.avatar
             },
             { new: true }
         ).select("-password");
 
         return res.status(200).json({ user: updatedUser });
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("Update profile error:", error);
         return res.status(500).json({ message: "Server error" });
     }
@@ -114,7 +114,7 @@ export const getUserProfile = async (req: AuthRequest, res: Response) => {
             },
             commonGroupsCount
         });
-    } catch (error) {
+    } catch (error: unknown) {
         console.error("Get user profile error:", error);
         return res.status(500).json({ message: "Server error" });
     }

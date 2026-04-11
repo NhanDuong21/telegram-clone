@@ -7,6 +7,7 @@ import {
   deleteConversationApi,
 } from "../api/chatApi";
 import { getSocket } from "../socket";
+import { SOCKET_EVENTS } from "../constants/socketEvents";
 
 export const useChatActions = (user: User | null) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -34,7 +35,7 @@ export const useChatActions = (user: User | null) => {
       if (socket && user?._id) {
         fetchedMessages.forEach((m: any) => {
           if (m.sender._id !== user._id && !(m.readBy || []).includes(user._id)) {
-            socket.emit("markAsRead", { messageId: m._id, conversationId: m.conversationId });
+            socket.emit(SOCKET_EVENTS.MARK_AS_READ, { messageId: m._id, conversationId: m.conversationId });
           }
         });
       }

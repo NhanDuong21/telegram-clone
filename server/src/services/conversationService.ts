@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Conversation from "../models/Conversation";
 import Message from "../models/Message";
 import { getIO } from "../socket";
+import { SOCKET_EVENTS } from "../utils/socketEvents";
 
 export const createGroupService = async (name: string, participantIds: string[], ownerId: string) => {
     const allParticipants = new Set([...participantIds, ownerId]);
@@ -41,7 +42,7 @@ export const updateGroupSettingsService = async (id: string, userId: string, dat
 
     const io = getIO();
     populated.participants.forEach((p: any) => {
-        io.to(p._id.toString()).emit("groupUpdated", populated);
+        io.to(p._id.toString()).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
     });
 
     return populated;
@@ -65,7 +66,7 @@ export const addMembersService = async (id: string, userId: string, participantI
 
     const io = getIO();
     populated.participants.forEach((p: any) => {
-        io.to(p._id.toString()).emit("groupUpdated", populated);
+        io.to(p._id.toString()).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
     });
 
     return populated;
@@ -95,9 +96,9 @@ export const removeMemberService = async (id: string, userId: string, memberId: 
 
     const io = getIO();
     populated.participants.forEach((p: any) => {
-        io.to(p._id.toString()).emit("groupUpdated", populated);
+        io.to(p._id.toString()).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
     });
-    io.to(memberId).emit("groupUpdated", populated);
+    io.to(memberId).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
 
     return populated;
 };
@@ -117,7 +118,7 @@ export const deleteGroupService = async (id: string, userId: string) => {
 
     const io = getIO();
     participantIds.forEach(p => {
-        io.to(p).emit("groupDeleted", { conversationId: id });
+        io.to(p).emit(SOCKET_EVENTS.GROUP_DELETED, { conversationId: id });
     });
 
     return id;
@@ -159,7 +160,7 @@ export const clearChatService = async (id: string, userId: string) => {
 
     const io = getIO();
     conversation.participants.forEach(p => {
-        io.to(p.toString()).emit("conversationCleared", { conversationId: id });
+        io.to(p.toString()).emit(SOCKET_EVENTS.CONVERSATION_CLEARED, { conversationId: id });
     });
 
     return id;
@@ -174,7 +175,7 @@ export const deleteConversationService = async (id: string, userId: string) => {
 
     const io = getIO();
     conversation.participants.forEach(p => {
-        io.to(p.toString()).emit("conversationDeleted", { conversationId: id });
+        io.to(p.toString()).emit(SOCKET_EVENTS.CONVERSATION_DELETED, { conversationId: id });
     });
 
     return id;

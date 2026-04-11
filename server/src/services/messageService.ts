@@ -1,6 +1,7 @@
 import Message from "../models/Message";
 import Conversation from "../models/Conversation";
 import { getIO } from "../socket";
+import { SOCKET_EVENTS } from "../utils/socketEvents";
 
 export const sendMessageService = async (conversationId: string, senderId: string, text?: string, imageUrl?: string) => {
     const conversation = await Conversation.findOne({
@@ -26,7 +27,7 @@ export const sendMessageService = async (conversationId: string, senderId: strin
     const populated = await newMessage.populate("sender", "-password");
 
     const io = getIO();
-    io.to(conversationId).emit("receiveMessage", populated);
+    io.to(conversationId).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, populated);
 
     return populated;
 };
@@ -66,5 +67,5 @@ export const markAsReadService = async (messageId: string, conversationId: strin
     });
     
     const io = getIO();
-    io.to(conversationId).emit("messageRead", { messageId, userId, conversationId });
+    io.to(conversationId).emit(SOCKET_EVENTS.MESSAGE_READ, { messageId, userId, conversationId });
 };

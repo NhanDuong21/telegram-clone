@@ -49,6 +49,14 @@ export const useChatSocket = ({
           if (prev.some((m) => m._id === message._id)) return prev;
           return [...prev, message];
         });
+        
+        // Real-time Read Receipt: If we are in the chat, mark as read immediately
+        if (user?._id && message.sender._id !== user._id) {
+          socket.emit(SOCKET_EVENTS.MARK_AS_READ, { 
+            messageId: message._id, 
+            conversationId: convId 
+          });
+        }
       } else {
         setUnreadCounts((prev) => ({
           ...prev,

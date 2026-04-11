@@ -14,6 +14,7 @@ import { disconnectSocket, getSocket } from "../socket";
 import { useChatSocket } from "../hooks/useChatSocket";
 import { useChatActions } from "../hooks/useChatActions";
 import type { Conversation, Message } from "../types/chat";
+import { SOCKET_EVENTS } from "../constants/socketEvents";
 
 const ChatPage = () => {
   const { user, logout } = useAuth();
@@ -75,7 +76,7 @@ const ChatPage = () => {
   useEffect(() => {
     if (selectedConversationId) {
       const socket = getSocket();
-      if (socket) socket.emit("joinRoom", selectedConversationId);
+      if (socket) socket.emit(SOCKET_EVENTS.JOIN_ROOM, selectedConversationId);
       
       fetchMessages(selectedConversationId).catch(() => {
         setSelectedConversationId(null);

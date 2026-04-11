@@ -1,70 +1,49 @@
 # Telegram Web Clone
 
-Ứng dụng chat real-time mô phỏng Telegram, sử dụng MERN stack + TypeScript.
+Một ứng dụng chat real-time hiện đại mô phỏng Telegram Web, được xây dựng với hiệu suất cao và trải nghiệm người dùng mượt mà.
 
 ## Tech Stack
 
-| Layer    | Stack                          |
-| -------- | ------------------------------ |
-| Frontend | React 18 + TypeScript + Vite   |
-| Backend  | Node.js + Express + TypeScript |
-| Database | MongoDB + Mongoose             |
-| Auth     | JWT (Bearer token) + bcrypt    |
-| Realtime | (chưa) Socket.IO               |
+| Layer    | Stack                                      |
+| -------- | ------------------------------------------ |
+| Frontend | React 19 + TypeScript + Vite + TailwindCSS |
+| Backend  | Node.js + Express + TypeScript             |
+| Realtime | Socket.IO (Global Sync Protocol)           |
+| Database | MongoDB + Mongoose                         |
+| Storage  | Cloudinary (Direct Upload + Compression)   |
+| Animation| Framer Motion                              |
 
-## Cấu trúc thư mục
+## Cấu trúc dự án (Modular & Clean)
 
 ```
 telegram-clone/
-├── client/                  # Frontend (Vite + React)
-│   └── src/
-│       ├── api/             # Gọi API (axios)
-│       │   └── authApi.ts
-│       ├── components/chat/ # Components chat (chưa implement)
-│       │   ├── Sidebar.tsx
-│       │   ├── ChatBox.tsx
-│       │   └── MessageInput.tsx
-│       ├── context/
-│       │   └── AuthContext.tsx
-│       ├── pages/
-│       │   ├── LoginPage.tsx
-│       │   ├── RegisterPage.tsx
-│       │   ├── ChatPage.tsx
-│       │   └── NotFoundPage.tsx
-│       ├── App.tsx
-│       └── main.tsx
-├── server/                  # Backend (Express)
-│   └── src/
-│       ├── config/db.ts
-│       ├── controllers/authController.ts
-│       ├── middlewares/authMiddleware.ts
-│       ├── models/User.ts
-│       ├── routes/authRoutes.ts
-│       ├── utils/generateToken.ts
-│       ├── app.ts
-│       └── server.ts
-├── PROJECT_CONTEXT.md
-└── ROADMAP.md
+├── client/              # Frontend Workspace
+│   ├── src/
+│   │   ├── api/         # Axios API clients
+│   │   ├── components/  # Modular components (chat, profile, common)
+│   │   ├── context/     # Auth & App state providers
+│   │   ├── hooks/       # Custom hooks (socket, chat actions)
+│   │   └── pages/       # Page-level components
+├── server/              # Backend Workspace
+│   ├── src/
+│   │   ├── config/      # DB & App configurations
+│   │   ├── controllers/ # Logic handlers
+│   │   ├── models/      # Mongoose schemas
+│   │   ├── services/    # Business logic
+│   │   └── socket.ts    # Real-time event engine
+└── README.md
 ```
 
-## Đã xong
+## Tính năng nổi bật
 
-- **Backend auth**: register, login, GET /me (protected bằng JWT middleware)
-- **User model**: username, email, password (bcrypt hash), avatar, timestamps
-- **Frontend auth**: AuthContext (login/logout/fetchMe), route guards, persist session qua localStorage
-- **Pages**: LoginPage, RegisterPage, ChatPage (layout cơ bản + logout), NotFoundPage
-
-## Chưa làm
-
-- Chat components (Sidebar, ChatBox, MessageInput) — file rỗng
-- Conversation & Message models + API
-- Real-time (Socket.IO)
-- UI/UX styling
+- **Global Real-time Sync**: Nhận tin nhắn và thông báo tức thì trên mọi thiết bị và cuộc trò chuyện ngay sau khi đăng nhập.
+- **High-Performance Upload**: Nén ảnh trực tiếp trên trình duyệt và upload thẳng lên Cloudinary, bỏ qua bottleneck của server.
+- **Responsive 100dvh Layout**: Tối ưu hoàn hảo cho cả thiết bị di động và máy tính với các hiệu ứng micro-animations cao cấp.
+- **Group Management**: Tạo nhóm, thêm/xóa thành viên và cập nhật thông tin nhóm theo thời gian thực.
+- **Advanced Auth**: Luồng đăng ký/đăng nhập an toàn với JWT, bảo mật và cực kỳ mượt mà.
 
 ## Coding Conventions
 
-- Backend: function-based controllers, async/await, error trả JSON `{ message }`
-- Frontend: functional components, hooks, axios cho API calls
-- Auth: token lưu localStorage, gửi qua header `Authorization: Bearer <token>`
-- Naming: camelCase cho biến/hàm, PascalCase cho components/models
-- API base URL: `http://localhost:5000/api`
+- **Clean Code**: Không console.log, không debugger, cấu trúc modular rõ ràng.
+- **Performance**: Bypass server cho media, global socket room management.
+- **Typing**: TypeScript nghiêm ngặt trên toàn bộ hệ thống.

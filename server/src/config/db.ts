@@ -10,7 +10,6 @@ const connectDB = async () => {
         }
 
         await mongoose.connect(uri);
-        console.log(`MongoDB connected in ${isProd ? "production" : "development"} mode`);
     } catch (error) {
         console.error("MongoDB connection error:", error);
         throw error;

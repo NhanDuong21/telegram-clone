@@ -110,6 +110,12 @@ const ChatPage = () => {
   };
 
   const handleMessageSent = (message: Message) => {
+    // Optimistic Update: Add to message list immediately if it's not already there (socket will also try to add it)
+    setMessages((prev) => {
+      if (prev.some(m => m._id === message._id)) return prev;
+      return [...prev, message];
+    });
+
     if (selectedConversationId) {
       setConversations((prev) => {
         const index = prev.findIndex((c) => c._id === selectedConversationId);
@@ -117,7 +123,7 @@ const ChatPage = () => {
         
         const updatedConv = {
           ...prev[index],
-          lastMessage: { _id: message._id, text: message.text ?? "" },
+          lastMessage: { _id: message._id, text: message.text || (message.imageUrl ? "📷 Ảnh" : "") },
           updatedAt: message.createdAt
         };
         

@@ -69,7 +69,8 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
         if (!conversationId) return;
         const socket = getSocket();
         if (socket) {
-            socket.emit(SOCKET_EVENTS.TYPING, { conversationId, isTyping });
+            const event = isTyping ? SOCKET_EVENTS.TYPING : SOCKET_EVENTS.STOP_TYPING;
+            socket.emit(event, { conversationId });
         }
     };
 
@@ -144,6 +145,10 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
                         value={text}
                         onChange={handleChange}
                         onKeyDown={handleKeyDown}
+                        onBlur={() => {
+                            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                            emitTyping(false);
+                        }}
                         placeholder="Nhập tin nhắn..."
                         className="message-textarea"
                     />

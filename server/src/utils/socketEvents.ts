@@ -11,4 +11,5 @@ export const SOCKET_EVENTS = {
     CONVERSATION_DELETED: "conversationDeleted",
     JOIN_ROOM: "joinRoom",
     MARK_AS_READ: "markAsRead",
+    STOP_TYPING: "stopTyping",
 };

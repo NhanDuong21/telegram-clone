@@ -63,9 +63,15 @@ export const initSocket = (httpServer: HttpServer) => {
         userSocketMap.set(socket.id, userId);
         emitOnlineUsers();
 
-        socket.on(SOCKET_EVENTS.TYPING, ({ conversationId, isTyping }: TypingPayload) => {
+        socket.on(SOCKET_EVENTS.TYPING, ({ conversationId }: { conversationId: string }) => {
             if (userId && conversationId) {
-                socket.to(conversationId).emit(SOCKET_EVENTS.TYPING, { senderId: userId, isTyping });
+                socket.to(conversationId).emit(SOCKET_EVENTS.TYPING, { senderId: userId, conversationId });
+            }
+        });
+
+        socket.on(SOCKET_EVENTS.STOP_TYPING, ({ conversationId }: { conversationId: string }) => {
+            if (userId && conversationId) {
+                socket.to(conversationId).emit(SOCKET_EVENTS.STOP_TYPING, { senderId: userId, conversationId });
             }
         });
 

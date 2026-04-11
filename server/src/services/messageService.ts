@@ -21,14 +21,20 @@ export const sendMessageService = async (conversationId: string, senderId: strin
         readBy: [senderId],
     });
 
-    await Conversation.findByIdAndUpdate(conversationId, { lastMessage: newMessage._id });
-
-    const populated = await newMessage.populate("sender", "-password");
-
+    // 1. Emit ngay lập tức sau khi tạo xong Message (Không đợi update Conversation)
+    const populated = await newMessage.populate("sender", "username avatar email");
     const io = getIO();
+    
+    // Broadcast message ngay (Non-blocking)
     conversation.participants.forEach((p) => {
         io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, populated);
     });
+
+    // 2. Chạy update Conversation ngầm trong background (Giảm độ trễ cho recipient)
+    Conversation.findByIdAndUpdate(conversationId, { 
+        lastMessage: newMessage._id,
+        updatedAt: new Date()
+    }).exec().catch(err => console.error("Async lastMessage update failed:", err));
 
     return populated;
 };

@@ -109,13 +109,21 @@ export const useChatSocket = ({
       setOnlineUsers(users);
     });
 
-    socket.on(SOCKET_EVENTS.TYPING, ({ senderId, isTyping, conversationId: typingConvId }: { senderId: string; isTyping: boolean, conversationId?: string }) => {
-      // Typing indicators should only show if we are in that conversation
+    socket.on(SOCKET_EVENTS.TYPING, ({ senderId, conversationId: typingConvId }: { senderId: string; conversationId: string }) => {
       if (selectedIdRef.current === typingConvId) {
         setTypingUsers((prev) => {
           const next = new Set(prev);
-          if (isTyping) next.add(senderId);
-          else next.delete(senderId);
+          next.add(senderId);
+          return next;
+        });
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.STOP_TYPING, ({ senderId, conversationId: typingConvId }: { senderId: string; conversationId: string }) => {
+      if (selectedIdRef.current === typingConvId) {
+        setTypingUsers((prev) => {
+          const next = new Set(prev);
+          next.delete(senderId);
           return next;
         });
       }
@@ -170,6 +178,7 @@ export const useChatSocket = ({
       socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE);
       socket.off(SOCKET_EVENTS.ONLINE_USERS);
       socket.off(SOCKET_EVENTS.TYPING);
+      socket.off(SOCKET_EVENTS.STOP_TYPING);
       socket.off(SOCKET_EVENTS.GROUP_UPDATED);
       socket.off(SOCKET_EVENTS.GROUP_DELETED);
       socket.off(SOCKET_EVENTS.CONVERSATION_CLEARED);

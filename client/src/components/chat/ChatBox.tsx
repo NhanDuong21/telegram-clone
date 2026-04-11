@@ -9,6 +9,7 @@ interface ChatBoxProps {
     hasMore?: boolean;
     loadingMore?: boolean;
     isGroup?: boolean;
+    onProfileClick?: (userId: string) => void;
 }
 
 const formatTime = (iso: string) => {
@@ -16,7 +17,7 @@ const formatTime = (iso: string) => {
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
-const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup }: ChatBoxProps) => {
+const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, onProfileClick }: ChatBoxProps) => {
     const bottomRef = useRef<HTMLDivElement>(null);
     const lastMessageId = useRef<string | null>(null);
 
@@ -106,8 +107,33 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                         style={{
                             display: "flex",
                             justifyContent: isMe ? "flex-end" : "flex-start",
+                            gap: "8px",
+                            alignItems: "flex-end"
                         }}
                     >
+                        {!isMe && (
+                            <div 
+                                style={{ 
+                                    width: "32px", height: "32px", borderRadius: "50%", 
+                                    overflow: "hidden", cursor: "pointer", 
+                                    visibility: isGroup ? "visible" : "hidden",
+                                    flexShrink: 0
+                                }}
+                                onClick={() => onProfileClick?.(msg.sender._id)}
+                            >
+                                {msg.sender.avatar ? (
+                                    <img src={msg.sender.avatar} alt={msg.sender.username} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                ) : (
+                                    <div style={{ 
+                                        width: "100%", height: "100%", backgroundColor: "#eee", 
+                                        display: "flex", alignItems: "center", justifyContent: "center", 
+                                        fontSize: "12px", color: "#666", fontWeight: "bold" 
+                                    }}>
+                                        {msg.sender.username.substring(0, 1).toUpperCase()}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                         <div
                             style={{
                                 maxWidth: "65%",
@@ -135,7 +161,9 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                                         color: "#0088cc",
                                         marginBottom: "3px",
                                         letterSpacing: "0.2px",
+                                        cursor: "pointer"
                                     }}
+                                    onClick={() => onProfileClick?.(msg.sender._id)}
                                 >
                                     {msg.sender.username}
                                 </div>

@@ -200,6 +200,7 @@ const ChatPage = () => {
               hasMore={hasMore}
               loadingMore={loadingMore}
               isGroup={selectedConversation.isGroup}
+              onProfileClick={setViewingProfileId}
             />
 
             {typingUsers.size > 0 && (

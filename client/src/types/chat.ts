@@ -2,6 +2,7 @@ export interface User {
     _id: string;
     username: string;
     email: string;
+    avatar?: string;
 }
 
 export interface Conversation {
@@ -26,6 +27,7 @@ export interface Message {
     sender: {
         _id: string;
         username: string;
+        avatar?: string;
     };
     readBy?: string[];
     createdAt: string;

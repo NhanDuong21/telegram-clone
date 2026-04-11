@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginApi } from "../../api/authApi";
 import { useAuth } from "../../context/AuthContext";
 import './Auth.css';
 
 const LoginPage = () => {
+  useEffect(() => {
+    document.title = "Login - Telegram Web";
+  }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

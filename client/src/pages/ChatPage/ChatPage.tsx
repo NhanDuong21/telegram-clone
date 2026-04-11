@@ -122,6 +122,17 @@ const ChatPage = () => {
 
   const otherParticipant = selectedConversation?.participants.find((p) => p._id !== user?._id);
 
+  useEffect(() => {
+    if (selectedConversation) {
+      const name = selectedConversation.isGroup 
+        ? selectedConversation.name 
+        : (otherParticipant?.username ?? "Chat");
+      document.title = `Telegram Web | ${name}`;
+    } else {
+      document.title = "Telegram Web";
+    }
+  }, [selectedConversation, otherParticipant]);
+
   return (
     <div className="app-container">
       <div className="sidebar-wrapper">

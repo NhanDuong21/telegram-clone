@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerApi } from "../../api/authApi";
 import { useAuth } from "../../context/AuthContext";
 import '../LoginPage/Auth.css';
 
 const RegisterPage = () => {
+  useEffect(() => {
+    document.title = "Register - Telegram Web";
+  }, []);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { useState, useRef } from "react";
 import { updateProfileApi } from "../../../api/userApi";
 import { useAuth } from "../../../context/AuthContext";
@@ -68,8 +69,21 @@ const EditProfileModal = ({ onClose }: EditProfileModalProps) => {
   };
 
   return (
-    <div className="edit-profile-overlay">
-      <div className="edit-profile-content">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="edit-profile-overlay"
+      onClick={onClose}
+    >
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="edit-profile-content"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2 className="edit-profile-title">
           Edit Profile
         </h2>
@@ -129,8 +143,8 @@ const EditProfileModal = ({ onClose }: EditProfileModalProps) => {
             {isSubmitting ? "Saving..." : "Save"}
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

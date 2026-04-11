@@ -1,3 +1,4 @@
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef } from "react";
 import { searchUsersApi } from "../../../api/userApi";
 import { createOrGetConversationApi } from "../../../api/chatApi";
@@ -92,7 +93,9 @@ const Sidebar = ({
                         className="sidebar__search-input"
                     />
                 </div>
-                <button
+                <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setShowGroupModal(true)}
                     className="sidebar__create-group-btn"
                     title="Tạo nhóm chat"
@@ -103,39 +106,49 @@ const Sidebar = ({
                         <line x1="20" y1="8" x2="20" y2="14"></line>
                         <line x1="23" y1="11" x2="17" y2="11"></line>
                     </svg>
-                </button>
+                </motion.button>
             </div>
 
-            {(results.length > 0 || searchLoading || (query.trim() && !searchLoading)) && (
-                <div className="sidebar__search-results">
-                    {searchLoading && (
-                        <p className="sidebar__status-msg">Đang tìm...</p>
-                    )}
-                    {!searchLoading && results.length === 0 && query.trim() && (
-                        <p className="sidebar__status-msg">Không tìm thấy user</p>
-                    )}
-                    {results.map((user) => (
-                        <div
-                            key={user._id}
-                            className={`search-item ${startingChat === user._id ? "search-item--loading" : ""}`}
-                            onClick={() => handleStartChat(user)}
-                        >
-                            <div className="avatar-container">
-                                <div onClick={(e) => { e.stopPropagation(); onViewProfile(user._id); }}>
-                                  <Avatar user={user} size={38} />
+            <AnimatePresence>
+                {(results.length > 0 || searchLoading || (query.trim() && !searchLoading)) && (
+                    <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="sidebar__search-results"
+                    >
+                        {searchLoading && (
+                            <p className="sidebar__status-msg">Đang tìm...</p>
+                        )}
+                        {!searchLoading && results.length === 0 && query.trim() && (
+                            <p className="sidebar__status-msg">Không tìm thấy user</p>
+                        )}
+                        {results.map((user) => (
+                            <motion.div
+                                key={user._id}
+                                layout
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className={`search-item ${startingChat === user._id ? "search-item--loading" : ""}`}
+                                onClick={() => handleStartChat(user)}
+                            >
+                                <div className="avatar-container">
+                                    <div onClick={(e) => { e.stopPropagation(); onViewProfile(user._id); }}>
+                                      <Avatar user={user} size={38} />
+                                    </div>
+                                    {onlineUsers.includes(user._id) && <div className="online-badge" />}
                                 </div>
-                                {onlineUsers.includes(user._id) && <div className="online-badge" />}
-                            </div>
-                            <div className="search-item__info">
-                                <div className="search-item__name">{user.username}</div>
-                                <div className="search-item__status">
-                                    {startingChat === user._id ? "Đang mở chat..." : "Nhấn để nhắn tin"}
+                                <div className="search-item__info">
+                                    <div className="search-item__name">{user.username}</div>
+                                    <div className="search-item__status">
+                                        {startingChat === user._id ? "Đang mở chat..." : "Nhấn để nhắn tin"}
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <div className="conversation-list">
                 {conversations.length === 0 && (
@@ -143,64 +156,73 @@ const Sidebar = ({
                         Chưa có cuộc trò chuyện nào.<br />Tìm kiếm user để bắt đầu!
                     </p>
                 )}
-                {conversations.map((conv) => {
-                    const other = getOtherUser(conv);
-                    const isSelected = conv._id === selectedId;
-                    const unreadCount = unreadCounts[conv._id] || 0;
+                <AnimatePresence>
+                    {conversations.map((conv) => {
+                        const other = getOtherUser(conv);
+                        const isSelected = conv._id === selectedId;
+                        const unreadCount = unreadCounts[conv._id] || 0;
 
-                    return (
-                        <div
-                            key={conv._id}
-                            className={`conversation-item ${isSelected ? "conversation-item--selected" : ""}`}
-                            onClick={() => onSelectConversation(conv)}
-                        >
-                            <div className="avatar-container">
-                                <div onClick={(e) => { 
-                                    if (!conv.isGroup && other) {
-                                        e.stopPropagation();
-                                        onViewProfile(other._id);
-                                    }
-                                }}>
-                                    {conv.isGroup ? (
-                                        conv.imageUrl ? (
-                                            <img src={conv.imageUrl} alt={conv.name} style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }} />
+                        return (
+                            <motion.div
+                                key={conv._id}
+                                layout
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
+                                className={`conversation-item ${isSelected ? "conversation-item--selected" : ""}`}
+                                onClick={() => onSelectConversation(conv)}
+                            >
+                                <div className="avatar-container">
+                                    <div onClick={(e) => { 
+                                        if (!conv.isGroup && other) {
+                                            e.stopPropagation();
+                                            onViewProfile(other._id);
+                                        }
+                                    }}>
+                                        {conv.isGroup ? (
+                                            conv.imageUrl ? (
+                                                <img src={conv.imageUrl} alt={conv.name} style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }} />
+                                            ) : (
+                                                <div className="group-avatar-fallback">
+                                                    {conv.name ? conv.name.substring(0, 1).toUpperCase() : "G"}
+                                                </div>
+                                            )
                                         ) : (
-                                            <div className="group-avatar-fallback">
-                                                {conv.name ? conv.name.substring(0, 1).toUpperCase() : "G"}
-                                            </div>
-                                        )
-                                    ) : (
-                                        other && <Avatar user={other} size={44} />
+                                            other && <Avatar user={other} size={44} />
+                                        )}
+                                    </div>
+                                    {other && !conv.isGroup && onlineUsers.includes(other._id) && (
+                                        <div className="conversation-item__online-badge" />
                                     )}
                                 </div>
-                                {other && !conv.isGroup && onlineUsers.includes(other._id) && (
-                                    <div className="conversation-item__online-badge" />
-                                )}
-                            </div>
-                            <div className="conversation-item__content">
-                                <div className={`conversation-item__header ${unreadCount > 0 ? "conversation-item__header--unread" : ""}`}>
-                                    <span>{conv.isGroup ? conv.name : (other?.username ?? "Unknown")}</span>
-                                    {unreadCount > 0 && <div className="unread-badge">{unreadCount}</div>}
+                                <div className="conversation-item__content">
+                                    <div className={`conversation-item__header ${unreadCount > 0 ? "conversation-item__header--unread" : ""}`}>
+                                        <span>{conv.isGroup ? conv.name : (other?.username ?? "Unknown")}</span>
+                                        {unreadCount > 0 && <div className="unread-badge">{unreadCount}</div>}
+                                    </div>
+                                    <div className={`conversation-item__last-msg ${unreadCount > 0 ? "conversation-item__last-msg--unread" : ""}`}>
+                                        {conv.lastMessage?.text ?? "Bắt đầu cuộc trò chuyện"}
+                                    </div>
                                 </div>
-                                <div className={`conversation-item__last-msg ${unreadCount > 0 ? "conversation-item__last-msg--unread" : ""}`}>
-                                    {conv.lastMessage?.text ?? "Bắt đầu cuộc trò chuyện"}
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
+                            </motion.div>
+                        );
+                    })}
+                </AnimatePresence>
             </div>
 
-            {showGroupModal && (
-                <CreateGroupModal
-                    onClose={() => setShowGroupModal(false)}
-                    onGroupCreated={(conv) => {
-                        onConversationCreated(conv);
-                        onSelectConversation(conv);
-                        setShowGroupModal(false);
-                    }}
-                />
-            )}
+            <AnimatePresence>
+                {showGroupModal && (
+                    <CreateGroupModal
+                        onClose={() => setShowGroupModal(false)}
+                        onGroupCreated={(conv) => {
+                            onConversationCreated(conv);
+                            onSelectConversation(conv);
+                            setShowGroupModal(false);
+                        }}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 };

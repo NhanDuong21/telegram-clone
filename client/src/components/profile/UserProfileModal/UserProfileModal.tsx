@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { getUserProfileApi } from "../../../api/userApi";
 import Avatar from "../../common/Avatar";
 import './UserProfileModal.css';
@@ -40,21 +41,36 @@ const UserProfileModal = ({ userId, onClose }: UserProfileModalProps) => {
 
     if (loading) {
         return (
-            <div className="profile-overlay animate-in fade-in duration-200">
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="profile-overlay"
+            >
                 <div className="loading-modal">
                     <div className="spinner"></div>
                     <span className="text-gray-400 text-sm font-medium">Đang tải profile...</span>
                 </div>
-            </div>
+            </motion.div>
         );
     }
 
     const { user } = profileData || {};
 
     return (
-        <div className="profile-overlay animate-in fade-in duration-300" onClick={onClose}>
-            <div 
-                className="profile-modal animate-in zoom-in-95 duration-200"
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="profile-overlay" 
+            onClick={onClose}
+        >
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="profile-modal"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="profile-modal__close-container">
@@ -109,8 +125,8 @@ const UserProfileModal = ({ userId, onClose }: UserProfileModalProps) => {
                     </button>
 
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 };
 
@@ -144,6 +160,5 @@ const MoreIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="non
 const BioIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>;
 const UserIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
 const QRIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><path d="M7 7h.01M17 7h.01M17 17h.01M7 17h.01" /></svg>;
-
 
 export default UserProfileModal;

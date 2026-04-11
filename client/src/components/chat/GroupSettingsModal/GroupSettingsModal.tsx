@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { motion } from "framer-motion";
 import { useState } from "react";
 import { searchUsersApi } from "../../../api/userApi";
 import { updateGroupSettingsApi, addMembersApi, removeMemberApi, uploadImageApi, deleteGroupApi } from "../../../api/chatApi";
@@ -136,8 +136,21 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
     };
 
     return (
-        <div className="settings-overlay">
-            <div className="settings-content">
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="settings-overlay"
+            onClick={onClose}
+        >
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="settings-content"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <div className="settings-header">
                     <h3 className="settings-title">Cài đặt nhóm</h3>
                     <button onClick={onClose} className="close-settings-btn">
@@ -296,8 +309,8 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
                     </div>
                 )}
 
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 };
 

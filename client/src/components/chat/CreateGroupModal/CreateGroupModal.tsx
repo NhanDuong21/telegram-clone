@@ -1,3 +1,4 @@
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { searchUsersApi } from "../../../api/userApi";
 import { createGroupConversationApi } from "../../../api/chatApi";
@@ -78,8 +79,21 @@ const CreateGroupModal = ({ onClose, onGroupCreated }: CreateGroupModalProps) =>
     const canCreate = groupName.trim() && selectedUsers.length >= 2;
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="modal-overlay"
+            onClick={onClose}
+        >
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="modal-content"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <h3 className="modal-title">Tạo Nhóm Trò Chuyện</h3>
 
                 <div className="form-group">
@@ -113,38 +127,54 @@ const CreateGroupModal = ({ onClose, onGroupCreated }: CreateGroupModalProps) =>
                         </button>
                     </div>
 
-                    {results.length > 0 && (
-                        <div className="search-results">
-                            {results.map((user) => (
-                                <div key={user._id} className="search-result-item">
-                                    <div className="user-info">
-                                        <Avatar user={user} size={28} />
-                                        <span className="user-name">{user.username}</span>
+                    <AnimatePresence>
+                        {results.length > 0 && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="search-results"
+                            >
+                                {results.map((user) => (
+                                    <div key={user._id} className="search-result-item">
+                                        <div className="user-info">
+                                            <Avatar user={user} size={28} />
+                                            <span className="user-name">{user.username}</span>
+                                        </div>
+                                        <button onClick={() => addUser(user)} className="add-btn">
+                                            + Thêm
+                                        </button>
                                     </div>
-                                    <button onClick={() => addUser(user)} className="add-btn">
-                                        + Thêm
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 {selectedUsers.length > 0 && (
                     <div className="selected-users-section">
                         <div className="selected-count">Đã chọn ({selectedUsers.length})</div>
                         <div className="selected-users-list">
-                            {selectedUsers.map(user => (
-                                <div key={user._id} className="selected-user-tag">
-                                    <span>{user.username}</span>
-                                    <span onClick={() => removeUser(user._id)} className="remove-tag-btn">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ width: "12px", height: "12px" }}>
-                                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                                        </svg>
-                                    </span>
-                                </div>
-                            ))}
+                            <AnimatePresence>
+                                {selectedUsers.map(user => (
+                                    <motion.div 
+                                        key={user._id}
+                                        layout
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.8 }}
+                                        className="selected-user-tag"
+                                    >
+                                        <span>{user.username}</span>
+                                        <span onClick={() => removeUser(user._id)} className="remove-tag-btn">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ width: "12px", height: "12px" }}>
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </span>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
                         </div>
                     </div>
                 )}
@@ -161,8 +191,8 @@ const CreateGroupModal = ({ onClose, onGroupCreated }: CreateGroupModalProps) =>
                         {isSubmitting ? "Đang tạo..." : "Tạo Nhóm"}
                     </button>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 };
 

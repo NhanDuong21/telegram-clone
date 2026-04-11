@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Message } from "../../../types/chat";
 import './ChatBox.css';
 
@@ -15,6 +16,12 @@ interface ChatBoxProps {
 const formatTime = (iso: string) => {
     const d = new Date(iso);
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+};
+
+const messageVariants = {
+    initial: { opacity: 0, scale: 0.9, y: 10 },
+    animate: { opacity: 1, scale: 1, y: 0 },
+    exit: { opacity: 0, scale: 0.9, transition: { duration: 0.1 } }
 };
 
 const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, onProfileClick }: ChatBoxProps) => {
@@ -64,79 +71,92 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                 </div>
             )}
             
-            {messages.map((msg) => {
-                const isMe = msg.sender._id === currentUserId;
-                const isRead = (msg.readBy || []).some(id => id !== currentUserId);
+            <AnimatePresence initial={false} mode="popLayout">
+                {messages.map((msg) => {
+                    const isMe = msg.sender?._id === currentUserId || (msg as any).senderId?._id === currentUserId;
+                    const isRead = (msg.readBy || []).some(id => id !== currentUserId);
 
-                return (
-                    <div
-                        key={msg._id}
-                        className={`message-row ${isMe ? "message-row--me" : "message-row--other"}`}
-                    >
-                        {!isMe && (
-                            <div 
-                                className="message-avatar"
-                                onClick={() => onProfileClick?.(msg.sender._id)}
-                            >
-                                {(msg.sender?.avatar || (msg as any).senderId?.avatar) ? (
-                                    <img 
-                                        src={msg.sender?.avatar || (msg as any).senderId?.avatar} 
-                                        alt={msg.sender?.username || "Avatar"} 
-                                        className="message-avatar-img"
-                                        onError={(e) => {
-                                            const target = e.currentTarget;
-                                            target.style.display = 'none';
-                                            const parent = target.parentElement;
-                                            if (parent) {
-                                                const fallback = document.createElement('div');
-                                                fallback.className = 'message-avatar-fallback';
-                                                fallback.innerText = (msg.sender?.username || "?").substring(0, 1).toUpperCase();
-                                                parent.appendChild(fallback);
-                                            }
-                                        }}
-                                    />
-                                ) : (
-                                    <div className="message-avatar-fallback">
-                                        {(msg.sender?.username || "?").substring(0, 1).toUpperCase()}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        <div className={`message-bubble ${isMe ? "message-bubble--me" : "message-bubble--other"}`}>
-                            {!isMe && isGroup && (
-                                <div
-                                    className="message-sender"
-                                    onClick={() => onProfileClick?.(msg.sender._id)}
+                    return (
+                        <motion.div
+                            key={msg._id}
+                            layout
+                            variants={messageVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            transition={{
+                                type: "spring",
+                                stiffness: 500,
+                                damping: 40,
+                                opacity: { duration: 0.2 }
+                            }}
+                            className={`message-row ${isMe ? "message-row--me" : "message-row--other"}`}
+                        >
+                            {!isMe && (
+                                <div 
+                                    className="message-avatar"
+                                    onClick={() => onProfileClick?.(msg.sender?._id || (msg as any).senderId?._id)}
                                 >
-                                    {msg.sender.username}
+                                    {(msg.sender?.avatar || (msg as any).senderId?.avatar) ? (
+                                        <img 
+                                            src={msg.sender?.avatar || (msg as any).senderId?.avatar} 
+                                            alt={msg.sender?.username || (msg as any).senderId?.username || "Avatar"} 
+                                            className="message-avatar-img"
+                                            onError={(e) => {
+                                                const target = e.currentTarget;
+                                                target.style.display = 'none';
+                                                const parent = target.parentElement;
+                                                if (parent) {
+                                                    const fallback = document.createElement('div');
+                                                    fallback.className = 'message-avatar-fallback';
+                                                    fallback.innerText = (msg.sender?.username || (msg as any).senderId?.username || "?").substring(0, 1).toUpperCase();
+                                                    parent.appendChild(fallback);
+                                                }
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="message-avatar-fallback">
+                                            {(msg.sender?.username || (msg as any).senderId?.username || "?").substring(0, 1).toUpperCase()}
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                            
-                            {msg.imageUrl && (
-                                <img
-                                    src={msg.imageUrl}
-                                    alt="Attached"
-                                    className={`message-image ${isMe ? "message-image--me" : "message-image--other"} ${msg.text ? "message-image--with-text" : ""}`}
-                                    onError={(e) => {
-                                        e.currentTarget.style.display = "none";
-                                    }}
-                                />
-                            )}
-                            
-                            {msg.text && <div>{msg.text}</div>}
-
-                            <div className="message-footer">
-                                <span>{formatTime(msg.createdAt)}</span>
-                                {isMe && (
-                                    <span className={`message-status ${isRead ? "message-status--read-me" : ""}`}>
-                                        {isRead ? "✓✓" : "✓"}
-                                    </span>
+                            <div className={`message-bubble ${isMe ? "message-bubble--me" : "message-bubble--other"}`}>
+                                {!isMe && isGroup && (
+                                    <div
+                                        className="message-sender"
+                                        onClick={() => onProfileClick?.(msg.sender?._id || (msg as any).senderId?._id)}
+                                    >
+                                        {msg.sender?.username || (msg as any).senderId?.username}
+                                    </div>
                                 )}
+                                
+                                {msg.imageUrl && (
+                                    <img
+                                        src={msg.imageUrl}
+                                        alt="Attached"
+                                        className={`message-image ${isMe ? "message-image--me" : "message-image--other"} ${msg.text ? "message-image--with-text" : ""}`}
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = "none";
+                                        }}
+                                    />
+                                )}
+                                
+                                {msg.text && <div>{msg.text}</div>}
+
+                                <div className="message-footer">
+                                    <span>{formatTime(msg.createdAt)}</span>
+                                    {isMe && (
+                                        <span className={`message-status ${isRead ? "message-status--read-me" : ""}`}>
+                                            {isRead ? "✓✓" : "✓"}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                );
-            })}
+                        </motion.div>
+                    );
+                })}
+            </AnimatePresence>
             <div ref={bottomRef} />
         </div>
     );

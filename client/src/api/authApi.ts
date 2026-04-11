@@ -1,9 +1,9 @@
-import axios from "axios";
+import axiosClient from "./axiosClient";
 
-const API = "http://localhost:5000/api/auth";
+const API = `/auth`;
 
 export const loginApi = (data: { email: string; password: string }) => {
-    return axios.post(`${API}/login`, data);
+    return axiosClient.post(`${API}/login`, data);
 };
 
 export const registerApi = (data: {
@@ -11,11 +11,11 @@ export const registerApi = (data: {
     email: string;
     password: string;
 }) => {
-    return axios.post(`${API}/register`, data);
+    return axiosClient.post(`${API}/register`, data);
 };
 
 export const getMeApi = (token: string) => {
-    return axios.get(`${API}/me`, {
+    return axiosClient.get(`${API}/me`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },

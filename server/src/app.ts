@@ -8,7 +8,14 @@ import messageRoutes from "./routes/messageRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
 const app = express();
 
-app.use(cors());
+const isProd = process.env.NODE_ENV === "production";
+const clientUrl = isProd ? process.env.CLIENT_URL_PROD : process.env.CLIENT_URL_DEV;
+
+app.use(cors({
+    origin: clientUrl,
+    credentials: true
+}));
+
 app.use(express.json());
 
 // Serve uploads folder as static

@@ -13,7 +13,8 @@ interface AuthenticatedSocket extends Socket {
 export const initSocket = (httpServer: HttpServer) => {
     io = new Server(httpServer, {
         cors: {
-            origin: "*",
+            origin: process.env.CLIENT_URL || "*",
+            credentials: true,
         },
     });
 

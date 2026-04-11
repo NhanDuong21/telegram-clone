@@ -24,7 +24,7 @@ const LoginPage = () => {
       navigate("/");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err.response?.data?.message || "Đăng nhập thất bại");
+      setError(err.response?.data?.message || "Đăng nhập thất bại, Nyan disconnect database rồi");
     } finally {
       setIsSubmitting(false);
     }

@@ -37,7 +37,7 @@ const RegisterPage = () => {
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err.response?.data?.message || "Đăng ký thất bại");
+      setError(err.response?.data?.message || "Đăng ký thất bại, Nyan disconect database rồi");
     } finally {
       setIsSubmitting(false);
     }

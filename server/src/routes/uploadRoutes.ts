@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -11,17 +11,17 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: (req: Request, file: Express.Multer.File, cb) => {
         cb(null, uploadDir);
     },
-    filename: (req, file, cb) => {
+    filename: (req: Request, file: Express.Multer.File, cb) => {
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
         const ext = path.extname(file.originalname);
         cb(null, uniqueSuffix + ext);
     },
 });
 
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     if (file.mimetype.startsWith("image/")) {
         cb(null, true);
     } else {
@@ -37,7 +37,7 @@ const upload = multer({
 
 const router = Router();
 
-router.post("/", protect, upload.single("image"), (req, res) => {
+router.post("/", protect, upload.single("image"), (req: Request, res: Response) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: "Không tìm thấy file" });
@@ -54,7 +54,7 @@ router.post("/", protect, upload.single("image"), (req, res) => {
 });
 
 // Middleware xử lý lỗi từ multer (VD: file quá lớn)
-router.use((err: any, req: any, res: any, next: any) => {
+router.use((err: any, req: Request, res: Response, next: NextFunction) => {
     if (err instanceof multer.MulterError || err.message === "Chỉ chấp nhận file ảnh") {
         return res.status(400).json({ message: err.message || "Lỗi upload ảnh" });
     }

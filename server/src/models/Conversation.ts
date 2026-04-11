@@ -1,16 +1,5 @@
-import mongoose, { Schema, Document } from "mongoose";
-
-// Conversation 1-1 giữa 2 user
-export interface IConversation extends Document {
-    participants: mongoose.Types.ObjectId[];
-    isGroup: boolean;
-    name?: string;
-    imageUrl?: string;
-    owner?: mongoose.Types.ObjectId;
-    lastMessage?: mongoose.Types.ObjectId;   // Tin nhắn cuối cùng (để hiển thị preview)
-    createdAt: Date;
-    updatedAt: Date;
-}
+import mongoose, { Schema } from "mongoose";
+import { IConversation } from "../types/chat";
 
 const conversationSchema = new Schema<IConversation>(
     {

@@ -4,25 +4,7 @@ import { createOrGetConversationApi } from "../../api/chatApi";
 import Avatar from "../common/Avatar";
 import CreateGroupModal from "./CreateGroupModal";
 
-interface User {
-    _id: string;
-    username: string;
-    email: string;
-}
-
-export interface Conversation {
-    _id: string;
-    participants: User[];
-    isGroup?: boolean;
-    name?: string;
-    imageUrl?: string;
-    owner?: string;
-    lastMessage?: {
-        _id: string;
-        text: string;
-    } | null;
-    updatedAt: string;
-}
+import type { User, Conversation } from "../../types/chat";
 
 interface SidebarProps {
     conversations: Conversation[];

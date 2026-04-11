@@ -1,14 +1,5 @@
-import mongoose, { Schema, Document } from "mongoose";
-
-export interface IMessage extends Document {
-    conversationId: mongoose.Types.ObjectId;
-    sender: mongoose.Types.ObjectId;
-    text?: string;
-    imageUrl?: string;
-    readBy: mongoose.Types.ObjectId[];
-    createdAt: Date;
-    updatedAt: Date;
-}
+import mongoose, { Schema } from "mongoose";
+import { IMessage } from "../types/chat";
 
 const messageSchema = new Schema<IMessage>(
     {

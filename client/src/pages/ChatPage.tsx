@@ -1,31 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-import Sidebar, { type Conversation } from "../components/chat/Sidebar";
-import ChatBox, { type Message } from "../components/chat/ChatBox";
+import Sidebar from "../components/chat/Sidebar";
+import ChatBox from "../components/chat/ChatBox";
 import MessageInput from "../components/chat/MessageInput";
 import Avatar from "../components/common/Avatar";
 import GroupSettingsModal from "../components/chat/GroupSettingsModal";
 import EditProfileModal from "../components/profile/EditProfileModal";
 
-import {
-  getConversationsApi,
-  getMessagesApi,
-  clearChatApi,
-  deleteConversationApi,
-} from "../api/chatApi";
-import { connectSocket, disconnectSocket, getSocket } from "../socket";
+import { disconnectSocket, getSocket } from "../socket";
+import { useChatSocket } from "../hooks/useChatSocket";
+import { useChatActions } from "../hooks/useChatActions";
+import type { Conversation, Message } from "../types/chat";
 
 const ChatPage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversationId, setSelectedConversationId] = useState<
-    string | null
-  >(() => {
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(() => {
     if (user?._id) {
       try {
         return localStorage.getItem(`tg_sel_conv_${user._id}`);
@@ -35,29 +29,62 @@ const ChatPage = () => {
     }
     return null;
   });
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
-  const [showGroupSettings, setShowGroupSettings] = useState(false);
-  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
 
-  // States for UX presence tracking
+  const {
+    conversations,
+    setConversations,
+    messages,
+    setMessages,
+    hasMore,
+    loadingMore,
+    fetchConversations,
+    fetchMessages,
+    loadOlderMessages,
+    clearChat,
+    deleteConversation,
+  } = useChatActions(user);
+
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
 
-  // Profile modal state
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
 
-  // Derive selectedConversation from list + id (stable: only changes when id or list changes)
+  useChatSocket({
+    user,
+    selectedConversationId,
+    setConversations,
+    setMessages,
+    setUnreadCounts,
+    setOnlineUsers,
+    setTypingUsers,
+    setSelectedConversationId,
+  });
+
   const selectedConversation = useMemo(
     () => conversations.find((c) => c._id === selectedConversationId) ?? null,
-    [conversations, selectedConversationId],
+    [conversations, selectedConversationId]
   );
 
-  // Ref to access latest selectedConversationId inside socket callback
-  const selectedIdRef = useRef(selectedConversationId);
-  selectedIdRef.current = selectedConversationId;
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
+  useEffect(() => {
+    if (selectedConversationId) {
+      const socket = getSocket();
+      if (socket) socket.emit("joinRoom", selectedConversationId);
+      
+      fetchMessages(selectedConversationId).catch(() => {
+        setSelectedConversationId(null);
+        if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
+      });
+    } else {
+      setMessages([]);
+    }
+  }, [selectedConversationId, user?._id, fetchMessages]);
 
   const handleLogout = () => {
     disconnectSocket();
@@ -66,366 +93,39 @@ const ChatPage = () => {
     navigate("/login");
   };
 
-  // Connect socket after auth
-  useEffect(() => {
-    if (!user) return;
-
-    const socket = connectSocket();
-
-    // Refetch conversations on reconnect (catches messages missed while offline)
-    // Socket.IO fires "connect" on initial connection AND on every reconnect
-    let isFirstConnect = true;
-    socket.on("connect", () => {
-      if (isFirstConnect) {
-        isFirstConnect = false;
-        return; // skip initial connect — conversations loaded by the other useEffect
-      }
-      // Reconnected — refetch conversations to sync sidebar
-      getConversationsApi()
-        .then((res) => setConversations(res.data.conversations))
-        .catch((err) => console.error("Reconnect refetch failed:", err));
-    });
-
-    socket.on("receiveMessage", (message: Message) => {
-      const convId = message.conversationId;
-
-      // Append message to chat if this conversation is currently open
-      if (selectedIdRef.current === convId) {
-        setMessages((prev) => {
-          // Prevent duplicates if already added by handleMessageSent
-          if (prev.some((m) => m._id === message._id)) return prev;
-          return [...prev, message];
-        });
-      } else {
-        // Increment unread count for sidebar badge
-        setUnreadCounts((prev) => ({
-            ...prev,
-            [convId]: (prev[convId] || 0) + 1
-        }));
-      }
-
-      // Update sidebar: known conversation → update lastMessage in-place
-      // Unknown conversation (first message from new user) → refetch list
-      setConversations((prev) => {
-        const exists = prev.some((c) => c._id === convId);
-
-        if (exists) {
-          return prev.map((c) =>
-            c._id === convId
-              ? {
-                  ...c,
-                  lastMessage: { _id: message._id, text: message.text ?? "" },
-                }
-              : c,
-          );
-        }
-
-        getConversationsApi()
-          .then((res) => setConversations(res.data.conversations))
-          .catch((err) =>
-            console.error("Failed to refetch conversations:", err),
-          );
-
-        return prev;
-      });
-    });
-
-    socket.on("messageRead", ({ messageId, userId, conversationId: convId }) => {
-      if (selectedIdRef.current === convId) {
-        setMessages((prev) =>
-          prev.map((m) => {
-            if (m._id === messageId) {
-               const currentReadBy = m.readBy || [];
-               if (!currentReadBy.includes(userId)) {
-                  return { ...m, readBy: [...currentReadBy, userId] };
-               }
-            }
-            return m;
-          })
-        );
-      }
-    });
-
-    socket.on("onlineUsers", (users: string[]) => {
-      setOnlineUsers(users);
-    });
-
-    socket.on(
-      "typing",
-      ({ senderId, isTyping }: { senderId: string; isTyping: boolean }) => {
-        setTypingUsers((prev) => {
-          const next = new Set(prev);
-          if (isTyping) next.add(senderId);
-          else next.delete(senderId);
-          return next;
-        });
-      },
-    );
-
-    socket.on("groupUpdated", (updatedGroup: Conversation) => {
-      const isStillMember = updatedGroup.participants.some(
-        (p) => p._id === user?._id,
-      );
-
-      if (!isStillMember) {
-        setConversations((prev) =>
-          prev.filter((c) => c._id !== updatedGroup._id),
-        );
-        if (selectedIdRef.current === updatedGroup._id) {
-          setSelectedConversationId(null);
-          if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
-        }
-        return;
-      }
-
-      setConversations((prev) => {
-        const index = prev.findIndex((c) => c._id === updatedGroup._id);
-        if (index === -1) {
-          return [updatedGroup, ...prev];
-        }
-        return prev.map((c) => (c._id === updatedGroup._id ? updatedGroup : c));
-      });
-    });
-
-    socket.on(
-      "groupDeleted",
-      ({ conversationId }: { conversationId: string }) => {
-        setConversations((prev) =>
-          prev.filter((c) => c._id !== conversationId),
-        );
-        if (selectedIdRef.current === conversationId) {
-          setSelectedConversationId(null);
-          if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
-        }
-      },
-    );
-
-    socket.on(
-      "conversationCleared",
-      ({ conversationId }: { conversationId: string }) => {
-        if (selectedIdRef.current === conversationId) {
-          setMessages([]);
-        }
-        setConversations((prev) =>
-          prev.map((c) =>
-            c._id === conversationId ? { ...c, lastMessage: null } : c,
-          ),
-        );
-      },
-    );
-
-    socket.on(
-      "conversationDeleted",
-      ({ conversationId }: { conversationId: string }) => {
-        setConversations((prev) =>
-          prev.filter((c) => c._id !== conversationId),
-        );
-        if (selectedIdRef.current === conversationId) {
-          setSelectedConversationId(null);
-          if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
-        }
-      },
-    );
-
-    return () => {
-      socket.off("connect");
-      socket.off("receiveMessage");
-      socket.off("onlineUsers");
-      socket.off("typing");
-      socket.off("groupUpdated");
-      socket.off("groupDeleted");
-      socket.off("conversationCleared");
-      socket.off("conversationDeleted");
-      socket.off("messageRead");
-    };
-  }, [user]);
-
-  // Load conversations on mount
-  useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        const res = await getConversationsApi();
-        setConversations(res.data.conversations);
-      } catch (error) {
-        console.error("Failed to load conversations:", error);
-      }
-    };
-    fetchConversations();
-  }, []);
-
-  // Load messages when selected conversation ID changes
-  useEffect(() => {
-    if (!selectedConversationId) {
-      setMessages([]);
-      setHasMore(false);
-      return;
-    }
-
-    // Join the specific conversation room
-    const socket = getSocket();
-    if (socket) {
-      socket.emit("joinRoom", selectedConversationId);
-    }
-
-    const fetchMessages = async () => {
-      try {
-        const res = await getMessagesApi(selectedConversationId);
-        const fetchedMessages = res.data.messages;
-        setMessages(fetchedMessages);
-        setHasMore(res.data.hasMore);
-
-        // Mark previously unseen messages as read
-        const socket = getSocket();
-        if (socket && user?._id) {
-            fetchedMessages.forEach((m: any) => {
-                if (m.sender._id !== user._id && !(m.readBy || []).includes(user._id)) {
-                    socket.emit("markAsRead", { messageId: m._id, conversationId: m.conversationId });
-                }
-            });
-        }
-
-      } catch (error: any) {
-        console.error("Failed to load messages:", error);
-        if (error.response?.status === 404) {
-          setSelectedConversationId(null);
-          if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
-        }
-      }
-    };
-    fetchMessages();
-  }, [selectedConversationId, user?._id]);
-
-  const loadOlderMessages = async () => {
-    if (
-      !selectedConversationId ||
-      messages.length === 0 ||
-      loadingMore ||
-      !hasMore
-    )
-      return;
-
-    setLoadingMore(true);
-    try {
-      const oldestMessageTime = messages[0].createdAt;
-      const res = await getMessagesApi(
-        selectedConversationId,
-        oldestMessageTime,
-      );
-      setMessages((prev) => [...res.data.messages, ...prev]);
-      setHasMore(res.data.hasMore);
-    } catch (error) {
-      console.error("Failed to load older messages:", error);
-    } finally {
-      setLoadingMore(false);
-    }
-  };
-
-  const handleConversationCreated = (conv: Conversation) => {
-    setConversations((prev) => {
-      const exists = prev.some((c) => c._id === conv._id);
-      if (exists) return prev;
-      return [conv, ...prev];
-    });
-  };
-
   const handleSelectConversation = (conv: Conversation) => {
     setSelectedConversationId(conv._id);
     setUnreadCounts((prev) => {
-        const copy = { ...prev };
-        delete copy[conv._id];
-        return copy;
+      const copy = { ...prev };
+      delete copy[conv._id];
+      return copy;
     });
-    if (user?._id) {
-      localStorage.setItem(`tg_sel_conv_${user._id}`, conv._id);
-    }
+    if (user?._id) localStorage.setItem(`tg_sel_conv_${user._id}`, conv._id);
   };
 
   const handleMessageSent = (message: Message) => {
-    // Only rely on Socket.IO for self-appending now to completely prevent duplicates
-    // Removing the optimistic `setMessages` override from here!
-
     if (selectedConversationId) {
       setConversations((prev) =>
         prev.map((c) =>
           c._id === selectedConversationId
-            ? {
-                ...c,
-                lastMessage: { _id: message._id, text: message.text ?? "" },
-              }
-            : c,
-        ),
+            ? { ...c, lastMessage: { _id: message._id, text: message.text ?? "" } }
+            : c
+        )
       );
     }
   };
 
-  const handleClearChat = async () => {
-    setShowOptionsMenu(false);
-    if (!confirm("Bạn có chắc chắn muốn xóa lịch sử trò chuyện?")) return;
-    try {
-      await clearChatApi(selectedConversationId!);
-    } catch (e) {
-      console.error("Clear chat error:", e);
-      alert("Không thể clear chat");
-    }
-  };
-
-  const handleDeleteConversation = async () => {
-    setShowOptionsMenu(false);
-    if (!confirm("Bọn có chắc chắn muốn Xóa hiển thị toàn bộ đoạn chat này?"))
-      return;
-    try {
-      await deleteConversationApi(selectedConversationId!);
-    } catch (e) {
-      console.error("Delete conversation error:", e);
-      alert("Không thể xóa đoạn chat");
-    }
-  };
-
-  const otherParticipant = selectedConversation?.participants.find(
-    (p) => p._id !== user?._id,
-  );
+  const otherParticipant = selectedConversation?.participants.find((p) => p._id !== user?._id);
 
   return (
     <div className="app-container">
       <div className="sidebar-wrapper">
-        <div
-          style={{
-            padding: "10px 12px",
-            borderBottom: "1px solid #ddd",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            backgroundColor: "#f5f5f5",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              cursor: "pointer",
-            }}
-            onClick={() => setShowEditProfile(true)}
-            title="Edit Profile"
-          >
+        <div style={styles.sidebarHeader}>
+          <div style={styles.profileSection} onClick={() => setShowEditProfile(true)}>
             <Avatar user={user} size={32} />
-            <span style={{ fontWeight: 600, fontSize: "14px" }}>
-              {user?.username}
-            </span>
+            <span style={styles.username}>{user?.username}</span>
           </div>
-          <button
-            onClick={handleLogout}
-            style={{
-              padding: "4px 10px",
-              fontSize: "12px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              backgroundColor: "white",
-              cursor: "pointer",
-            }}
-          >
-            Logout
-          </button>
+          <button onClick={handleLogout} style={styles.logoutBtn}>Logout</button>
         </div>
 
         <Sidebar
@@ -435,199 +135,51 @@ const ChatPage = () => {
           onlineUsers={onlineUsers}
           unreadCounts={unreadCounts}
           onSelectConversation={handleSelectConversation}
-          onConversationCreated={handleConversationCreated}
+          onConversationCreated={(conv) => setConversations(prev => [conv, ...prev.filter(c => c._id !== conv._id)])}
         />
       </div>
 
-      <div
-        className={`chat-wrapper ${selectedConversation ? "is-active" : ""}`}
-      >
+      <div className={`chat-wrapper ${selectedConversation ? "is-active" : ""}`}>
         {!selectedConversation ? (
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#999",
-              gap: "8px",
-            }}
-          >
+          <div style={styles.noChatPlaceholder}>
             <div style={{ fontSize: "36px" }}>💬</div>
-            <div style={{ fontSize: "16px" }}>
-              Chọn một cuộc trò chuyện để bắt đầu
-            </div>
-            <div style={{ fontSize: "13px", color: "#bbb" }}>
-              Hoặc tìm kiếm người dùng ở thanh bên trái
-            </div>
+            <div style={{ fontSize: "16px" }}>Chọn một cuộc trò chuyện để bắt đầu</div>
+            <div style={{ fontSize: "13px", color: "#bbb" }}>Hoặc tìm kiếm người dùng ở thanh bên trái</div>
           </div>
         ) : (
           <>
-            <div
-              style={{
-                padding: "10px 16px",
-                borderBottom: "1px solid #eee",
-                fontWeight: 600,
-                fontSize: "15px",
-                backgroundColor: "#f9f9f9",
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                justifyContent: "space-between",
-              }}
-            >
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "10px" }}
-              >
-                <button
-                  className="mobile-back-btn"
-                  onClick={() => {
-                    setSelectedConversationId(null);
-                  }}
-                  title="Quay lại"
-                >
-                  ←
-                </button>
+            <div style={styles.chatHeader}>
+              <div style={styles.chatHeaderInfo}>
+                <button className="mobile-back-btn" onClick={() => setSelectedConversationId(null)}>←</button>
                 {selectedConversation.isGroup ? (
-                  selectedConversation.imageUrl ? (
-                    <img
-                      src={selectedConversation.imageUrl}
-                      alt={selectedConversation.name}
-                      style={{
-                        width: "36px",
-                        height: "36px",
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: "36px",
-                        height: "36px",
-                        borderRadius: "50%",
-                        backgroundColor: "#0088cc",
-                        color: "white",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "16px",
-                      }}
-                    >
-                      👥
-                    </div>
-                  )
+                  <div style={styles.groupAvatar}>
+                    {selectedConversation.imageUrl ? 
+                      <img src={selectedConversation.imageUrl} alt={selectedConversation.name} style={styles.groupImg} /> 
+                      : "👥"}
+                  </div>
                 ) : (
                   <Avatar user={otherParticipant} size={36} />
                 )}
-
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span>
-                    {selectedConversation.isGroup
-                      ? selectedConversation.name
-                      : (otherParticipant?.username ?? "Chat")}
-                  </span>
+                <div style={styles.headerText}>
+                  <span>{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
                   {!selectedConversation.isGroup && otherParticipant && onlineUsers.includes(otherParticipant._id) && (
-                    <span
-                      style={{
-                        fontSize: "12px",
-                        color: "#0088cc",
-                        fontWeight: "600",
-                        marginTop: "2px",
-                      }}
-                    >
-                      Online
-                    </span>
+                    <span style={styles.onlineStatus}>Online</span>
                   )}
                   {selectedConversation.isGroup && (
-                    <span
-                      style={{
-                        fontSize: "12px",
-                        color: "#666",
-                        fontWeight: "normal",
-                        marginTop: "2px",
-                      }}
-                    >
-                      {selectedConversation.participants.length} thành viên
-                    </span>
+                    <span style={styles.memberCount}>{selectedConversation.participants.length} thành viên</span>
                   )}
                 </div>
               </div>
-
               <div style={{ position: "relative" }}>
-                <button
-                  onClick={() => setShowOptionsMenu((p) => !p)}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    fontSize: "20px",
-                    color: "#0088cc",
-                    padding: "4px",
-                  }}
-                  title="Tuỳ chọn"
-                >
-                  ⋮
-                </button>
-
+                <button onClick={() => setShowOptionsMenu(!showOptionsMenu)} style={styles.optionsBtn}>⋮</button>
                 {showOptionsMenu && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      right: 0,
-                      top: "100%",
-                      background: "white",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                      borderRadius: "8px",
-                      zIndex: 10,
-                      minWidth: "150px",
-                      overflow: "hidden",
-                    }}
-                  >
+                  <div style={styles.optionsMenu}>
                     {selectedConversation.isGroup && (
-                      <div
-                        onClick={() => {
-                          setShowOptionsMenu(false);
-                          setShowGroupSettings(true);
-                        }}
-                        style={{
-                          padding: "10px 16px",
-                          cursor: "pointer",
-                          borderBottom: "1px solid #eee",
-                          fontSize: "14px",
-                        }}
-                      >
-                        Cài đặt nhóm
-                      </div>
+                      <div onClick={() => { setShowOptionsMenu(false); setShowGroupSettings(true); }} style={styles.menuItem}>Cài đặt nhóm</div>
                     )}
-                    <div
-                      onClick={handleClearChat}
-                      style={{
-                        padding: "10px 16px",
-                        cursor: "pointer",
-                        borderBottom: selectedConversation.isGroup
-                          ? "none"
-                          : "1px solid #eee",
-                        fontSize: "14px",
-                        color: "#d63031",
-                      }}
-                    >
-                      Clear chat
-                    </div>
+                    <div onClick={() => { setShowOptionsMenu(false); clearChat(selectedConversationId!); }} style={styles.deleteMenuItem}>Clear chat</div>
                     {!selectedConversation.isGroup && (
-                      <div
-                        onClick={handleDeleteConversation}
-                        style={{
-                          padding: "10px 16px",
-                          cursor: "pointer",
-                          color: "#d63031",
-                          fontSize: "14px",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        Delete conversation
-                      </div>
+                      <div onClick={() => { setShowOptionsMenu(false); deleteConversation(selectedConversationId!); }} style={styles.deleteMenuItemBold}>Delete conversation</div>
                     )}
                   </div>
                 )}
@@ -637,62 +189,57 @@ const ChatPage = () => {
             <ChatBox
               messages={messages}
               currentUserId={user?._id ?? ""}
-              onLoadMore={loadOlderMessages}
+              onLoadMore={() => loadOlderMessages(selectedConversationId!, messages[0].createdAt)}
               hasMore={hasMore}
               loadingMore={loadingMore}
               isGroup={selectedConversation.isGroup}
             />
 
-            {/* Typing Indicator */}
             {typingUsers.size > 0 && (
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#aaa",
-                  padding: "0 16px 8px 16px",
-                  fontStyle: "italic",
-                }}
-              >
+              <div style={styles.typingIndicator}>
                 {Array.from(typingUsers)
-                  .map(
-                    (id) =>
-                      selectedConversation.participants.find((p) => p._id === id)
-                        ?.username
-                  )
-                  .filter(Boolean)
-                  .join(", ")}{" "}
-                đang soạn tin...
+                  .map(id => selectedConversation.participants.find(p => p._id === id)?.username)
+                  .filter(Boolean).join(", ")} đang soạn tin...
               </div>
             )}
 
-            <MessageInput
-              conversationId={selectedConversation._id}
-              onMessageSent={handleMessageSent}
-            />
+            <MessageInput conversationId={selectedConversation._id} onMessageSent={handleMessageSent} />
 
             {showGroupSettings && selectedConversation.isGroup && (
               <GroupSettingsModal
                 conversation={selectedConversation}
                 currentUserId={user?._id ?? ""}
                 onClose={() => setShowGroupSettings(false)}
-                onUpdated={(updatedConv) => {
-                  setConversations((prev) =>
-                    prev.map((c) =>
-                      c._id === updatedConv._id ? updatedConv : c,
-                    ),
-                  );
-                }}
+                onUpdated={(updatedConv) => setConversations(prev => prev.map(c => c._id === updatedConv._id ? updatedConv : c))}
               />
             )}
           </>
         )}
       </div>
-
-      {showEditProfile && (
-        <EditProfileModal onClose={() => setShowEditProfile(false)} />
-      )}
+      {showEditProfile && <EditProfileModal onClose={() => setShowEditProfile(false)} />}
     </div>
   );
+};
+
+const styles: Record<string, any> = {
+  sidebarHeader: { padding: "10px 12px", borderBottom: "1px solid #ddd", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#f5f5f5" },
+  profileSection: { display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" },
+  username: { fontWeight: 600, fontSize: "14px" },
+  logoutBtn: { padding: "4px 10px", fontSize: "12px", border: "1px solid #ccc", borderRadius: "4px", backgroundColor: "white", cursor: "pointer" },
+  noChatPlaceholder: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#999", gap: "8px" },
+  chatHeader: { padding: "10px 16px", borderBottom: "1px solid #eee", fontWeight: 600, fontSize: "15px", backgroundColor: "#f9f9f9", display: "flex", alignItems: "center", gap: "10px", justifyContent: "space-between" },
+  chatHeaderInfo: { display: "flex", alignItems: "center", gap: "10px" },
+  headerText: { display: "flex", flexDirection: "column" },
+  onlineStatus: { fontSize: "12px", color: "#0088cc", fontWeight: "600", marginTop: "2px" },
+  memberCount: { fontSize: "12px", color: "#666", fontWeight: "normal", marginTop: "2px" },
+  groupAvatar: { width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "#0088cc", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", overflow: "hidden" },
+  groupImg: { width: "100%", height: "100%", objectFit: "cover" },
+  optionsBtn: { background: "transparent", border: "none", cursor: "pointer", fontSize: "20px", color: "#0088cc", padding: "4px" },
+  optionsMenu: { position: "absolute", right: 0, top: "100%", background: "white", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", borderRadius: "8px", zIndex: 10, minWidth: "150px", overflow: "hidden" },
+  menuItem: { padding: "10px 16px", cursor: "pointer", borderBottom: "1px solid #eee", fontSize: "14px" },
+  deleteMenuItem: { padding: "10px 16px", cursor: "pointer", borderBottom: "1px solid #eee", fontSize: "14px", color: "#d63031" },
+  deleteMenuItemBold: { padding: "10px 16px", cursor: "pointer", color: "#d63031", fontSize: "14px", fontWeight: "bold" },
+  typingIndicator: { fontSize: "12px", color: "#aaa", padding: "0 16px 8px 16px", fontStyle: "italic" },
 };
 
 export default ChatPage;

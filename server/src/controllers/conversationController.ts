@@ -1,13 +1,7 @@
-import mongoose from "mongoose";
 import { Response } from "express";
 import { AuthRequest } from "../middlewares/authMiddleware";
-import Conversation from "../models/Conversation";
-import Message from "../models/Message";
-import { getIO } from "../socket";
+import * as conversationService from "../services/conversationService";
 
-// POST /api/conversations/group
-// Body: { name: string, participantIds: string[] }
-// Tạo một group chat mới
 export const createGroupConversation = async (req: AuthRequest, res: Response) => {
     try {
         const { name, participantIds } = req.body;
@@ -21,26 +15,11 @@ export const createGroupConversation = async (req: AuthRequest, res: Response) =
             return res.status(400).json({ message: "participantIds phải là một array" });
         }
 
-        // Đảm bảo không duplicate và current user luôn là một thành viên
-        const allParticipants = new Set([...participantIds, senderId]);
-
-        if (allParticipants.size < 3) {
-            return res.status(400).json({ message: "Group phải có ít nhất 3 thành viên" });
-        }
-
-        const newGroup = await Conversation.create({
-            isGroup: true,
-            name: name.trim(),
-            participants: Array.from(allParticipants),
-            owner: new mongoose.Types.ObjectId(senderId)
-        });
-
-        const populated = await newGroup.populate("participants", "-password");
-
-        return res.status(201).json({ conversation: populated });
-    } catch (error) {
+        const conversation = await conversationService.createGroupService(name, participantIds, senderId);
+        return res.status(201).json({ conversation });
+    } catch (error: any) {
         console.error("Create group error:", error);
-        return res.status(500).json({ message: "Server error" });
+        return res.status(error.message.includes("ít nhất 3") ? 400 : 500).json({ message: error.message || "Server error" });
     }
 };
 
@@ -50,33 +29,12 @@ export const updateGroupSettings = async (req: AuthRequest, res: Response) => {
         const { name, imageUrl } = req.body;
         const userId = req.user._id.toString();
 
-        const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
-        if (!conversation) return res.status(404).json({ message: "Group không tồn tại hoặc bạn không có quyền" });
-
-        if (conversation.owner && conversation.owner.toString() !== userId) {
-            return res.status(403).json({ message: "Chỉ Group Owner mới có quyền thay đổi thông tin nhóm" });
-        }
-
-        if (name !== undefined) {
-            if (name.trim() === "") return res.status(400).json({ message: "Tên group không hợp lệ" });
-            conversation.name = name.trim();
-        }
-        if (imageUrl !== undefined) {
-            conversation.imageUrl = imageUrl.trim();
-        }
-
-        await conversation.save();
-        const populated = await conversation.populate("participants", "-password");
-
-        const io = getIO();
-        populated.participants.forEach((p: any) => {
-            io.to(p._id.toString()).emit("groupUpdated", populated);
-        });
-
-        return res.status(200).json({ conversation: populated });
-    } catch (error) {
+        const conversation = await conversationService.updateGroupSettingsService(id as string, userId, { name, imageUrl });
+        return res.status(200).json({ conversation });
+    } catch (error: any) {
         console.error("Update group error:", error);
-        return res.status(500).json({ message: "Server error" });
+        const status = error.message.includes("không tồn tại") ? 404 : error.message.includes("không có quyền") ? 403 : 400;
+        return res.status(status).json({ message: error.message || "Server error" });
     }
 };
 
@@ -90,30 +48,11 @@ export const addMembers = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: "Danh sách member không hợp lệ" });
         }
 
-        const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
-        if (!conversation) return res.status(404).json({ message: "Group không tồn tại hoặc bạn không có quyền" });
-
-        if (conversation.owner && conversation.owner.toString() !== userId) {
-            return res.status(403).json({ message: "Chỉ Group Owner mới có quyền thêm thành viên" });
-        }
-
-        const currentIds = conversation.participants.map((p: any) => p.toString());
-        const newSet = new Set([...currentIds, ...participantIds]);
-
-        conversation.participants = Array.from(newSet) as any;
-        await conversation.save();
-        
-        const populated = await conversation.populate("participants", "-password");
-
-        const io = getIO();
-        populated.participants.forEach((p: any) => {
-            io.to(p._id.toString()).emit("groupUpdated", populated);
-        });
-
-        return res.status(200).json({ conversation: populated });
-    } catch (error) {
+        const conversation = await conversationService.addMembersService(id as string, userId, participantIds);
+        return res.status(200).json({ conversation });
+    } catch (error: any) {
         console.error("Add members error:", error);
-        return res.status(500).json({ message: "Server error" });
+        return res.status(500).json({ message: error.message || "Server error" });
     }
 };
 
@@ -122,43 +61,11 @@ export const removeMember = async (req: AuthRequest, res: Response) => {
         const { id, memberId } = req.params;
         const userId = req.user._id.toString();
 
-        const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
-        if (!conversation) return res.status(404).json({ message: "Group không tồn tại hoặc bạn không có quyền" });
-
-        if (conversation.owner && conversation.owner.toString() !== userId) {
-            return res.status(403).json({ message: "Chỉ Group Owner mới có quyền kick thành viên" });
-        }
-
-        if (memberId === conversation.owner?.toString()) {
-            return res.status(400).json({ message: "Không thể kick Group Owner" });
-        }
-
-        const currentIds = conversation.participants.map((p: any) => p.toString());
-        if (!currentIds.includes(memberId)) {
-            return res.status(400).json({ message: "Member không có trong group" });
-        }
-
-        if (currentIds.length <= 3) {
-            return res.status(400).json({ message: "Group phải có ít nhất 3 người. Không thể kick thêm." });
-        }
-
-        conversation.participants = currentIds.filter(pid => pid !== memberId) as any;
-        await conversation.save();
-
-        const populated = await conversation.populate("participants", "-password");
-
-        const io = getIO();
-        populated.participants.forEach((p: any) => {
-            io.to(p._id.toString()).emit("groupUpdated", populated);
-        });
-        
-        // Important: also emit to the member who was just removed!
-        io.to(memberId).emit("groupUpdated", populated);
-
-        return res.status(200).json({ conversation: populated });
-    } catch (error) {
+        const conversation = await conversationService.removeMemberService(id as string, userId, memberId as string);
+        return res.status(200).json({ conversation });
+    } catch (error: any) {
         console.error("Remove member error:", error);
-        return res.status(500).json({ message: "Server error" });
+        return res.status(400).json({ message: error.message || "Server error" });
     }
 };
 
@@ -167,88 +74,37 @@ export const deleteGroupConversation = async (req: AuthRequest, res: Response) =
         const { id } = req.params;
         const userId = req.user._id.toString();
 
-        const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
-        if (!conversation) return res.status(404).json({ message: "Group không tồn tại hoặc bạn không có quyền" });
-
-        // Only group owner can delete
-        if (conversation.owner && conversation.owner.toString() !== userId) {
-            return res.status(403).json({ message: "Chỉ Group Owner mới có quyền xóa vĩnh viễn nhóm" });
-        }
-
-        const participantIds = conversation.participants.map(p => p.toString());
-
-        // Delete all grouped messages and the group itself
-        await Message.deleteMany({ conversationId: id });
-        await Conversation.findByIdAndDelete(id);
-
-        const io = getIO();
-        participantIds.forEach(p => {
-            io.to(p).emit("groupDeleted", { conversationId: id });
-        });
-
-        return res.status(200).json({ message: "Xóa group thành công", deletedConversationId: id });
-    } catch (error) {
+        const deletedId = await conversationService.deleteGroupService(id as string, userId);
+        return res.status(200).json({ message: "Xóa group thành công", deletedConversationId: deletedId });
+    } catch (error: any) {
         console.error("Delete group error:", error);
-        return res.status(500).json({ message: "Server error" });
+        return res.status(500).json({ message: error.message || "Server error" });
     }
 };
 
-// POST /api/conversations
-// Body: { receiverId }
-// Tạo conversation mới hoặc trả về conversation đã tồn tại
 export const createOrGetConversation = async (req: AuthRequest, res: Response) => {
     try {
         const { receiverId } = req.body;
-        const senderId = req.user._id;
+        const senderId = req.user._id.toString();
 
         if (!receiverId) {
             return res.status(400).json({ message: "receiverId là bắt buộc" });
         }
 
-        // Không cho tạo conversation với chính mình
-        if (senderId.toString() === receiverId) {
-            return res.status(400).json({ message: "Không thể chat với chính mình" });
-        }
-
-        // Tìm conversation đã tồn tại giữa 2 user
-        const existingConversation = await Conversation.findOne({
-            participants: { $all: [senderId, receiverId], $size: 2 },
-        }).populate("participants", "-password");
-
-        if (existingConversation) {
-            return res.status(200).json({ conversation: existingConversation });
-        }
-
-        // Tạo conversation mới
-        const newConversation = await Conversation.create({
-            participants: [senderId, receiverId],
-        });
-
-        // Populate participants trước khi trả về
-        const populated = await newConversation.populate("participants", "-password");
-
-        return res.status(201).json({ conversation: populated });
-    } catch (error) {
+        const conversation = await conversationService.createOrGetConversationService(senderId, receiverId);
+        return res.status(201).json({ conversation });
+    } catch (error: any) {
         console.error("Create conversation error:", error);
-        return res.status(500).json({ message: "Server error" });
+        return res.status(400).json({ message: error.message || "Server error" });
     }
 };
 
-// GET /api/conversations
-// Lấy tất cả conversations của user hiện tại, sắp xếp theo tin nhắn mới nhất
 export const getMyConversations = async (req: AuthRequest, res: Response) => {
     try {
-        const userId = req.user._id;
-
-        const conversations = await Conversation.find({
-            participants: userId,
-        })
-            .populate("participants", "-password")
-            .populate("lastMessage")
-            .sort({ updatedAt: -1 });
-
+        const userId = req.user._id.toString();
+        const conversations = await conversationService.getMyConversationsService(userId);
         return res.status(200).json({ conversations });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Get conversations error:", error);
         return res.status(500).json({ message: "Server error" });
     }
@@ -259,23 +115,11 @@ export const clearChat = async (req: AuthRequest, res: Response) => {
         const { id } = req.params;
         const userId = req.user._id.toString();
 
-        const conversation = await Conversation.findOne({ _id: id, participants: userId });
-        if (!conversation) return res.status(404).json({ message: "Conversation không tồn tại hoặc bạn không có quyền" });
-
-        await Message.deleteMany({ conversationId: id });
-        
-        conversation.lastMessage = undefined;
-        await conversation.save();
-
-        const io = getIO();
-        conversation.participants.forEach(p => {
-            io.to(p.toString()).emit("conversationCleared", { conversationId: id });
-        });
-
-        return res.status(200).json({ message: "Đã xóa toàn bộ tin nhắn", clearedConversationId: id });
-    } catch (error) {
+        const clearedId = await conversationService.clearChatService(id as string, userId);
+        return res.status(200).json({ message: "Đã xóa toàn bộ tin nhắn", clearedConversationId: clearedId });
+    } catch (error: any) {
         console.error("Clear chat error:", error);
-        return res.status(500).json({ message: "Server error" });
+        return res.status(500).json({ message: error.message || "Server error" });
     }
 };
 
@@ -284,20 +128,10 @@ export const deleteConversation = async (req: AuthRequest, res: Response) => {
         const { id } = req.params;
         const userId = req.user._id.toString();
 
-        const conversation = await Conversation.findOne({ _id: id, isGroup: false, participants: userId });
-        if (!conversation) return res.status(404).json({ message: "Chat không tồn tại, bạn không có quyền, hoặc đây là Group Chat" });
-
-        await Message.deleteMany({ conversationId: id });
-        await Conversation.findByIdAndDelete(id);
-
-        const io = getIO();
-        conversation.participants.forEach(p => {
-            io.to(p.toString()).emit("conversationDeleted", { conversationId: id });
-        });
-
-        return res.status(200).json({ message: "Đã xóa hiển thị chat", deletedConversationId: id });
-    } catch (error) {
+        const deletedId = await conversationService.deleteConversationService(id as string, userId);
+        return res.status(200).json({ message: "Đã xóa hiển thị chat", deletedConversationId: deletedId });
+    } catch (error: any) {
         console.error("Delete conversation error:", error);
-        return res.status(500).json({ message: "Server error" });
+        return res.status(500).json({ message: error.message || "Server error" });
     }
 };

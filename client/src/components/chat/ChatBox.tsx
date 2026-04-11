@@ -1,17 +1,6 @@
 import { useEffect, useRef } from "react";
 
-export interface Message {
-    _id: string;
-    conversationId: string;
-    text?: string;
-    imageUrl?: string;
-    sender: {
-        _id: string;
-        username: string;
-    };
-    readBy?: string[];
-    createdAt: string;
-}
+import type { Message } from "../../types/chat";
 
 interface ChatBoxProps {
     messages: Message[];

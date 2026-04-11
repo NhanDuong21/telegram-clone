@@ -2,7 +2,8 @@
 import { useState, useRef } from "react";
 import { sendMessageApi, uploadImageApi } from "../../api/chatApi";
 import { getSocket } from "../../socket";
-import type { Message } from "./ChatBox";
+import type { Message } from "../../types/chat";
+import { SOCKET_EVENTS } from "../../constants/socketEvents";
 
 interface MessageInputProps {
     conversationId: string;
@@ -51,7 +52,7 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
         if (!conversationId) return;
         const socket = getSocket();
         if (socket) {
-            socket.emit("typing", { conversationId, isTyping });
+            socket.emit(SOCKET_EVENTS.TYPING, { conversationId, isTyping });
         }
     };
 

@@ -1,8 +1,8 @@
-# Telegram Clone - Group 4 Project
+# Telegram Clone
 
 A professional, real-time messaging application inspired by Telegram Desktop, built with a modern full-stack architecture.
 
-## 🚀 Introduction
+##Introduction
 This project is a high-performance messaging platform that supports real-time communication, group chats, and multimedia sharing. It features a sleek, responsive UI with dark mode support and mobile-first design.
 
 ## 🛠️ Tech Stack
@@ -13,7 +13,7 @@ This project is a high-performance messaging platform that supports real-time co
 - **Cloud Storage**: Cloudinary (for avatars and image messages).
 - **Authentication**: JWT (JSON Web Tokens).
 
-## ✨ Key Features
+##Key Features
 - **Real-time Messaging**: Instant message delivery using WebSocket.
 - **Group Chats**: Create and manage group conversations with multiple members.
 - **Image Uploads**: Share images effortlessly with Cloudinary integration.
@@ -23,7 +23,7 @@ This project is a high-performance messaging platform that supports real-time co
 - **Online Status**: Real-time tracking of user connectivity.
 - **Mobile Responsive**: Optimised experience for both desktop and mobile devices.
 
-## ⚙️ Setup Instructions
+##Setup Instructions
 
 ### Prerequisites
 - Node.js (v18+)
@@ -67,13 +67,9 @@ VITE_SOCKET_URL=http://localhost:5000
 - **Server**: `npm run dev` (inside `/server`)
 - **Client**: `npm run dev` (inside `/client`)
 
-## 🌐 Deployment
+## Deployment
 The application is ready for production and is hosted on **Render**. 
 - Backend acts as a RESTful API and WebSocket server.
 - Frontend is served as a static SPA.
-
-## 👥 Team (Group 4)
-- **Duong Thien Nhan** (CE190741) - Lead Developer & Architect.
-
 ---
 *Created as part of the Web Application Development course.*

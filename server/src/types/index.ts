@@ -7,6 +7,7 @@ export * from "./chat";
 export interface AuthRequest extends Request {
     user?: any;
     file?: any;
+    headers: any;
 }
 
 export type { IUser, IMessage, IConversation };

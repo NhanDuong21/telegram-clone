@@ -8,11 +8,11 @@ import messageRoutes from "./routes/messageRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
 const app = express();
 
+const isProd = process.env.NODE_ENV === "production";
+const clientUrl = isProd ? process.env.CLIENT_URL_PROD : process.env.CLIENT_URL_DEV;
+
 app.use(cors({
-    origin: [
-        "http://localhost:5173",
-        "https://telegram-nyan.onrender.com"
-    ],
+    origin: clientUrl,
     credentials: true
 }));
 

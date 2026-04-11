@@ -2,12 +2,15 @@ import mongoose from "mongoose";
 
 const connectDB = async () => {
     try {
-        if (!process.env.MONGO_URI) {
-            throw new Error("MONGO_URI is missing");
+        const isProd = process.env.NODE_ENV === "production";
+        const uri = isProd ? process.env.MONGO_URI_PROD : process.env.MONGO_URI_DEV;
+
+        if (!uri) {
+            throw new Error(`MongoDB URI is missing for ${isProd ? "production" : "development"} environment`);
         }
 
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log("MongoDB connected");
+        await mongoose.connect(uri);
+        console.log(`MongoDB connected in ${isProd ? "production" : "development"} mode`);
     } catch (error) {
         console.error("MongoDB connection error:", error);
         throw error;

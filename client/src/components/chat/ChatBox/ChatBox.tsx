@@ -75,11 +75,27 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                     >
                         {!isMe && (
                             <div 
-                                className={`message-avatar ${!isGroup ? "message-avatar--hidden" : ""}`}
+                                className="message-avatar"
                                 onClick={() => onProfileClick?.(msg.sender._id)}
                             >
                                 {msg.sender.avatar ? (
-                                    <img src={msg.sender.avatar} alt={msg.sender.username} className="w-full h-full object-cover" />
+                                    <img 
+                                        src={msg.sender.avatar} 
+                                        alt={msg.sender.username} 
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            // replace broken image with fallback div
+                                            const target = e.currentTarget;
+                                            target.style.display = 'none';
+                                            const parent = target.parentElement;
+                                            if (parent) {
+                                                const fallback = document.createElement('div');
+                                                fallback.className = 'message-avatar-fallback';
+                                                fallback.innerText = msg.sender.username.substring(0, 1).toUpperCase();
+                                                parent.appendChild(fallback);
+                                            }
+                                        }}
+                                    />
                                 ) : (
                                     <div className="message-avatar-fallback">
                                         {msg.sender.username.substring(0, 1).toUpperCase()}

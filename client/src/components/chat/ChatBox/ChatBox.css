@@ -68,9 +68,7 @@
     flex-shrink: 0;
 }
 
-.message-avatar--hidden {
-    visibility: hidden;
-}
+
 
 .message-avatar-fallback {
     width: 100%;

@@ -49,7 +49,7 @@ const UserProfileModal = ({ userId, onClose }: UserProfileModalProps) => {
         );
     }
 
-    const { user, sharedMedia, commonGroupsCount } = profileData || {};
+    const { user } = profileData || {};
 
     return (
         <div className="profile-overlay animate-in fade-in duration-300" onClick={onClose}>
@@ -108,15 +108,6 @@ const UserProfileModal = ({ userId, onClose }: UserProfileModalProps) => {
                         Thêm vào danh bạ
                     </button>
 
-                    <div className="shared-content-section">
-                        <h3 className="shared-content-section__title">Nội dung chung</h3>
-                        <div className="shared-items-list">
-                            <SharedItem icon={<PhotosIcon />} label="Ảnh" count={sharedMedia.photos} />
-                            <SharedItem icon={<LinksIcon />} label="Liên kết" count={sharedMedia.links} />
-                            <SharedItem icon={<FilesIcon />} label="Tệp" count={sharedMedia.files || 0} />
-                            <SharedItem icon={<GroupsIcon />} label="Nhóm chung" count={commonGroupsCount} />
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -144,16 +135,6 @@ const InfoSection = ({ icon, label, value }: { icon: any, label: string, value: 
     </div>
 );
 
-const SharedItem = ({ icon, label, count }: { icon: any, label: string, count: number }) => (
-    <div className="shared-item group">
-        <div className="shared-item__left">
-            <div className="shared-item__icon">{icon}</div>
-            <span className="shared-item__label">{label}</span>
-        </div>
-        <span className="shared-item__count">{count || 0}</span>
-    </div>
-);
-
 // --- SVG Icons ---
 
 const MessageIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>;
@@ -163,9 +144,6 @@ const MoreIcon = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="non
 const BioIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>;
 const UserIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
 const QRIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><path d="M7 7h.01M17 7h.01M17 17h.01M7 17h.01" /></svg>;
-const PhotosIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>;
-const LinksIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>;
-const FilesIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><polyline points="13 2 13 9 20 9" /></svg>;
-const GroupsIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
+
 
 export default UserProfileModal;

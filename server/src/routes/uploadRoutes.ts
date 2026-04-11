@@ -1,24 +1,15 @@
 import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../config/cloudinary";
 import { protect } from "../middlewares/authMiddleware";
 
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, "../../uploads");
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination: (req: Request, file: Express.Multer.File, cb) => {
-        cb(null, uploadDir);
-    },
-    filename: (req: Request, file: Express.Multer.File, cb) => {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        const ext = path.extname(file.originalname);
-        cb(null, uniqueSuffix + ext);
-    },
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: "telegram-clone",
+        allowed_formats: ["jpg", "jpeg", "png", "webp", "gif"],
+    } as any,
 });
 
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
@@ -43,9 +34,8 @@ router.post("/", protect, upload.single("image"), (req: Request, res: Response) 
             return res.status(400).json({ message: "Không tìm thấy file" });
         }
         
-        const protocol = req.protocol;
-        const host = req.get("host");
-        const imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+        // Cloudinary stores the file path securely in req.file.path
+        const imageUrl = req.file.path;
         return res.status(200).json({ imageUrl });
     } catch (error) {
         console.error("Upload error:", error);

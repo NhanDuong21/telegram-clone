@@ -11,7 +11,6 @@ interface MessageInputProps {
 
 const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
     const [text, setText] = useState("");
-    const [imageUrl, setImageUrl] = useState("");
     const [sending, setSending] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -32,10 +31,15 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
 
         setIsUploading(true);
         try {
+            // Upload to Cloudinary via backend
             const res = await uploadImageApi(file);
-            setImageUrl(res.data.imageUrl);
+            const uploadedImageUrl = res.data.imageUrl;
+            
+            // Instantly send as a message
+            const sendRes = await sendMessageApi(conversationId, { text: "", imageUrl: uploadedImageUrl });
+            onMessageSent(sendRes.data.message);
         } catch (error: any) {
-            console.error("Upload failed:", error);
+            console.error("Upload and send failed:", error);
             alert(error.response?.data?.message || "Lỗi upload ảnh.");
         } finally {
             setIsUploading(false);
@@ -53,18 +57,16 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
 
     const handleSend = async () => {
         const trimmedText = text.trim();
-        const trimmedImage = imageUrl.trim();
-        if ((!trimmedText && !trimmedImage) || sending) return;
+        if (!trimmedText || sending) return;
 
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         emitTyping(false);
 
         setSending(true);
         try {
-            const res = await sendMessageApi(conversationId, { text: trimmedText, imageUrl: trimmedImage });
+            const res = await sendMessageApi(conversationId, { text: trimmedText, imageUrl: "" });
             onMessageSent(res.data.message); 
             setText("");
-            setImageUrl("");
         } catch (error) {
             console.error("Send message failed:", error);
         } finally {
@@ -92,29 +94,10 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
         }
     };
 
-    const canSend = (text.trim() || imageUrl.trim()) && !sending;
+    const canSend = text.trim() && !sending;
 
     return (
         <div style={{ display: "flex", flexDirection: "column" }}>
-            {imageUrl && (
-                <div style={{ padding: "8px 16px", backgroundColor: "#f0f2f5", borderTop: "1px solid #e8ecf0", display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                    <div style={{ position: "relative", display: "inline-block" }}>
-                        <img src={imageUrl} alt="preview" style={{ height: "60px", borderRadius: "8px", objectFit: "cover", border: "1px solid #ccc" }} />
-                        <button
-                            onClick={() => setImageUrl("")}
-                            style={{
-                                position: "absolute", top: "-6px", right: "-6px",
-                                background: "#ff4d4f", color: "white", border: "none",
-                                borderRadius: "50%", width: "20px", height: "20px",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                cursor: "pointer", fontSize: "10px", fontWeight: "bold",
-                                boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
-                            }}
-                            title="Xóa ảnh đính kèm"
-                        >✕</button>
-                    </div>
-                </div>
-            )}
             <div
                 style={{
                     display: "flex",

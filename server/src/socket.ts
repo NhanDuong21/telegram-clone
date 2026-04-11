@@ -11,9 +11,12 @@ interface AuthenticatedSocket extends Socket {
 }
 
 export const initSocket = (httpServer: HttpServer) => {
+    const isProd = process.env.NODE_ENV === "production";
+    const clientUrl = isProd ? process.env.CLIENT_URL_PROD : process.env.CLIENT_URL_DEV;
+
     io = new Server(httpServer, {
         cors: {
-            origin: process.env.CLIENT_URL || "*",
+            origin: clientUrl || "*",
             credentials: true,
         },
     });

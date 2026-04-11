@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { AuthRequest } from "../middlewares/authMiddleware";
+import { AuthRequest } from "../types";
 import * as messageService from "../services/messageService";
 
 export const sendMessage = async (req: AuthRequest, res: Response) => {
@@ -15,7 +15,7 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: "Cần ít nhất text hoặc hình ảnh" });
         }
 
-        const message = await messageService.sendMessageService(conversationId, senderId, text, imageUrl);
+        const message = await messageService.sendMessageService(conversationId, senderId.toString(), text, imageUrl);
         return res.status(201).json({ message });
     } catch (error: unknown) {
         console.error("Send message error:", error);
@@ -34,7 +34,7 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
         const { before } = req.query;
         const limit = parseInt(req.query.limit as string) || 30;
 
-        const result = await messageService.getMessagesService(conversationId as string, userId, before as string, limit);
+        const result = await messageService.getMessagesService(conversationId as string, userId.toString(), before as string, limit);
         return res.status(200).json(result);
     } catch (error: unknown) {
         console.error("Get messages error:", error);

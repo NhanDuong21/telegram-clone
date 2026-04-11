@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import User, { IUser } from "../models/User";
 import { generateToken } from "../utils/generateToken";
+import { AuthRequest } from "../types";
 
 export async function register(req: Request, res: Response) {
     try {
@@ -95,16 +96,13 @@ export async function login(req: Request, res: Response) {
     }
 }
 
-interface AuthRequest extends Request {
-    user?: IUser;
-}
 
 export const getMe = async (req: AuthRequest, res: Response) => {
   try {
     return res.status(200).json({
       user: req.user,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     return res.status(500).json({ message: "Server error" });
   }
 };

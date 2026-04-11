@@ -1,6 +1,6 @@
 import { Response } from "express";
 import User from "../models/User";
-import { AuthRequest } from "../middlewares/authMiddleware";
+import { AuthRequest } from "../types";
 
 // GET /api/users/search?q=keyword
 // Tìm user theo username (không trả về chính mình)
@@ -75,7 +75,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
 export const getUserProfile = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const currentUserId = req.user._id;
+        const currentUserId = req.user!._id;
 
         const targetUser = await User.findById(id).select("-password");
         if (!targetUser) return res.status(404).json({ message: "User không tồn tại" });

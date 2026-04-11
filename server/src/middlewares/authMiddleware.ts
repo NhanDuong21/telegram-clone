@@ -1,10 +1,8 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import User from "../models/User";
+import User, { IUser } from "../models/User";
 
-export interface AuthRequest extends Request {
-    user?: any;
-}
+import { AuthRequest } from "../types";
 
 export const protect = async (
     req: AuthRequest,
@@ -35,9 +33,9 @@ export const protect = async (
             return res.status(401).json({ message: "User khong ton tai" });
         }
 
-        req.user = user;
+        req.user = user as IUser;
         next();
-    } catch (error) {
+    } catch (error: unknown) {
         return res.status(401).json({ message: "Token khong hop le" });
     }
 };

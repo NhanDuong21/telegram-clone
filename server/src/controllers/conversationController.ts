@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { AuthRequest } from "../middlewares/authMiddleware";
+import { AuthRequest } from "../types";
 import * as conversationService from "../services/conversationService";
 
 export const createGroupConversation = async (req: AuthRequest, res: Response) => {
@@ -28,7 +28,7 @@ export const updateGroupSettings = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const { name, imageUrl } = req.body;
-        const userId = req.user._id.toString();
+        const userId = req.user!._id.toString();
 
         const conversation = await conversationService.updateGroupSettingsService(id as string, userId, { name, imageUrl });
         return res.status(200).json({ conversation });
@@ -44,7 +44,7 @@ export const addMembers = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const { participantIds } = req.body;
-        const userId = req.user._id.toString();
+        const userId = req.user!._id.toString();
 
         if (!participantIds || !Array.isArray(participantIds) || participantIds.length === 0) {
             return res.status(400).json({ message: "Danh sách member không hợp lệ" });
@@ -62,7 +62,7 @@ export const addMembers = async (req: AuthRequest, res: Response) => {
 export const removeMember = async (req: AuthRequest, res: Response) => {
     try {
         const { id, memberId } = req.params;
-        const userId = req.user._id.toString();
+        const userId = req.user!._id.toString();
 
         const conversation = await conversationService.removeMemberService(id as string, userId, memberId as string);
         return res.status(200).json({ conversation });
@@ -76,7 +76,7 @@ export const removeMember = async (req: AuthRequest, res: Response) => {
 export const deleteGroupConversation = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const userId = req.user._id.toString();
+        const userId = req.user!._id.toString();
 
         const deletedId = await conversationService.deleteGroupService(id as string, userId);
         return res.status(200).json({ message: "Xóa group thành công", deletedConversationId: deletedId });
@@ -90,7 +90,7 @@ export const deleteGroupConversation = async (req: AuthRequest, res: Response) =
 export const createOrGetConversation = async (req: AuthRequest, res: Response) => {
     try {
         const { receiverId } = req.body;
-        const senderId = req.user._id.toString();
+        const senderId = req.user!._id.toString();
 
         if (!receiverId) {
             return res.status(400).json({ message: "receiverId là bắt buộc" });
@@ -107,7 +107,7 @@ export const createOrGetConversation = async (req: AuthRequest, res: Response) =
 
 export const getMyConversations = async (req: AuthRequest, res: Response) => {
     try {
-        const userId = req.user._id.toString();
+        const userId = req.user!._id.toString();
         const conversations = await conversationService.getMyConversationsService(userId);
         return res.status(200).json({ conversations });
     } catch (error: unknown) {
@@ -119,7 +119,7 @@ export const getMyConversations = async (req: AuthRequest, res: Response) => {
 export const clearChat = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const userId = req.user._id.toString();
+        const userId = req.user!._id.toString();
 
         const clearedId = await conversationService.clearChatService(id as string, userId);
         return res.status(200).json({ message: "Đã xóa toàn bộ tin nhắn", clearedConversationId: clearedId });
@@ -133,7 +133,7 @@ export const clearChat = async (req: AuthRequest, res: Response) => {
 export const deleteConversation = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const userId = req.user._id.toString();
+        const userId = req.user!._id.toString();
 
         const deletedId = await conversationService.deleteConversationService(id as string, userId);
         return res.status(200).json({ message: "Đã xóa hiển thị chat", deletedConversationId: deletedId });

@@ -12,6 +12,6 @@ export const searchUsersApi = (query: string) => {
     return axiosClient.get(`${API}/search?q=${encodeURIComponent(query)}`, getAuthHeader());
 };
 
-export const updateProfileApi = (data: { username: string; avatar: string }) => {
+export const updateProfileApi = (data: any) => {
     return axiosClient.put(`${API}/me`, data, getAuthHeader());
 };

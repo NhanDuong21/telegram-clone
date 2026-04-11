@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { updateProfileApi } from "../../api/userApi";
 import { useAuth } from "../../context/AuthContext";
 import Avatar from "../common/Avatar";
@@ -11,9 +11,35 @@ const EditProfileModal = ({ onClose }: EditProfileModalProps) => {
   const { user, updateUser } = useAuth();
 
   const [username, setUsername] = useState(user?.username || "");
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || "");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [localPreview, setLocalPreview] = useState<string>(user?.avatar || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+        setError("Vui lòng chọn file ảnh hợp lệ.");
+        return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+        setError("File ảnh quá lớn (tối đa 2MB).");
+        return;
+    }
+
+    setAvatarFile(file);
+    setError("");
+
+    // Create local preview URL
+    const reader = new FileReader();
+    reader.onloadend = () => {
+        setLocalPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSave = async () => {
     if (!username.trim() || username.trim().length < 2) {
@@ -24,7 +50,13 @@ const EditProfileModal = ({ onClose }: EditProfileModalProps) => {
     setError("");
     setIsSubmitting(true);
     try {
-      const res = await updateProfileApi({ username, avatar: avatarUrl });
+      const formData = new FormData();
+      formData.append("username", username.trim());
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      }
+
+      const res = await updateProfileApi(formData);
       updateUser(res.data.user);
       onClose();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,8 +100,36 @@ const EditProfileModal = ({ onClose }: EditProfileModalProps) => {
         </h2>
 
         {/* Live Preview Avatar */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "-8px" }}>
-           <Avatar user={{ _id: user?._id || "1", username: username || "?", avatar: avatarUrl }} size={80} />
+        <div 
+            style={{ 
+                display: "flex", 
+                flexDirection: "column",
+                alignItems: "center", 
+                gap: "12px" 
+            }}
+        >
+           <Avatar user={{ _id: user?._id || "1", username: username || "?", avatar: localPreview }} size={100} />
+           <button
+             onClick={() => fileInputRef.current?.click()}
+             type="button"
+             style={{
+                 fontSize: "13px",
+                 color: "#0088cc",
+                 background: "none",
+                 border: "none",
+                 cursor: "pointer",
+                 fontWeight: 600
+             }}
+           >
+             Thay đổi ảnh đại diện
+           </button>
+           <input 
+             type="file" 
+             ref={fileInputRef} 
+             onChange={handleFileChange} 
+             accept="image/*" 
+             style={{ display: "none" }} 
+           />
         </div>
 
         {error && (
@@ -87,26 +147,6 @@ const EditProfileModal = ({ onClose }: EditProfileModalProps) => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="e.g. John Doe"
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: "8px",
-                border: "1px solid #dce1e6",
-                outline: "none",
-                fontSize: "14px",
-                boxSizing: "border-box"
-              }}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: "block", fontSize: "13px", fontWeight: 600, marginBottom: "6px", color: "#555" }}>
-              Avatar URL (Optional)
-            </label>
-            <input
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              placeholder="https://example.com/avatar.jpg"
               style={{
                 width: "100%",
                 padding: "10px 12px",
@@ -147,12 +187,29 @@ const EditProfileModal = ({ onClose }: EditProfileModalProps) => {
               cursor: "pointer",
               fontWeight: 500,
               opacity: isSubmitting ? 0.7 : 1,
+              display: "flex",
+              alignItems: "center",
+              gap: "8px"
             }}
           >
+            {isSubmitting && (
+                <div style={{ 
+                    width: "14px", height: "14px", 
+                    border: "2px solid rgba(255,255,255,0.3)", 
+                    borderTopColor: "white", 
+                    borderRadius: "50%", 
+                    animation: "spin 1s linear infinite" 
+                }} />
+            )}
             {isSubmitting ? "Saving..." : "Save"}
           </button>
         </div>
       </div>
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

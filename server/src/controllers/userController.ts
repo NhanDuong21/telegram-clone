@@ -51,11 +51,16 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
             }
         }
 
+        let avatarUrl = req.body.avatar;
+        if (req.file) {
+            avatarUrl = req.file.path;
+        }
+
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             { 
                 username: username.trim(),
-                avatar: avatar ? avatar.trim() : ""
+                avatar: avatarUrl !== undefined ? avatarUrl.trim() : req.user.avatar
             },
             { new: true }
         ).select("-password");

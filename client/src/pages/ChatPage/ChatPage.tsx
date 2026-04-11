@@ -145,108 +145,99 @@ const ChatPage = () => {
         />
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div 
-          key={selectedConversationId || "empty"}
-          initial={{ x: "100%" }}
-          animate={{ x: 0 }}
-          exit={{ x: "100%" }}
-          transition={{ type: "spring", damping: 25, stiffness: 200 }}
-          className={`chat-wrapper ${selectedConversation ? "is-active" : ""}`}
-        >
-          {!selectedConversation ? (
-            <div className="no-chat-placeholder">
-              <div className="placeholder-icon">💬</div>
-              <div className="placeholder-title">Chọn một cuộc trò chuyện để bắt đầu</div>
-              <div className="placeholder-subtitle">Hoặc tìm kiếm người dùng ở thanh bên trái</div>
-            </div>
-          ) : (
-            <>
-              <div className="chat-header">
-                <div className="chat-header__info">
-                  <button className="mobile-back-btn" onClick={() => setSelectedConversationId(null)}>←</button>
-                  {selectedConversation.isGroup ? (
-                    <div className="group-avatar">
-                      {selectedConversation.imageUrl ? 
-                        <img src={selectedConversation.imageUrl} alt={selectedConversation.name} /> 
-                        : "👥"}
-                    </div>
-                  ) : (
-                    <div className="chat-header__avatar-clickable" onClick={() => otherParticipant && setViewingProfileId(otherParticipant._id)}>
-                      <Avatar user={otherParticipant} size={36} />
-                    </div>
-                  )}
-                  <div className={`chat-header__text ${!selectedConversation.isGroup ? "chat-header__text-clickable" : ""}`} 
-                       onClick={() => !selectedConversation.isGroup && otherParticipant && setViewingProfileId(otherParticipant._id)}>
-                    <span className="chat-header__name">{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
-                    {!selectedConversation.isGroup && otherParticipant && onlineUsers.includes(otherParticipant._id) && (
-                      <span className="chat-header__status">Online</span>
-                    )}
-                    {selectedConversation.isGroup && (
-                      <span className="chat-header__members">{selectedConversation.participants.length} thành viên</span>
-                    )}
+      <div className={`chat-wrapper ${selectedConversation ? "is-active" : ""}`}>
+        {!selectedConversation ? (
+          <div className="no-chat-placeholder">
+            <div className="placeholder-icon">💬</div>
+            <div className="placeholder-title">Chọn một cuộc trò chuyện để bắt đầu</div>
+            <div className="placeholder-subtitle">Hoặc tìm kiếm người dùng ở thanh bên trái</div>
+          </div>
+        ) : (
+          <>
+            <div className="chat-header">
+              <div className="chat-header__info">
+                <button className="mobile-back-btn" onClick={() => setSelectedConversationId(null)}>←</button>
+                {selectedConversation.isGroup ? (
+                  <div className="group-avatar">
+                    {selectedConversation.imageUrl ? 
+                      <img src={selectedConversation.imageUrl} alt={selectedConversation.name} /> 
+                      : "👥"}
                   </div>
-                </div>
-                <div className="chat-header__options-container">
-                  <button onClick={() => setShowOptionsMenu(!showOptionsMenu)} className="options-btn">⋮</button>
-                  <AnimatePresence>
-                    {showOptionsMenu && (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        className="options-menu"
-                      >
-                        {selectedConversation.isGroup && (
-                          <div onClick={() => { setShowOptionsMenu(false); setShowGroupSettings(true); }} className="menu-item">Cài đặt nhóm</div>
-                        )}
-                        <div onClick={() => { setShowOptionsMenu(false); clearChat(selectedConversationId!); }} className="menu-item menu-item--delete">Clear chat</div>
-                        {!selectedConversation.isGroup && (
-                          <div onClick={() => { setShowOptionsMenu(false); deleteConversation(selectedConversationId!); }} className="menu-item menu-item--delete-bold">Delete conversation</div>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                ) : (
+                  <div className="chat-header__avatar-clickable" onClick={() => otherParticipant && setViewingProfileId(otherParticipant._id)}>
+                    <Avatar user={otherParticipant} size={36} />
+                  </div>
+                )}
+                <div className={`chat-header__text ${!selectedConversation.isGroup ? "chat-header__text-clickable" : ""}`} 
+                     onClick={() => !selectedConversation.isGroup && otherParticipant && setViewingProfileId(otherParticipant._id)}>
+                  <span className="chat-header__name">{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
+                  {!selectedConversation.isGroup && otherParticipant && onlineUsers.includes(otherParticipant._id) && (
+                    <span className="chat-header__status">Online</span>
+                  )}
+                  {selectedConversation.isGroup && (
+                    <span className="chat-header__members">{selectedConversation.participants.length} thành viên</span>
+                  )}
                 </div>
               </div>
+              <div className="chat-header__options-container">
+                <button onClick={() => setShowOptionsMenu(!showOptionsMenu)} className="options-btn">⋮</button>
+                <AnimatePresence>
+                  {showOptionsMenu && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className="options-menu"
+                    >
+                      {selectedConversation.isGroup && (
+                        <div onClick={() => { setShowOptionsMenu(false); setShowGroupSettings(true); }} className="menu-item">Cài đặt nhóm</div>
+                      )}
+                      <div onClick={() => { setShowOptionsMenu(false); clearChat(selectedConversationId!); }} className="menu-item menu-item--delete">Clear chat</div>
+                      {!selectedConversation.isGroup && (
+                        <div onClick={() => { setShowOptionsMenu(false); deleteConversation(selectedConversationId!); }} className="menu-item menu-item--delete-bold">Delete conversation</div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
 
-              <ChatBox
-                messages={messages}
-                currentUserId={user?._id ?? ""}
-                onLoadMore={() => loadOlderMessages(selectedConversationId!, messages[0].createdAt)}
-                hasMore={hasMore}
-                loadingMore={loadingMore}
-                isGroup={selectedConversation.isGroup}
-                onProfileClick={setViewingProfileId}
-              />
+            <ChatBox
+              messages={messages}
+              currentUserId={user?._id ?? ""}
+              onLoadMore={() => loadOlderMessages(selectedConversationId!, messages[0].createdAt)}
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              isGroup={selectedConversation.isGroup}
+              onProfileClick={setViewingProfileId}
+            />
 
-              {typingUsers.size > 0 && (
-                <div className="typing-indicator">
-                  <TypingDots />
-                  <span className="ml-2">
-                    {Array.from(typingUsers)
-                      .map(id => selectedConversation.participants.find(p => p._id === id)?.username)
-                      .filter(Boolean).join(", ")} đang soạn tin...
-                  </span>
-                </div>
+            {typingUsers.size > 0 && (
+              <div className="typing-indicator">
+                <TypingDots />
+                <span className="ml-2">
+                  {Array.from(typingUsers)
+                    .map(id => selectedConversation.participants.find(p => p._id === id)?.username)
+                    .filter(Boolean).join(", ")} đang soạn tin...
+                </span>
+              </div>
+            )}
+
+            <MessageInput conversationId={selectedConversation._id} onMessageSent={handleMessageSent} />
+
+            <AnimatePresence>
+              {showGroupSettings && selectedConversation.isGroup && (
+                <GroupSettingsModal
+                  conversation={selectedConversation}
+                  currentUserId={user?._id ?? ""}
+                  onClose={() => setShowGroupSettings(false)}
+                  onUpdated={(updatedConv) => setConversations(prev => prev.map(c => c._id === updatedConv._id ? updatedConv : c))}
+                />
               )}
-
-              <MessageInput conversationId={selectedConversation._id} onMessageSent={handleMessageSent} />
-
-              <AnimatePresence>
-                {showGroupSettings && selectedConversation.isGroup && (
-                  <GroupSettingsModal
-                    conversation={selectedConversation}
-                    currentUserId={user?._id ?? ""}
-                    onClose={() => setShowGroupSettings(false)}
-                    onUpdated={(updatedConv) => setConversations(prev => prev.map(c => c._id === updatedConv._id ? updatedConv : c))}
-                  />
-                )}
-              </AnimatePresence>
-            </>
-          )}
-        </motion.div>
-      </AnimatePresence>
+            </AnimatePresence>
+          </>
+        )}
+      </div>
 
       <AnimatePresence>
         {showEditProfile && <EditProfileModal onClose={() => setShowEditProfile(false)} />}

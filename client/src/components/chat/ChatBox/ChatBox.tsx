@@ -79,7 +79,6 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                     return (
                         <motion.div
                             key={msg._id}
-                            layout
                             variants={messageVariants}
                             initial="initial"
                             animate="animate"

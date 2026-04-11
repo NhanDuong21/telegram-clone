@@ -38,27 +38,35 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
             const compressedFile = await imageCompression(file, options);
 
             // 2. Upload trực tiếp lên Cloudinary (Bypass Server)
+            const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dqc4hufot";
+            const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "ml_default";
+
             const formData = new FormData();
             formData.append("file", compressedFile);
-            formData.append("upload_preset", "ml_default"); // User needs to create an 'Unsigned' preset
-            formData.append("cloud_name", "dqc4hufot");
+            formData.append("upload_preset", uploadPreset);
+            formData.append("cloud_name", cloudName);
 
-            const cloudinaryUrl = `https://api.cloudinary.com/v1_1/dqc4hufot/image/upload`;
+            const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
             const response = await fetch(cloudinaryUrl, {
                 method: "POST",
                 body: formData
             });
 
-            if (!response.ok) throw new Error("Cloudinary upload failed");
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                console.error("Cloudinary Error:", errData);
+                throw new Error(errData?.error?.message || "Cloudinary upload failed");
+            }
+
             const data = await response.json();
             const uploadedImageUrl = data.secure_url;
 
             // 3. Gửi tin nhắn kèm URL ảnh đã upload
             const sendRes = await sendMessageApi(conversationId, { text: "", imageUrl: uploadedImageUrl });
             onMessageSent(sendRes.data.message);
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error("Upload and send failed:", error);
-            alert("Lỗi upload ảnh. Vui lòng kiểm tra lại cấu hình Unsigned Upload Preset trên Cloudinary.");
+            alert(`Lỗi: ${error?.message || "Không thể upload ảnh"}. Vui lòng kiểm tra lại 'Unsigned Upload Preset' trên Cloudinary.`);
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";

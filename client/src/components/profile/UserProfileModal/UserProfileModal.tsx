@@ -95,10 +95,10 @@ const UserProfileModal = ({ userId, onClose }: UserProfileModalProps) => {
                         </div>
                     </div>
                     <h2 className="profile-name">
-                        {user.displayName || user.username}
+                        {user?.displayName || user?.username || "Unknown"}
                     </h2>
                     <span className="profile-status">
-                        {formatLastSeen(user.lastSeen)}
+                        {formatLastSeen(user?.lastSeen)}
                     </span>
 
                     <div className="profile-actions">
@@ -111,13 +111,13 @@ const UserProfileModal = ({ userId, onClose }: UserProfileModalProps) => {
 
                 <div className="profile-body">
                     <div className="profile-info-section">
-                        <InfoSection icon={<BioIcon />} label="Tiểu sử" value={user.bio || "Người dùng chưa cài đặt tiểu sử"} />
+                        <InfoSection icon={<BioIcon />} label="Tiểu sử" value={user?.bio || "Người dùng chưa cài đặt tiểu sử"} />
                         
                         <div className="username-row group">
                             <div className="flex gap-4">
                                 <div className="text-teal-400 mt-0.5"><UserIcon /></div>
                                 <div>
-                                    <div className="username-row__text">@{user.username}</div>
+                                    <div className="username-row__text">@{user?.username}</div>
                                     <div className="text-[12px] text-gray-400 mt-0.5">Username</div>
                                 </div>
                             </div>

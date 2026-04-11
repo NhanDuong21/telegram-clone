@@ -60,9 +60,9 @@ const EditProfileModal = ({ onClose }: EditProfileModalProps) => {
       const res = await updateProfileApi(formData);
       updateUser(res.data.user);
       onClose();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to update profile");
+    } catch (err: unknown) {
+      const error = err as any; // Temporary cast for axios error access while we still use local Error interfaces
+      setError(error.response?.data?.message || "Failed to update profile");
     } finally {
       setIsSubmitting(false);
     }

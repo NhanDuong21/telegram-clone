@@ -11,6 +11,7 @@ interface ChatBoxProps {
     loadingMore?: boolean;
     isGroup?: boolean;
     onProfileClick?: (userId: string) => void;
+    onImagePreview?: (url: string) => void;
 }
 
 const formatTime = (iso: string) => {
@@ -24,7 +25,7 @@ const messageVariants = {
     exit: { opacity: 0, scale: 0.9, transition: { duration: 0.1 } }
 };
 
-const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, onProfileClick }: ChatBoxProps) => {
+const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, onProfileClick, onImagePreview }: ChatBoxProps) => {
     const bottomRef = useRef<HTMLDivElement>(null);
     const lastMessageId = useRef<string | null>(null);
     const prevConvId = useRef<string | null>(null);
@@ -136,6 +137,7 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                                         src={msg.imageUrl}
                                         alt="Attached"
                                         className={`message-image ${isMe ? "message-image--me" : "message-image--other"} ${msg.text ? "message-image--with-text" : ""}`}
+                                        onClick={() => onImagePreview?.(msg.imageUrl!)}
                                         onError={(e) => {
                                             e.currentTarget.style.display = "none";
                                         }}

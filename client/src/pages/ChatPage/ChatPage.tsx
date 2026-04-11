@@ -10,6 +10,7 @@ import Avatar from "../../components/common/Avatar";
 import GroupSettingsModal from "../../components/chat/GroupSettingsModal/GroupSettingsModal";
 import EditProfileModal from "../../components/profile/EditProfileModal/EditProfileModal";
 import UserProfileModal from "../../components/profile/UserProfileModal/UserProfileModal";
+import ImagePreviewModal from "../../components/chat/ImagePreviewModal/ImagePreviewModal";
 
 import { disconnectSocket, getSocket } from "../../socket";
 import { useChatSocket } from "../../hooks/useChatSocket";
@@ -55,6 +56,7 @@ const ChatPage = () => {
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
   useChatSocket({
     user,
@@ -235,6 +237,7 @@ const ChatPage = () => {
                 loadingMore={loadingMore}
                 isGroup={selectedConversation.isGroup}
                 onProfileClick={setViewingProfileId}
+                onImagePreview={setPreviewImageUrl}
               />
 
               {typingUsers.size > 0 && (
@@ -270,6 +273,9 @@ const ChatPage = () => {
       </AnimatePresence>
       <AnimatePresence>
         {viewingProfileId && <UserProfileModal userId={viewingProfileId} onClose={() => setViewingProfileId(null)} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {previewImageUrl && <ImagePreviewModal imageUrl={previewImageUrl} onClose={() => setPreviewImageUrl(null)} />}
       </AnimatePresence>
     </div>
   );

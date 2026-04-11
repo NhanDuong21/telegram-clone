@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { connectSocket } from "../socket";
 import type { Message, Conversation, User } from "../types";
 import { getConversationsApi } from "../api/chatApi";
@@ -25,6 +25,12 @@ export const useChatSocket = ({
   setTypingUsers,
   setSelectedConversationId,
 }: UseChatSocketProps) => {
+  const selectedIdRef = useRef<string | null>(selectedConversationId);
+
+  useEffect(() => {
+    selectedIdRef.current = selectedConversationId;
+  }, [selectedConversationId]);
+
   useEffect(() => {
     if (!user) return;
 
@@ -44,13 +50,12 @@ export const useChatSocket = ({
     socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, (message: Message) => {
       const convId = message.conversationId;
 
-      if (selectedConversationId === convId) {
+      if (selectedIdRef.current === convId) {
         setMessages((prev) => {
           if (prev.some((m) => m._id === message._id)) return prev;
           return [...prev, message];
         });
         
-        // Real-time Read Receipt: If we are in the chat, mark as read immediately
         if (user?._id && message.sender._id !== user._id) {
           socket.emit(SOCKET_EVENTS.MARK_AS_READ, { 
             messageId: message._id, 
@@ -85,7 +90,7 @@ export const useChatSocket = ({
     });
 
     socket.on(SOCKET_EVENTS.MESSAGE_READ, ({ messageId, userId, conversationId: convId }) => {
-      if (selectedConversationId === convId) {
+      if (selectedIdRef.current === convId) {
         setMessages((prev) =>
           prev.map((m) => {
             if (m._id === messageId) {
@@ -104,13 +109,16 @@ export const useChatSocket = ({
       setOnlineUsers(users);
     });
 
-    socket.on(SOCKET_EVENTS.TYPING, ({ senderId, isTyping }: { senderId: string; isTyping: boolean }) => {
-      setTypingUsers((prev) => {
-        const next = new Set(prev);
-        if (isTyping) next.add(senderId);
-        else next.delete(senderId);
-        return next;
-      });
+    socket.on(SOCKET_EVENTS.TYPING, ({ senderId, isTyping, conversationId: typingConvId }: { senderId: string; isTyping: boolean, conversationId?: string }) => {
+      // Typing indicators should only show if we are in that conversation
+      if (selectedIdRef.current === typingConvId) {
+        setTypingUsers((prev) => {
+          const next = new Set(prev);
+          if (isTyping) next.add(senderId);
+          else next.delete(senderId);
+          return next;
+        });
+      }
     });
 
     socket.on(SOCKET_EVENTS.GROUP_UPDATED, (updatedGroup: Conversation) => {
@@ -118,7 +126,7 @@ export const useChatSocket = ({
 
       if (!isStillMember) {
         setConversations((prev) => prev.filter((c) => c._id !== updatedGroup._id));
-        if (selectedConversationId === updatedGroup._id) {
+        if (selectedIdRef.current === updatedGroup._id) {
           setSelectedConversationId(null);
           if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
         }
@@ -134,14 +142,14 @@ export const useChatSocket = ({
 
     socket.on(SOCKET_EVENTS.GROUP_DELETED, ({ conversationId }: { conversationId: string }) => {
       setConversations((prev) => prev.filter((c) => c._id !== conversationId));
-      if (selectedConversationId === conversationId) {
+      if (selectedIdRef.current === conversationId) {
         setSelectedConversationId(null);
         if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
       }
     });
 
     socket.on(SOCKET_EVENTS.CONVERSATION_CLEARED, ({ conversationId }: { conversationId: string }) => {
-      if (selectedConversationId === conversationId) {
+      if (selectedIdRef.current === conversationId) {
         setMessages([]);
       }
       setConversations((prev) =>
@@ -151,7 +159,7 @@ export const useChatSocket = ({
 
     socket.on(SOCKET_EVENTS.CONVERSATION_DELETED, ({ conversationId }: { conversationId: string }) => {
       setConversations((prev) => prev.filter((c) => c._id !== conversationId));
-      if (selectedConversationId === conversationId) {
+      if (selectedIdRef.current === conversationId) {
         setSelectedConversationId(null);
         if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
       }
@@ -168,9 +176,5 @@ export const useChatSocket = ({
       socket.off(SOCKET_EVENTS.CONVERSATION_DELETED);
       socket.off(SOCKET_EVENTS.MESSAGE_READ);
     };
-  }, [user, selectedConversationId]); // Note: using selectedConversationId to ensure closure has right ID if needed, 
-                                      // though usually we use refs for this internally if we don't want to re-subscribe.
-                                      // The previous implementation used selectedIdRef. 
-                                      // If I use selectedConversationId in deps, it re-binds on every switch. 
-                                      // That's actually fine and often cleaner than refs in hooks.
+  }, [user]);
 };

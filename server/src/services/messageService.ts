@@ -27,7 +27,9 @@ export const sendMessageService = async (conversationId: string, senderId: strin
     const populated = await newMessage.populate("sender", "-password");
 
     const io = getIO();
-    io.to(conversationId).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, populated);
+    conversation.participants.forEach((p) => {
+        io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, populated);
+    });
 
     return populated;
 };
@@ -67,5 +69,10 @@ export const markAsReadService = async (messageId: string, conversationId: strin
     });
     
     const io = getIO();
-    io.to(conversationId).emit(SOCKET_EVENTS.MESSAGE_READ, { messageId, userId, conversationId });
+    const conversation = await Conversation.findById(conversationId);
+    if (conversation) {
+        conversation.participants.forEach((p) => {
+            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGE_READ, { messageId, userId, conversationId });
+        });
+    }
 };

@@ -54,7 +54,7 @@ export const initSocket = (httpServer: HttpServer) => {
         const socket = rawSocket as AuthenticatedSocket;
         const userId = socket.userId!;
 
-        socket.join(userId);
+        socket.join(`user_${userId}`);
         userSocketMap.set(socket.id, userId);
         emitOnlineUsers();
 

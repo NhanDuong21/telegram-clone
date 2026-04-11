@@ -1,0 +1,125 @@
+.not-found-page {
+    min-height: 100vh;
+    background-color: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0 1.5rem;
+}
+
+.not-found-content {
+    text-align: center;
+}
+
+.big-404 {
+    font-size: 8rem;
+    font-weight: 900;
+    color: #3b82f6;
+    opacity: 0.2;
+    margin: 0;
+}
+
+.relative-content {
+    position: relative;
+    margin-top: -5rem;
+}
+
+.not-found-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.not-found-text {
+    color: #4b5563;
+    margin-bottom: 2rem;
+    max-width: 28rem;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.5;
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1rem;
+}
+
+@media (min-width: 640px) {
+    .button-group {
+        flex-direction: row;
+    }
+}
+
+.home-btn {
+    padding: 0.75rem 2rem;
+    background-color: #3b82f6;
+    color: white;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2);
+}
+
+.home-btn:hover {
+    background-color: #2563eb;
+}
+
+.back-btn {
+    padding: 0.75rem 2rem;
+    background-color: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+    background-color: #f9fafb;
+}
+
+.decoration-dots {
+    margin-top: 4rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+    opacity: 0.4;
+}
+
+.dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: #60a5fa;
+    border-radius: 9999px;
+    animation: bounce 1s infinite;
+}
+
+.dot--dark {
+    background-color: #2563eb;
+}
+
+.dot-delay-1 {
+    animation-delay: -0.15s;
+}
+
+.dot-delay-2 {
+    animation-delay: -0.3s;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(-25%);
+        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+        transform: translateY(0);
+        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+}

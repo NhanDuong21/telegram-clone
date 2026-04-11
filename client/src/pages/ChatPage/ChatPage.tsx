@@ -7,8 +7,8 @@ import Sidebar from "../../components/chat/Sidebar/Sidebar";
 import ChatBox from "../../components/chat/ChatBox/ChatBox";
 import MessageInput from "../../components/chat/MessageInput/MessageInput";
 import Avatar from "../../components/common/Avatar";
-import GroupSettingsModal from "../../components/chat/GroupSettingsModal";
-import EditProfileModal from "../../components/profile/EditProfileModal";
+import GroupSettingsModal from "../../components/chat/GroupSettingsModal/GroupSettingsModal";
+import EditProfileModal from "../../components/profile/EditProfileModal/EditProfileModal";
 import UserProfileModal from "../../components/profile/UserProfileModal/UserProfileModal";
 
 import { disconnectSocket, getSocket } from "../../socket";
@@ -147,9 +147,9 @@ const ChatPage = () => {
       <div className={`chat-wrapper ${selectedConversation ? "is-active" : ""}`}>
         {!selectedConversation ? (
           <div className="no-chat-placeholder">
-            <div style={{ fontSize: "36px" }}>💬</div>
-            <div style={{ fontSize: "16px" }}>Chọn một cuộc trò chuyện để bắt đầu</div>
-            <div style={{ fontSize: "13px", color: "#bbb" }}>Hoặc tìm kiếm người dùng ở thanh bên trái</div>
+            <div className="placeholder-icon">💬</div>
+            <div className="placeholder-title">Chọn một cuộc trò chuyện để bắt đầu</div>
+            <div className="placeholder-subtitle">Hoặc tìm kiếm người dùng ở thanh bên trái</div>
           </div>
         ) : (
           <>
@@ -163,11 +163,11 @@ const ChatPage = () => {
                       : "👥"}
                   </div>
                 ) : (
-                  <div style={{ cursor: "pointer" }} onClick={() => otherParticipant && setViewingProfileId(otherParticipant._id)}>
+                  <div className="chat-header__avatar-clickable" onClick={() => otherParticipant && setViewingProfileId(otherParticipant._id)}>
                     <Avatar user={otherParticipant} size={36} />
                   </div>
                 )}
-                <div className="chat-header__text" style={{ cursor: !selectedConversation.isGroup ? "pointer" : "default" }} 
+                <div className={`chat-header__text ${!selectedConversation.isGroup ? "chat-header__text-clickable" : ""}`} 
                      onClick={() => !selectedConversation.isGroup && otherParticipant && setViewingProfileId(otherParticipant._id)}>
                   <span className="chat-header__name">{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
                   {!selectedConversation.isGroup && otherParticipant && onlineUsers.includes(otherParticipant._id) && (
@@ -178,7 +178,7 @@ const ChatPage = () => {
                   )}
                 </div>
               </div>
-              <div style={{ position: "relative" }}>
+              <div className="chat-header__options-container">
                 <button onClick={() => setShowOptionsMenu(!showOptionsMenu)} className="options-btn">⋮</button>
                 {showOptionsMenu && (
                   <div className="options-menu">

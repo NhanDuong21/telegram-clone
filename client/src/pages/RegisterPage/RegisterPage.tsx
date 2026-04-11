@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { registerApi } from "../api/authApi";
-import { useAuth } from "../context/AuthContext";
+import { registerApi } from "../../api/authApi";
+import { useAuth } from "../../context/AuthContext";
+import '../LoginPage/Auth.css';
 
 const RegisterPage = () => {
   const [username, setUsername] = useState("");
@@ -12,7 +13,7 @@ const RegisterPage = () => {
   const [successMessage, setSuccessMessage] = useState("");
   
   const navigate = useNavigate();
-  const { login } = useAuth(); // Import login so we can auto-login after success
+  const { login } = useAuth();
 
   const handleRegister = async () => {
     if (isSubmitting) return;
@@ -26,18 +27,15 @@ const RegisterPage = () => {
       
       setSuccessMessage("Đăng ký thành công! Đang đăng nhập...");
       
-      // Backend authController's register already returns { message, user, token }
-      // Auto-login for better UX
       if (res.data.token) {
         await login(res.data.token);
         navigate("/");
       } else {
-        // Fallback in case token isn't returned
         setTimeout(() => navigate("/login"), 1000);
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err.response?.data?.message || "Đăng ký thất bại, Nyan disconect database rồi");
+      setError(err.response?.data?.message || "Đăng ký thất bại");
     } finally {
       setIsSubmitting(false);
     }
@@ -46,15 +44,14 @@ const RegisterPage = () => {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        {/* Telegram paper plane logo */}
-        <div style={{ width: "120px", height: "120px", borderRadius: "50%", backgroundColor: "#3390ec", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "24px" }}>
-            <svg viewBox="0 0 24 24" style={{ width: "64px", height: "64px", fill: "white", marginLeft: "-4px" }}>
+        <div className="auth-logo">
+            <svg viewBox="0 0 24 24" className="auth-logo-svg">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
             </svg>
         </div>
 
-        <h2 style={{ fontSize: "24px", fontWeight: "600", color: "#222", marginBottom: "8px", marginTop: "0" }}>Tạo tài khoản mới</h2>
-        <p style={{ fontSize: "15px", color: "#707579", textAlign: "center", marginBottom: "32px", lineHeight: "1.4" }}>
+        <h2 className="auth-title">Tạo tài khoản mới</h2>
+        <p className="auth-subtitle">
             Vui lòng nhập tên hiển thị và thông tin đăng nhập của bạn.
         </p>
         

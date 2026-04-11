@@ -1,0 +1,37 @@
+.auth-logo {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: #3390ec;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.auth-logo-svg {
+    width: 64px;
+    height: 64px;
+    fill: white;
+    margin-left: -4px;
+}
+
+.auth-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 8px;
+    margin-top: 0;
+}
+
+.auth-subtitle {
+    font-size: 15px;
+    color: #707579;
+    text-align: center;
+    margin-bottom: 32px;
+    line-height: 1.4;
+}
+
+.auth-input-group {
+    width: 100%;
+}

@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { searchUsersApi } from "../../../api/userApi";
 import { createOrGetConversationApi } from "../../../api/chatApi";
 import Avatar from "../../common/Avatar";
-import CreateGroupModal from "../CreateGroupModal";
+import CreateGroupModal from "../CreateGroupModal/CreateGroupModal";
 import type { User, Conversation } from "../../../types/chat";
 import './Sidebar.css';
 

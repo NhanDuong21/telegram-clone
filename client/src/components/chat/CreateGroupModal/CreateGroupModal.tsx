@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { searchUsersApi } from "../../api/userApi";
-import { createGroupConversationApi } from "../../api/chatApi";
-import Avatar from "../common/Avatar";
+import { searchUsersApi } from "../../../api/userApi";
+import { createGroupConversationApi } from "../../../api/chatApi";
+import Avatar from "../../common/Avatar";
+import './CreateGroupModal.css';
 
 export interface User {
     _id: string;
@@ -58,7 +59,6 @@ const CreateGroupModal = ({ onClose, onGroupCreated }: CreateGroupModalProps) =>
 
     const handleCreate = async () => {
         const name = groupName.trim();
-        // At least 2 other users selected, so group > 2 (including myself)
         if (!name || selectedUsers.length < 2 || isSubmitting) return;
 
         setIsSubmitting(true);
@@ -78,79 +78,50 @@ const CreateGroupModal = ({ onClose, onGroupCreated }: CreateGroupModalProps) =>
     const canCreate = groupName.trim() && selectedUsers.length >= 2;
 
     return (
-        <div style={{
-            position: "fixed",
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-        }}>
-            <div style={{
-                backgroundColor: "white",
-                padding: "24px",
-                borderRadius: "12px",
-                width: "400px",
-                maxWidth: "90%",
-                boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-                display: "flex",
-                flexDirection: "column",
-                gap: "16px"
-            }}>
-                <h3 style={{ margin: 0, fontSize: "18px" }}>Tạo Nhóm Trò Chuyện</h3>
+        <div className="modal-overlay">
+            <div className="modal-content">
+                <h3 className="modal-title">Tạo Nhóm Trò Chuyện</h3>
 
-                <div>
-                    <label style={{ display: "block", marginBottom: "6px", fontSize: "14px", fontWeight: 600 }}>Tên nhóm</label>
+                <div className="form-group">
+                    <label className="form-label">Tên nhóm</label>
                     <input
                         type="text"
                         placeholder="Nhập tên nhóm..."
                         value={groupName}
                         onChange={(e) => setGroupName(e.target.value)}
-                        style={{
-                            width: "100%", padding: "10px", borderRadius: "8px",
-                            border: "1px solid #ccc", outline: "none", boxSizing: "border-box"
-                        }}
+                        className="form-input"
                     />
                 </div>
 
-                <div>
-                    <label style={{ display: "block", marginBottom: "6px", fontSize: "14px", fontWeight: 600 }}>Thêm thành viên</label>
-                    <div style={{ display: "flex", gap: "8px" }}>
+                <div className="form-group">
+                    <label className="form-label">Thêm thành viên</label>
+                    <div className="search-input-group">
                         <input
                             type="text"
                             placeholder="Tìm kiếm user..."
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            style={{
-                                flex: 1, padding: "10px", borderRadius: "8px",
-                                border: "1px solid #ccc", outline: "none"
-                            }}
+                            className="form-input"
                         />
                         <button
                             onClick={handleSearch}
                             disabled={isSearching}
-                            style={{
-                                padding: "8px 16px", borderRadius: "8px", border: "none",
-                                background: "#0088cc", color: "white", cursor: "pointer",
-                                opacity: isSearching ? 0.7 : 1
-                            }}
+                            className="search-btn"
                         >
                             Tìm
                         </button>
                     </div>
 
-                    {/* Search Results */}
                     {results.length > 0 && (
-                        <div style={{ marginTop: "8px", maxHeight: "150px", overflowY: "auto", border: "1px solid #eee", borderRadius: "8px", padding: "4px" }}>
+                        <div className="search-results">
                             {results.map((user) => (
-                                <div key={user._id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px", borderRadius: "6px", backgroundColor: "#f9f9f9", marginBottom: "4px" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <div key={user._id} className="search-result-item">
+                                    <div className="user-info">
                                         <Avatar user={user} size={28} />
-                                        <span style={{ fontSize: "13px" }}>{user.username}</span>
+                                        <span className="user-name">{user.username}</span>
                                     </div>
-                                    <button onClick={() => addUser(user)} style={{ border: "none", background: "#e4eef7", color: "#0088cc", padding: "4px 8px", borderRadius: "4px", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>
+                                    <button onClick={() => addUser(user)} className="add-btn">
                                         + Thêm
                                     </button>
                                 </div>
@@ -159,15 +130,14 @@ const CreateGroupModal = ({ onClose, onGroupCreated }: CreateGroupModalProps) =>
                     )}
                 </div>
 
-                {/* Selected Users */}
                 {selectedUsers.length > 0 && (
-                    <div>
-                        <div style={{ fontSize: "13px", color: "#666", marginBottom: "6px" }}>Đã chọn ({selectedUsers.length})</div>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                    <div className="selected-users-section">
+                        <div className="selected-count">Đã chọn ({selectedUsers.length})</div>
+                        <div className="selected-users-list">
                             {selectedUsers.map(user => (
-                                <div key={user._id} style={{ display: "flex", alignItems: "center", gap: "6px", backgroundColor: "#e4eef7", padding: "4px 8px", borderRadius: "16px", fontSize: "12px" }}>
+                                <div key={user._id} className="selected-user-tag">
                                     <span>{user.username}</span>
-                                    <span onClick={() => removeUser(user._id)} style={{ cursor: "pointer", color: "#d63031", display: "flex", alignItems: "center" }}>
+                                    <span onClick={() => removeUser(user._id)} className="remove-tag-btn">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ width: "12px", height: "12px" }}>
                                             <line x1="18" y1="6" x2="6" y2="18"></line>
                                             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -179,25 +149,14 @@ const CreateGroupModal = ({ onClose, onGroupCreated }: CreateGroupModalProps) =>
                     </div>
                 )}
 
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
-                    <button
-                        onClick={onClose}
-                        style={{
-                            padding: "10px 16px", borderRadius: "8px", border: "1px solid #ccc",
-                            background: "white", cursor: "pointer", fontWeight: 600
-                        }}
-                    >
+                <div className="modal-footer">
+                    <button onClick={onClose} className="btn-secondary">
                         Hủy
                     </button>
                     <button
                         onClick={handleCreate}
-                        disabled={!canCreate}
-                        style={{
-                            padding: "10px 16px", borderRadius: "8px", border: "none",
-                            background: canCreate ? "#0088cc" : "#ccc", color: "white",
-                            cursor: canCreate ? "pointer" : "not-allowed", fontWeight: 600,
-                            minWidth: "120px"
-                        }}
+                        disabled={!canCreate || isSubmitting}
+                        className="btn-primary"
                     >
                         {isSubmitting ? "Đang tạo..." : "Tạo Nhóm"}
                     </button>

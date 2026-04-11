@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import { searchUsersApi } from "../../api/userApi";
-import { updateGroupSettingsApi, addMembersApi, removeMemberApi, uploadImageApi, deleteGroupApi } from "../../api/chatApi";
-import Avatar from "../common/Avatar";
-import type { Conversation } from "./Sidebar";
-import type { User } from "./CreateGroupModal";
+import { searchUsersApi } from "../../../api/userApi";
+import { updateGroupSettingsApi, addMembersApi, removeMemberApi, uploadImageApi, deleteGroupApi } from "../../../api/chatApi";
+import Avatar from "../../common/Avatar";
+import type { Conversation, User } from "../../../types/chat";
+import './GroupSettingsModal.css';
 
 interface GroupSettingsModalProps {
     conversation: Conversation;
@@ -21,12 +21,9 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
 
     const isOwner = conversation.owner === currentUserId;
 
-    // Search state
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<User[]>([]);
     const [isSearching, setIsSearching] = useState(false);
-    
-    // API state
     const [opLoading, setOpLoading] = useState(false);
 
     const handleSaveInfo = async () => {
@@ -66,7 +63,7 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
             alert(error.response?.data?.message || "Lỗi upload ảnh.");
         } finally {
             setIsUploading(false);
-            e.target.value = ""; // Reset input
+            e.target.value = "";
         }
     };
 
@@ -79,7 +76,6 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
         setIsSearching(true);
         try {
             const res = await searchUsersApi(trimmed);
-            // filter out existing members
             const existingIds = conversation.participants.map(p => p._id);
             const filtered = res.data.users.filter((u: User) => !existingIds.includes(u._id));
             setResults(filtered);
@@ -125,7 +121,7 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
     };
 
     const handleDeleteGroup = async () => {
-        if (!confirm("CẢNH BÁO: Bọn có chắc chắn muốn XÓA VĨNH VIỄN nhóm này không? Hành động này không thể hoàn tác.")) return;
+        if (!confirm("CẢNH BÁO: Bạn có chắc chắn muốn XÓA VĨNH VIỄN nhóm này không? Hành động này không thể hoàn tác.")) return;
         
         setOpLoading(true);
         try {
@@ -140,21 +136,11 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
     };
 
     return (
-        <div style={{
-            position: "fixed",
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            zIndex: 1000,
-        }}>
-            <div style={{
-                backgroundColor: "white", padding: "24px", borderRadius: "12px",
-                width: "450px", maxWidth: "90%", maxHeight: "85vh", overflowY: "auto",
-                boxShadow: "0 10px 25px rgba(0,0,0,0.2)", display: "flex", flexDirection: "column", gap: "20px"
-            }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <h3 style={{ margin: 0, fontSize: "20px" }}>Cài đặt nhóm</h3>
-                    <button onClick={onClose} style={{ border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center" }}>
+        <div className="settings-overlay">
+            <div className="settings-content">
+                <div className="settings-header">
+                    <h3 className="settings-title">Cài đặt nhóm</h3>
+                    <button onClick={onClose} className="close-settings-btn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: "20px", height: "20px" }}>
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -162,25 +148,31 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
                     </button>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "16px", backgroundColor: "#f9f9f9", borderRadius: "8px" }}>
-                    <div>
-                        <label style={{ fontSize: "14px", fontWeight: 600, display: "block", marginBottom: "4px" }}>Tên nhóm</label>
-                        <input type="text" value={name} onChange={e => setName(e.target.value)} disabled={!isOwner}
-                               style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", boxSizing: "border-box", backgroundColor: !isOwner ? "#f0f0f0" : "white" }} />
+                <div className="settings-section">
+                    <div className="settings-row">
+                        <label className="form-label">Tên nhóm</label>
+                        <input 
+                            type="text" 
+                            value={name} 
+                            onChange={e => setName(e.target.value)} 
+                            disabled={!isOwner}
+                            className="form-input"
+                            style={{ backgroundColor: !isOwner ? "#f0f0f0" : "white" }} 
+                        />
                     </div>
-                    <div>
-                        <label style={{ fontSize: "14px", fontWeight: 600, display: "block", marginBottom: "8px" }}>Ảnh nhóm</label>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                            <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: "#e4eef7", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                    <div className="settings-row">
+                        <label className="form-label">Ảnh nhóm</label>
+                        <div className="avatar-preview-container">
+                            <div className="group-avatar-box">
                                 {imageUrl ? (
-                                    <img src={imageUrl} alt="preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                    <img src={imageUrl} alt="preview" className="group-avatar-img" />
                                 ) : (
-                                    <span style={{ fontSize: "18px", fontWeight: "bold", color: "#0088cc" }}>
+                                    <span className="group-avatar-initial">
                                         {name ? name.substring(0, 1).toUpperCase() : "G"}
                                     </span>
                                 )}
                             </div>
-                            <div style={{ flex: 1, display: "flex", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                            <div className="avatar-actions">
                                 {isOwner ? (
                                     <>
                                         <input 
@@ -193,20 +185,15 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
                                         />
                                         <label 
                                             htmlFor="group-avatar-upload" 
-                                            style={{ 
-                                                display: "inline-flex", padding: "8px 14px", border: "1px solid #0088cc", 
-                                                color: "#0088cc", borderRadius: "8px", cursor: isUploading ? "not-allowed" : "pointer",
-                                                fontSize: "13px", fontWeight: 600, opacity: isUploading ? 0.6 : 1,
-                                                alignItems: "center", gap: "6px"
-                                            }}
+                                            className={`upload-label ${isUploading ? "upload-label--disabled" : ""}`}
                                         >
-                                            {isUploading && <div style={{ width: "12px", height: "12px", border: "2px solid rgba(0,136,204,0.3)", borderTopColor: "#0088cc", borderRadius: "50%", animation: "spin 1s linear infinite" }} />}
+                                            {isUploading && <div className="spinner" style={{ width: "12px", height: "12px" }} />}
                                             {isUploading ? "Đang tải lên..." : "Chọn ảnh"}
                                         </label>
                                         {imageUrl && !isUploading && (
                                             <button 
                                                 onClick={() => setImageUrl("")} 
-                                                style={{ background: "transparent", border: "none", color: "#d63031", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}
+                                                className="delete-avatar-btn"
                                             >
                                                 Xóa ảnh
                                             </button>
@@ -219,30 +206,51 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
                         </div>
                     </div>
                     {isOwner && (
-                        <button onClick={handleSaveInfo} disabled={isSaving || !name.trim()}
-                                style={{ alignSelf: "flex-end", padding: "8px 16px", backgroundColor: "#0088cc", color: "white", border: "none", borderRadius: "6px", cursor: isSaving ? "not-allowed" : "pointer" }}>
+                        <button 
+                            onClick={handleSaveInfo} 
+                            disabled={isSaving || !name.trim()}
+                            className="save-info-btn"
+                        >
                             {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
                         </button>
                     )}
                 </div>
 
                 {isOwner && (
-                    <div>
-                        <h4 style={{ margin: "0 0 10px 0" }}>Thêm thành viên</h4>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                            <input type="text" placeholder="Tìm bằng username..." value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSearch()}
-                                   style={{ flex: 1, padding: "8px", borderRadius: "6px", border: "1px solid #ccc" }} />
-                            <button onClick={handleSearch} disabled={isSearching} style={{ padding: "8px 16px", backgroundColor: "#0088cc", color: "white", border: "none", borderRadius: "6px", cursor: "pointer" }}>Tìm</button>
+                    <div className="form-group">
+                        <h4 className="sub-title">Thêm thành viên</h4>
+                        <div className="search-input-group">
+                            <input 
+                                type="text" 
+                                placeholder="Tìm bằng username..." 
+                                value={query} 
+                                onChange={e => setQuery(e.target.value)} 
+                                onKeyDown={e => e.key === "Enter" && handleSearch()}
+                                className="form-input" 
+                            />
+                            <button 
+                                onClick={handleSearch} 
+                                disabled={isSearching} 
+                                className="search-btn"
+                            >
+                                Tìm
+                            </button>
                         </div>
                         {results.length > 0 && (
-                            <div style={{ marginTop: "10px", border: "1px solid #eee", borderRadius: "6px", padding: "4px", maxHeight: "150px", overflowY: "auto" }}>
-                                {results.map(user => (
-                                    <div key={user._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px", borderBottom: "1px solid #eee" }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div className="search-results">
+                                {results.map((user: User) => (
+                                    <div key={user._id} className="search-result-item">
+                                        <div className="user-info">
                                             <Avatar user={user as any} size={28} />
-                                            <span>{user.username}</span>
+                                            <span className="user-name">{user.username}</span>
                                         </div>
-                                        <button onClick={() => handleAddMember(user)} disabled={opLoading} style={{ padding: "4px 8px", backgroundColor: "#00b894", color: "white", border: "none", borderRadius: "4px", fontSize: "12px", cursor: "pointer" }}>+ Thêm</button>
+                                        <button 
+                                            onClick={() => handleAddMember(user as any)} 
+                                            disabled={opLoading} 
+                                            className="add-btn"
+                                        >
+                                            + Thêm
+                                        </button>
                                     </div>
                                 ))}
                             </div>
@@ -251,19 +259,25 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
                 )}
 
                 <div>
-                    <h4 style={{ margin: "0 0 10px 0" }}>Thành viên ({conversation.participants.length})</h4>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "200px", overflowY: "auto", border: "1px solid #eee", padding: "8px", borderRadius: "6px" }}>
+                    <h4 className="sub-title">Thành viên ({conversation.participants.length})</h4>
+                    <div className="member-list">
                         {conversation.participants.map(p => (
-                            <div key={p._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px", backgroundColor: "#fdfdfd", borderRadius: "4px" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div key={p._id} className="member-item">
+                                <div className="member-main-info">
                                     <Avatar user={p as any} size={32} />
-                                    <span>
+                                    <span className="user-name">
                                         {p.username} {p._id === currentUserId && "(Bạn)"}
-                                        {conversation.owner === p._id && <span style={{ marginLeft: "8px", fontSize: "11px", backgroundColor: "#3390ec", color: "white", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold" }}>Owner</span>}
+                                        {conversation.owner === p._id && <span className="owner-badge">Owner</span>}
                                     </span>
                                 </div>
                                 {isOwner && p._id !== currentUserId && (
-                                    <button onClick={() => handleRemoveMember(p._id)} disabled={opLoading} style={{ padding: "4px 8px", backgroundColor: "#d63031", color: "white", border: "none", borderRadius: "4px", fontSize: "12px", cursor: "pointer" }}>Kick</button>
+                                    <button 
+                                        onClick={() => handleRemoveMember(p._id)} 
+                                        disabled={opLoading} 
+                                        className="kick-btn"
+                                    >
+                                        Kick
+                                    </button>
                                 )}
                             </div>
                         ))}
@@ -271,8 +285,12 @@ const GroupSettingsModal = ({ conversation, currentUserId, onClose, onUpdated }:
                 </div>
 
                 {isOwner && (
-                    <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #ffcccc", display: "flex", justifyContent: "center" }}>
-                        <button onClick={handleDeleteGroup} disabled={opLoading} style={{ padding: "10px 24px", backgroundColor: "#ff4d4f", color: "white", border: "none", borderRadius: "6px", fontWeight: "bold", cursor: "pointer", width: "100%", opacity: opLoading ? 0.6 : 1 }}>
+                    <div className="danger-zone">
+                        <button 
+                            onClick={handleDeleteGroup} 
+                            disabled={opLoading} 
+                            className="delete-group-btn"
+                        >
                             {opLoading ? "Đang xử lý..." : "Xóa vĩnh viễn Group"}
                         </button>
                     </div>

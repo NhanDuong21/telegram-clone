@@ -1,0 +1,241 @@
+.settings-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.settings-content {
+    background-color: white;
+    padding: 24px;
+    border-radius: 12px;
+    width: 450px;
+    max-width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.settings-title {
+    margin: 0;
+    font-size: 20px;
+}
+
+.close-settings-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #666;
+    transition: color 0.2s;
+}
+
+.close-settings-btn:hover {
+    color: #333;
+}
+
+.settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.settings-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.avatar-preview-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.group-avatar-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #e4eef7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.group-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.group-avatar-initial {
+    font-size: 10px;
+    font-weight: bold;
+    color: #0088cc;
+}
+
+.avatar-actions {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.upload-label {
+    display: inline-flex;
+    padding: 8px 14px;
+    border: 1px solid #0088cc;
+    color: #0088cc;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+
+.upload-label:hover {
+    background: rgba(0, 136, 204, 0.05);
+}
+
+.upload-label--disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.delete-avatar-btn {
+    background: transparent;
+    border: none;
+    color: #d63031;
+    cursor: pointer;
+    fontSize: 13px;
+    fontWeight: 600;
+}
+
+.save-info-btn {
+    align-self: flex-end;
+    padding: 8px 16px;
+    background-color: #0088cc;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.save-info-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.sub-title {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #1a1a2e;
+}
+
+.member-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    padding: 8px;
+    border-radius: 6px;
+}
+
+.member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background-color: #fdfdfd;
+    border-radius: 6px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.member-main-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.owner-badge {
+    margin-left: 8px;
+    font-size: 10px;
+    background-color: #3390ec;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.kick-btn {
+    padding: 4px 10px;
+    background-color: #d63031;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.kick-btn:hover {
+    background-color: #c0392b;
+}
+
+.danger-zone {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #ffcccc;
+    display: flex;
+    justify-content: center;
+}
+
+.delete-group-btn {
+    padding: 12px 24px;
+    background-color: #ff4d4f;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s, opacity 0.2s;
+}
+
+.delete-group-btn:hover:not(:disabled) {
+    background-color: #d9363e;
+}
+
+.delete-group-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

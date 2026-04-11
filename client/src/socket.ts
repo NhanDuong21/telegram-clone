@@ -34,19 +34,16 @@ export const connectSocket = (): Socket => {
     });
 
     socket.on("connect", () => {
-        console.log("[socket] connected:", socket?.id);
     });
 
-    socket.on("reconnect", (attempt: number) => {
-        console.log(`[socket] reconnected after ${attempt} attempt(s)`);
+    socket.on("reconnect", () => {
     });
 
     socket.on("connect_error", (err) => {
         console.error("[socket] connection error:", err.message);
     });
 
-    socket.on("disconnect", (reason) => {
-        console.log("[socket] disconnected:", reason);
+    socket.on("disconnect", () => {
     });
 
     return socket;

@@ -22,15 +22,19 @@ interface MarkAsReadPayload {
 }
 
 export const initSocket = (httpServer: HttpServer) => {
-    const isProd = process.env.NODE_ENV === "production";
-    const clientUrl = isProd ? process.env.CLIENT_URL_PROD : process.env.CLIENT_URL_DEV;
+    const allowedOrigins = [
+        process.env.CLIENT_URL_PROD,
+        process.env.CLIENT_URL_DEV,
+        "http://localhost:5173",
+        "https://telegram-nyan.onrender.com"
+    ].filter(Boolean) as string[];
 
     io = new Server(httpServer, {
         cors: {
-            origin: clientUrl || "*",
+            origin: allowedOrigins,
             credentials: true,
         },
-        transports: ["websocket"],
+        transports: ["websocket", "polling"],
     });
 
     io.use((socket: AuthenticatedSocket, next) => {

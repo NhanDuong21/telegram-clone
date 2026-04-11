@@ -11,11 +11,15 @@ import compression from "compression";
 const app = express();
 app.use(compression());
 
-const isProd = process.env.NODE_ENV === "production";
-const clientUrl = isProd ? process.env.CLIENT_URL_PROD : process.env.CLIENT_URL_DEV;
+const allowedOrigins = [
+    process.env.CLIENT_URL_PROD,
+    process.env.CLIENT_URL_DEV,
+    "http://localhost:5173",
+    "https://telegram-nyan.onrender.com"
+].filter(Boolean) as string[];
 
 app.use(cors({
-    origin: clientUrl,
+    origin: allowedOrigins,
     credentials: true
 }));
 

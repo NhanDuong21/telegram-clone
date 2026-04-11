@@ -7,7 +7,7 @@ export const sendMessageService = async (conversationId: string, senderId: strin
     const conversation = await Conversation.findOne({
         _id: conversationId,
         participants: senderId,
-    }).select("participants").lean();
+    });
 
     if (!conversation) {
         throw new Error("Conversation không tồn tại");
@@ -21,8 +21,7 @@ export const sendMessageService = async (conversationId: string, senderId: strin
         readBy: [senderId],
     });
 
-    conversation.lastMessage = newMessage._id;
-    await conversation.save();
+    await Conversation.findByIdAndUpdate(conversationId, { lastMessage: newMessage._id });
 
     const populated = await newMessage.populate("sender", "-password");
 

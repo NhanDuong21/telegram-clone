@@ -110,13 +110,20 @@ const ChatPage = () => {
 
   const handleMessageSent = (message: Message) => {
     if (selectedConversationId) {
-      setConversations((prev) =>
-        prev.map((c) =>
-          c._id === selectedConversationId
-            ? { ...c, lastMessage: { _id: message._id, text: message.text ?? "" } }
-            : c
-        )
-      );
+      setConversations((prev) => {
+        const index = prev.findIndex((c) => c._id === selectedConversationId);
+        if (index === -1) return prev;
+        
+        const updatedConv = {
+          ...prev[index],
+          lastMessage: { _id: message._id, text: message.text ?? "" },
+          updatedAt: message.createdAt
+        };
+        
+        const next = [...prev];
+        next.splice(index, 1);
+        return [updatedConv, ...next];
+      });
     }
   };
 

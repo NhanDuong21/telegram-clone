@@ -65,17 +65,18 @@ export const useChatSocket = ({
       }
 
       setConversations((prev) => {
-        const exists = prev.some((c) => c._id === convId);
-        if (exists) {
-          return prev.map((c) =>
-            c._id === convId
-              ? {
-                  ...c,
-                  lastMessage: { _id: message._id, text: message.text ?? "" },
-                }
-              : c
-          );
+        const index = prev.findIndex((c) => c._id === convId);
+        if (index !== -1) {
+          const updatedConv = {
+            ...prev[index],
+            lastMessage: { _id: message._id, text: message.text ?? "" },
+            updatedAt: message.createdAt
+          };
+          const next = [...prev];
+          next.splice(index, 1);
+          return [updatedConv, ...next];
         }
+        
         getConversationsApi()
           .then((res) => setConversations(res.data.conversations))
           .catch((err) => console.error("Failed to refetch conversations:", err));

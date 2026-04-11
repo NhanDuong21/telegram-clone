@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef } from "react";
-import { sendMessageApi, uploadImageApi } from "../../api/chatApi";
-import { getSocket } from "../../socket";
-import type { Message } from "../../types/chat";
-import { SOCKET_EVENTS } from "../../constants/socketEvents";
+import { sendMessageApi, uploadImageApi } from "../../../api/chatApi";
+import { getSocket } from "../../../socket";
+import type { Message } from "../../../types/chat";
+import { SOCKET_EVENTS } from "../../../constants/socketEvents";
+import './MessageInput.css';
 
 interface MessageInputProps {
     conversationId: string;
@@ -32,11 +33,8 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
 
         setIsUploading(true);
         try {
-            // Upload to Cloudinary via backend
             const res = await uploadImageApi(file);
             const uploadedImageUrl = res.data.imageUrl;
-            
-            // Instantly send as a message
             const sendRes = await sendMessageApi(conversationId, { text: "", imageUrl: uploadedImageUrl });
             onMessageSent(sendRes.data.message);
         } catch (error: any) {
@@ -98,17 +96,8 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
     const canSend = text.trim() && !sending;
 
     return (
-        <div style={{ display: "flex", flexDirection: "column" }}>
-            <div
-                style={{
-                    display: "flex",
-                    gap: "10px",
-                    padding: "12px 16px",
-                    borderTop: "1px solid #e8ecf0",
-                    backgroundColor: "#ffffff",
-                    alignItems: "flex-end",
-                }}
-            >
+        <div className="message-input-container">
+            <div className="message-input-wrapper">
                 <input
                     type="file"
                     accept="image/*"
@@ -119,83 +108,34 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
                 <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    style={{
-                        padding: "8px",
-                        background: "transparent",
-                        border: "none",
-                        borderRadius: "50%",
-                        cursor: isUploading ? "not-allowed" : "pointer",
-                        fontSize: "18px",
-                        marginBottom: "4px",
-                        flexShrink: 0,
-                        opacity: isUploading ? 0.6 : 1,
-                    }}
+                    className={`file-upload-btn ${isUploading ? "file-upload-btn--loading" : ""}`}
                     title="Upload ảnh"
                 >
                     {isUploading ? (
-                        <div style={{ width: "20px", height: "20px", border: "2px solid rgba(0,136,204,0.3)", borderTopColor: "#0088cc", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                        <div className="upload-spinner" />
                     ) : (
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: "20px", height: "20px" }}>
                             <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
                         </svg>
                     )}
                 </button>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                <textarea
-                    rows={1}
-                    value={text}
-                    onChange={handleChange}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Nhập tin nhắn... (Enter để gửi)"
-                    style={{
-                        padding: "10px 16px",
-                        borderRadius: "22px",
-                        border: "1px solid #dce1e6",
-                        fontSize: "14px",
-                        resize: "none",
-                        outline: "none",
-                        fontFamily: "inherit",
-                        maxHeight: "100px",
-                        overflowY: "auto",
-                        lineHeight: "1.5",
-                        backgroundColor: "#f7f9fb",
-                        transition: "border-color 0.2s, box-shadow 0.2s",
-                        width: "100%"
-                    }}
-                    onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "#0088cc";
-                        e.currentTarget.style.boxShadow = "0 0 0 2px rgba(0,136,204,0.12)";
-                    }}
-                    onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "#dce1e6";
-                        e.currentTarget.style.boxShadow = "none";
-                    }}
-                />
-            </div>
-            <button
-                onClick={handleSend}
-                disabled={!canSend}
-                style={{
-                    padding: "10px 20px",
-                    borderRadius: "22px",
-                    border: "none",
-                    background: canSend
-                        ? "linear-gradient(135deg, #0088cc, #0077b5)"
-                        : "#dce1e6",
-                    color: "white",
-                    cursor: canSend ? "pointer" : "not-allowed",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
-                    flexShrink: 0,
-                    transition: "background 0.2s, transform 0.1s",
-                    boxShadow: canSend
-                        ? "0 2px 6px rgba(0,136,204,0.3)"
-                        : "none",
-                }}
-            >
-                {sending ? "..." : "Gửi"}
-            </button>
+                <div className="text-input-container">
+                    <textarea
+                        rows={1}
+                        value={text}
+                        onChange={handleChange}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Nhập tin nhắn..."
+                        className="message-textarea"
+                    />
+                </div>
+                <button
+                    onClick={handleSend}
+                    disabled={!canSend}
+                    className={`send-btn ${canSend ? "send-btn--active" : ""}`}
+                >
+                    {sending ? "..." : "Gửi"}
+                </button>
             </div>
         </div>
     );

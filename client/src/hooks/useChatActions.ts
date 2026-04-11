@@ -31,7 +31,6 @@ export const useChatActions = (user: User | null) => {
       setMessages(fetchedMessages);
       setHasMore(res.data.hasMore);
 
-      const socket = getSocket();
       if (socket && user?._id) {
         fetchedMessages.forEach((m: any) => {
           if (m.sender._id !== user._id && !(m.readBy || []).includes(user._id)) {

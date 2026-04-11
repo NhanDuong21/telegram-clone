@@ -21,79 +21,10 @@ body {
   box-sizing: border-box;
 }
 
-/* Telegram Responsive Layout */
-.app-container {
-  display: flex;
-  height: 100dvh; /* important for mobile */
-  width: 100vw;
-  position: relative;
-  overflow: hidden;
-}
-
-.sidebar-wrapper {
-  width: 320px;
-  border-right: 1px solid #ddd;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  background: white;
-}
-
-.chat-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  background: white;
-}
-
-.mobile-back-btn {
-  display: none;
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 8px;
-  margin-right: 8px;
-  color: #0088cc;
-  border-radius: 50%;
-}
-
-.mobile-back-btn:hover {
-  background: rgba(0, 136, 204, 0.1);
-}
-
-@media (max-width: 768px) {
-  .sidebar-wrapper {
-      width: 100%;
-      border-right: none;
-  }
-  
-  .chat-wrapper {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 10;
-      transform: translateX(100%);
-      transition: transform 0.25s ease-out;
-  }
-  
-  .chat-wrapper.is-active {
-      transform: translateX(0);
-  }
-
-  .mobile-back-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-  }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+ /* Global Animations */
+ @keyframes spin {
+   to { transform: rotate(360deg); }
+ }
 
 /* Telegram Auth Redesign Classes */
 .auth-page {

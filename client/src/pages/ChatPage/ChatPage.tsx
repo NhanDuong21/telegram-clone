@@ -1,21 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
-import Sidebar from "../components/chat/Sidebar";
-import ChatBox from "../components/chat/ChatBox";
-import MessageInput from "../components/chat/MessageInput";
-import Avatar from "../components/common/Avatar";
-import GroupSettingsModal from "../components/chat/GroupSettingsModal";
-import EditProfileModal from "../components/profile/EditProfileModal";
-import UserProfileModal from "../components/profile/UserProfileModal";
+import Sidebar from "../../components/chat/Sidebar/Sidebar";
+import ChatBox from "../../components/chat/ChatBox/ChatBox";
+import MessageInput from "../../components/chat/MessageInput/MessageInput";
+import Avatar from "../../components/common/Avatar";
+import GroupSettingsModal from "../../components/chat/GroupSettingsModal";
+import EditProfileModal from "../../components/profile/EditProfileModal";
+import UserProfileModal from "../../components/profile/UserProfileModal/UserProfileModal";
 
-import { disconnectSocket, getSocket } from "../socket";
-import { useChatSocket } from "../hooks/useChatSocket";
-import { useChatActions } from "../hooks/useChatActions";
-import type { Conversation, Message } from "../types/chat";
-import { SOCKET_EVENTS } from "../constants/socketEvents";
+import { disconnectSocket, getSocket } from "../../socket";
+import { useChatSocket } from "../../hooks/useChatSocket";
+import { useChatActions } from "../../hooks/useChatActions";
+import type { Conversation, Message } from "../../types/chat";
+import { SOCKET_EVENTS } from "../../constants/socketEvents";
+import './ChatPage.css';
 
 const ChatPage = () => {
   const { user, logout } = useAuth();
@@ -123,12 +124,12 @@ const ChatPage = () => {
   return (
     <div className="app-container">
       <div className="sidebar-wrapper">
-        <div style={styles.sidebarHeader}>
-          <div style={styles.profileSection} onClick={() => setShowEditProfile(true)}>
+        <div className="sidebar-header">
+          <div className="profile-section" onClick={() => setShowEditProfile(true)}>
             <Avatar user={user} size={32} />
-            <span style={styles.username}>{user?.username}</span>
+            <span className="profile-username">{user?.username}</span>
           </div>
-          <button onClick={handleLogout} style={styles.logoutBtn}>Logout</button>
+          <button onClick={handleLogout} className="logout-btn">Logout</button>
         </div>
 
         <Sidebar
@@ -145,20 +146,20 @@ const ChatPage = () => {
 
       <div className={`chat-wrapper ${selectedConversation ? "is-active" : ""}`}>
         {!selectedConversation ? (
-          <div style={styles.noChatPlaceholder}>
+          <div className="no-chat-placeholder">
             <div style={{ fontSize: "36px" }}>💬</div>
             <div style={{ fontSize: "16px" }}>Chọn một cuộc trò chuyện để bắt đầu</div>
             <div style={{ fontSize: "13px", color: "#bbb" }}>Hoặc tìm kiếm người dùng ở thanh bên trái</div>
           </div>
         ) : (
           <>
-            <div style={styles.chatHeader}>
-              <div style={styles.chatHeaderInfo}>
+            <div className="chat-header">
+              <div className="chat-header__info">
                 <button className="mobile-back-btn" onClick={() => setSelectedConversationId(null)}>←</button>
                 {selectedConversation.isGroup ? (
-                  <div style={styles.groupAvatar}>
+                  <div className="group-avatar">
                     {selectedConversation.imageUrl ? 
-                      <img src={selectedConversation.imageUrl} alt={selectedConversation.name} style={styles.groupImg} /> 
+                      <img src={selectedConversation.imageUrl} alt={selectedConversation.name} /> 
                       : "👥"}
                   </div>
                 ) : (
@@ -166,27 +167,27 @@ const ChatPage = () => {
                     <Avatar user={otherParticipant} size={36} />
                   </div>
                 )}
-                <div style={{ ...styles.headerText, cursor: !selectedConversation.isGroup ? "pointer" : "default" }} 
+                <div className="chat-header__text" style={{ cursor: !selectedConversation.isGroup ? "pointer" : "default" }} 
                      onClick={() => !selectedConversation.isGroup && otherParticipant && setViewingProfileId(otherParticipant._id)}>
-                  <span>{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
+                  <span className="chat-header__name">{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
                   {!selectedConversation.isGroup && otherParticipant && onlineUsers.includes(otherParticipant._id) && (
-                    <span style={styles.onlineStatus}>Online</span>
+                    <span className="chat-header__status">Online</span>
                   )}
                   {selectedConversation.isGroup && (
-                    <span style={styles.memberCount}>{selectedConversation.participants.length} thành viên</span>
+                    <span className="chat-header__members">{selectedConversation.participants.length} thành viên</span>
                   )}
                 </div>
               </div>
               <div style={{ position: "relative" }}>
-                <button onClick={() => setShowOptionsMenu(!showOptionsMenu)} style={styles.optionsBtn}>⋮</button>
+                <button onClick={() => setShowOptionsMenu(!showOptionsMenu)} className="options-btn">⋮</button>
                 {showOptionsMenu && (
-                  <div style={styles.optionsMenu}>
+                  <div className="options-menu">
                     {selectedConversation.isGroup && (
-                      <div onClick={() => { setShowOptionsMenu(false); setShowGroupSettings(true); }} style={styles.menuItem}>Cài đặt nhóm</div>
+                      <div onClick={() => { setShowOptionsMenu(false); setShowGroupSettings(true); }} className="menu-item">Cài đặt nhóm</div>
                     )}
-                    <div onClick={() => { setShowOptionsMenu(false); clearChat(selectedConversationId!); }} style={styles.deleteMenuItem}>Clear chat</div>
+                    <div onClick={() => { setShowOptionsMenu(false); clearChat(selectedConversationId!); }} className="menu-item menu-item--delete">Clear chat</div>
                     {!selectedConversation.isGroup && (
-                      <div onClick={() => { setShowOptionsMenu(false); deleteConversation(selectedConversationId!); }} style={styles.deleteMenuItemBold}>Delete conversation</div>
+                      <div onClick={() => { setShowOptionsMenu(false); deleteConversation(selectedConversationId!); }} className="menu-item menu-item--delete-bold">Delete conversation</div>
                     )}
                   </div>
                 )}
@@ -204,7 +205,7 @@ const ChatPage = () => {
             />
 
             {typingUsers.size > 0 && (
-              <div style={styles.typingIndicator}>
+              <div className="typing-indicator">
                 {Array.from(typingUsers)
                   .map(id => selectedConversation.participants.find(p => p._id === id)?.username)
                   .filter(Boolean).join(", ")} đang soạn tin...
@@ -228,27 +229,6 @@ const ChatPage = () => {
       {viewingProfileId && <UserProfileModal userId={viewingProfileId} onClose={() => setViewingProfileId(null)} />}
     </div>
   );
-};
-
-const styles: Record<string, any> = {
-  sidebarHeader: { padding: "10px 12px", borderBottom: "1px solid #ddd", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#f5f5f5" },
-  profileSection: { display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" },
-  username: { fontWeight: 600, fontSize: "14px" },
-  logoutBtn: { padding: "4px 10px", fontSize: "12px", border: "1px solid #ccc", borderRadius: "4px", backgroundColor: "white", cursor: "pointer" },
-  noChatPlaceholder: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#999", gap: "8px" },
-  chatHeader: { padding: "10px 16px", borderBottom: "1px solid #eee", fontWeight: 600, fontSize: "15px", backgroundColor: "#f9f9f9", display: "flex", alignItems: "center", gap: "10px", justifyContent: "space-between" },
-  chatHeaderInfo: { display: "flex", alignItems: "center", gap: "10px" },
-  headerText: { display: "flex", flexDirection: "column" },
-  onlineStatus: { fontSize: "12px", color: "#0088cc", fontWeight: "600", marginTop: "2px" },
-  memberCount: { fontSize: "12px", color: "#666", fontWeight: "normal", marginTop: "2px" },
-  groupAvatar: { width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "#0088cc", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", overflow: "hidden" },
-  groupImg: { width: "100%", height: "100%", objectFit: "cover" },
-  optionsBtn: { background: "transparent", border: "none", cursor: "pointer", fontSize: "20px", color: "#0088cc", padding: "4px" },
-  optionsMenu: { position: "absolute", right: 0, top: "100%", background: "white", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", borderRadius: "8px", zIndex: 10, minWidth: "150px", overflow: "hidden" },
-  menuItem: { padding: "10px 16px", cursor: "pointer", borderBottom: "1px solid #eee", fontSize: "14px" },
-  deleteMenuItem: { padding: "10px 16px", cursor: "pointer", borderBottom: "1px solid #eee", fontSize: "14px", color: "#d63031" },
-  deleteMenuItemBold: { padding: "10px 16px", cursor: "pointer", color: "#d63031", fontSize: "14px", fontWeight: "bold" },
-  typingIndicator: { fontSize: "12px", color: "#aaa", padding: "0 16px 8px 16px", fontStyle: "italic" },
 };
 
 export default ChatPage;

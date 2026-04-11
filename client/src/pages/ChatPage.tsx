@@ -123,6 +123,22 @@ const ChatPage = () => {
       });
     });
 
+    socket.on("messageRead", ({ messageId, userId, conversationId: convId }) => {
+      if (selectedIdRef.current === convId) {
+        setMessages((prev) =>
+          prev.map((m) => {
+            if (m._id === messageId) {
+               const currentReadBy = m.readBy || [];
+               if (!currentReadBy.includes(userId)) {
+                  return { ...m, readBy: [...currentReadBy, userId] };
+               }
+            }
+            return m;
+          })
+        );
+      }
+    });
+
     socket.on("onlineUsers", (users: string[]) => {
       setOnlineUsers(users);
     });
@@ -213,6 +229,7 @@ const ChatPage = () => {
       socket.off("groupDeleted");
       socket.off("conversationCleared");
       socket.off("conversationDeleted");
+      socket.off("messageRead");
     };
   }, [user]);
 
@@ -246,8 +263,20 @@ const ChatPage = () => {
     const fetchMessages = async () => {
       try {
         const res = await getMessagesApi(selectedConversationId);
-        setMessages(res.data.messages);
+        const fetchedMessages = res.data.messages;
+        setMessages(fetchedMessages);
         setHasMore(res.data.hasMore);
+
+        // Mark previously unseen messages as read
+        const socket = getSocket();
+        if (socket && user?._id) {
+            fetchedMessages.forEach((m: any) => {
+                if (m.sender._id !== user._id && !(m.readBy || []).includes(user._id)) {
+                    socket.emit("markAsRead", { messageId: m._id, conversationId: m.conversationId });
+                }
+            });
+        }
+
       } catch (error: any) {
         console.error("Failed to load messages:", error);
         if (error.response?.status === 404) {
@@ -300,7 +329,9 @@ const ChatPage = () => {
   };
 
   const handleMessageSent = (message: Message) => {
-    setMessages((prev) => [...prev, message]);
+    // Add us as having read our own message safely
+    const sentMsg = { ...message, readBy: [user?._id] };
+    setMessages((prev) => [...prev, sentMsg]);
 
     if (selectedConversationId) {
       setConversations((prev) =>
@@ -308,7 +339,7 @@ const ChatPage = () => {
           c._id === selectedConversationId
             ? {
                 ...c,
-                lastMessage: { _id: message._id, text: message.text ?? "" },
+                lastMessage: { _id: sentMsg._id, text: sentMsg.text ?? "" },
               }
             : c,
         ),
@@ -339,12 +370,9 @@ const ChatPage = () => {
     }
   };
 
-  // Derive other participant and typing status
   const otherParticipant = selectedConversation?.participants.find(
     (p) => p._id !== user?._id,
   );
-  const isOtherParticipantTyping =
-    otherParticipant && typingUsers.has(otherParticipant._id);
 
   return (
     <div className="app-container">
@@ -488,6 +516,18 @@ const ChatPage = () => {
                       ? selectedConversation.name
                       : (otherParticipant?.username ?? "Chat")}
                   </span>
+                  {!selectedConversation.isGroup && otherParticipant && onlineUsers.includes(otherParticipant._id) && (
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        color: "#0088cc",
+                        fontWeight: "600",
+                        marginTop: "2px",
+                      }}
+                    >
+                      Online
+                    </span>
+                  )}
                   {selectedConversation.isGroup && (
                     <span
                       style={{
@@ -592,7 +632,7 @@ const ChatPage = () => {
             />
 
             {/* Typing Indicator */}
-            {isOtherParticipantTyping && !selectedConversation.isGroup && (
+            {typingUsers.size > 0 && (
               <div
                 style={{
                   fontSize: "12px",
@@ -601,13 +641,20 @@ const ChatPage = () => {
                   fontStyle: "italic",
                 }}
               >
-                {otherParticipant?.username} đang soạn tin...
+                {Array.from(typingUsers)
+                  .map(
+                    (id) =>
+                      selectedConversation.participants.find((p) => p._id === id)
+                        ?.username
+                  )
+                  .filter(Boolean)
+                  .join(", ")}{" "}
+                đang soạn tin...
               </div>
             )}
 
             <MessageInput
               conversationId={selectedConversation._id}
-              receiverId={otherParticipant?._id}
               onMessageSent={handleMessageSent}
             />
 

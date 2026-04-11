@@ -60,10 +60,11 @@ export const initSocket = (httpServer: HttpServer) => {
         console.log(`Socket connected: ${socket.id} (user: ${userId})`);
         emitOnlineUsers();
 
-        // Typing indicator
-        socket.on("typing", ({ receiverId, isTyping }) => {
-            if (userId && receiverId) {
-                io.to(receiverId).emit("typing", { senderId: userId, isTyping });
+        // Typing indicator via room broadcast
+        socket.on("typing", ({ conversationId, isTyping }) => {
+            if (userId && conversationId) {
+                // Broadcast to everyone else in the room
+                socket.to(conversationId).emit("typing", { senderId: userId, isTyping });
             }
         });
 
@@ -71,6 +72,23 @@ export const initSocket = (httpServer: HttpServer) => {
         socket.on("joinRoom", (roomId: string) => {
             socket.join(roomId);
             console.log(`Socket ${socket.id} joined room ${roomId}`);
+        });
+
+        // Read Receipts listener
+        socket.on("markAsRead", async ({ messageId, conversationId }) => {
+            if (userId && messageId && conversationId) {
+                try {
+                    const Message = (await import("./models/Message")).default;
+                    await Message.findByIdAndUpdate(messageId, {
+                        $addToSet: { readBy: userId }
+                    });
+                    
+                    // Broadcast to everyone in the room that this message was read by this user
+                    io.to(conversationId).emit("messageRead", { messageId, userId, conversationId });
+                } catch (error) {
+                    console.error("markAsRead error:", error);
+                }
+            }
         });
 
         socket.on("disconnect", () => {

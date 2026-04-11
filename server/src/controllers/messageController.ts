@@ -33,6 +33,7 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
             sender: senderId,
             text: text ? text.trim() : "",
             imageUrl: imageUrl ? imageUrl.trim() : "",
+            readBy: [senderId],
         });
 
         conversation.lastMessage = newMessage._id;

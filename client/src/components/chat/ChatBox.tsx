@@ -9,6 +9,7 @@ export interface Message {
         _id: string;
         username: string;
     };
+    readBy?: string[];
     createdAt: string;
 }
 
@@ -99,6 +100,8 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
             
             {messages.map((msg) => {
                 const isMe = msg.sender._id === currentUserId;
+                const isRead = (msg.readBy || []).some(id => id !== currentUserId);
+
                 return (
                     <div
                         key={msg._id}
@@ -165,11 +168,19 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                                 style={{
                                     fontSize: "10px",
                                     marginTop: "5px",
-                                    textAlign: "right",
-                                    opacity: 0.55,
+                                    display: "flex",
+                                    justifyContent: "flex-end",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    opacity: 0.7,
                                 }}
                             >
-                                {formatTime(msg.createdAt)}
+                                <span>{formatTime(msg.createdAt)}</span>
+                                {isMe && (
+                                    <span style={{ color: isRead ? (isMe ? "#e0f7fa" : "#34b7f1") : "inherit", fontSize: "12px", display: "flex", alignItems: "center" }}>
+                                        {isRead ? "✓✓" : "✓"}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>

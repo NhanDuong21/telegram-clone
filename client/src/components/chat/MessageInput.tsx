@@ -6,11 +6,10 @@ import type { Message } from "./ChatBox";
 
 interface MessageInputProps {
     conversationId: string;
-    receiverId?: string;
     onMessageSent: (message: Message) => void;
 }
 
-const MessageInput = ({ conversationId, receiverId, onMessageSent }: MessageInputProps) => {
+const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
     const [text, setText] = useState("");
     const [imageUrl, setImageUrl] = useState("");
     const [sending, setSending] = useState(false);
@@ -45,10 +44,10 @@ const MessageInput = ({ conversationId, receiverId, onMessageSent }: MessageInpu
     };
 
     const emitTyping = (isTyping: boolean) => {
-        if (!receiverId) return;
+        if (!conversationId) return;
         const socket = getSocket();
         if (socket) {
-            socket.emit("typing", { receiverId, isTyping });
+            socket.emit("typing", { conversationId, isTyping });
         }
     };
 
@@ -157,36 +156,38 @@ const MessageInput = ({ conversationId, receiverId, onMessageSent }: MessageInpu
                         </svg>
                     )}
                 </button>
-            <textarea
-                rows={1}
-                value={text}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                placeholder="Nhập tin nhắn... (Enter để gửi)"
-                style={{
-                    flex: 1,
-                    padding: "10px 16px",
-                    borderRadius: "22px",
-                    border: "1px solid #dce1e6",
-                    fontSize: "14px",
-                    resize: "none",
-                    outline: "none",
-                    fontFamily: "inherit",
-                    maxHeight: "100px",
-                    overflowY: "auto",
-                    lineHeight: "1.5",
-                    backgroundColor: "#f7f9fb",
-                    transition: "border-color 0.2s, box-shadow 0.2s",
-                }}
-                onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "#0088cc";
-                    e.currentTarget.style.boxShadow = "0 0 0 2px rgba(0,136,204,0.12)";
-                }}
-                onBlur={(e) => {
-                    e.currentTarget.style.borderColor = "#dce1e6";
-                    e.currentTarget.style.boxShadow = "none";
-                }}
-            />
+            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                <textarea
+                    rows={1}
+                    value={text}
+                    onChange={handleChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Nhập tin nhắn... (Enter để gửi)"
+                    style={{
+                        padding: "10px 16px",
+                        borderRadius: "22px",
+                        border: "1px solid #dce1e6",
+                        fontSize: "14px",
+                        resize: "none",
+                        outline: "none",
+                        fontFamily: "inherit",
+                        maxHeight: "100px",
+                        overflowY: "auto",
+                        lineHeight: "1.5",
+                        backgroundColor: "#f7f9fb",
+                        transition: "border-color 0.2s, box-shadow 0.2s",
+                        width: "100%"
+                    }}
+                    onFocus={(e) => {
+                        e.currentTarget.style.borderColor = "#0088cc";
+                        e.currentTarget.style.boxShadow = "0 0 0 2px rgba(0,136,204,0.12)";
+                    }}
+                    onBlur={(e) => {
+                        e.currentTarget.style.borderColor = "#dce1e6";
+                        e.currentTarget.style.boxShadow = "none";
+                    }}
+                />
+            </div>
             <button
                 onClick={handleSend}
                 disabled={!canSend}

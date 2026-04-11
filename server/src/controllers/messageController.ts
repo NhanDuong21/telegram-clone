@@ -40,13 +40,9 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
 
         const populated = await newMessage.populate("sender", "-password");
 
-        // Emit to the OTHER participant(s) in realtime
+        // Emit to the conversation room in realtime so all active clients get it
         const io = getIO();
-        conversation.participants.forEach((participantId) => {
-            if (participantId.toString() !== senderId.toString()) {
-                io.to(participantId.toString()).emit("newMessage", populated);
-            }
-        });
+        io.to(conversationId.toString()).emit("receiveMessage", populated);
 
         return res.status(201).json({ message: populated });
     } catch (error) {

@@ -16,7 +16,7 @@ import {
   clearChatApi,
   deleteConversationApi,
 } from "../api/chatApi";
-import { connectSocket, disconnectSocket } from "../socket";
+import { connectSocket, disconnectSocket, getSocket } from "../socket";
 
 const ChatPage = () => {
   const { user, logout } = useAuth();
@@ -85,12 +85,16 @@ const ChatPage = () => {
         .catch((err) => console.error("Reconnect refetch failed:", err));
     });
 
-    socket.on("newMessage", (message: Message) => {
+    socket.on("receiveMessage", (message: Message) => {
       const convId = message.conversationId;
 
       // Append message to chat if this conversation is currently open
       if (selectedIdRef.current === convId) {
-        setMessages((prev) => [...prev, message]);
+        setMessages((prev) => {
+          // Prevent duplicates if already added by handleMessageSent
+          if (prev.some((m) => m._id === message._id)) return prev;
+          return [...prev, message];
+        });
       }
 
       // Update sidebar: known conversation → update lastMessage in-place
@@ -202,7 +206,7 @@ const ChatPage = () => {
 
     return () => {
       socket.off("connect");
-      socket.off("newMessage");
+      socket.off("receiveMessage");
       socket.off("onlineUsers");
       socket.off("typing");
       socket.off("groupUpdated");
@@ -232,6 +236,13 @@ const ChatPage = () => {
       setHasMore(false);
       return;
     }
+
+    // Join the specific conversation room
+    const socket = getSocket();
+    if (socket) {
+      socket.emit("joinRoom", selectedConversationId);
+    }
+
     const fetchMessages = async () => {
       try {
         const res = await getMessagesApi(selectedConversationId);

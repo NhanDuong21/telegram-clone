@@ -64,6 +64,12 @@ export const initSocket = (httpServer: HttpServer) => {
             }
         });
 
+        // Join specific conversation room for real-time messages
+        socket.on("joinRoom", (roomId: string) => {
+            socket.join(roomId);
+            console.log(`Socket ${socket.id} joined room ${roomId}`);
+        });
+
         socket.on("disconnect", () => {
             console.log(`Socket disconnected: ${socket.id} (user: ${userId})`);
             userSocketMap.delete(socket.id);

@@ -6,7 +6,7 @@ import '../LoginPage/Auth.css';
 
 const RegisterPage = () => {
   useEffect(() => {
-    document.title = "Register - Telegram Web";
+    document.title = "Telegram Web";
   }, []);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -55,7 +55,7 @@ const RegisterPage = () => {
 
         <h2 className="auth-title">Tạo tài khoản mới</h2>
         <p className="auth-subtitle">
-            Vui lòng nhập tên hiển thị và thông tin đăng nhập của bạn.
+            Vui lòng nhập thông tin để bắt đầu sử dụng Telegram.
         </p>
         
         {error && (

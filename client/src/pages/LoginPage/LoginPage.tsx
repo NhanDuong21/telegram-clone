@@ -6,7 +6,7 @@ import './Auth.css';
 
 const LoginPage = () => {
   useEffect(() => {
-    document.title = "Login - Telegram Web";
+    document.title = "Telegram Web";
   }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

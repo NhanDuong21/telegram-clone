@@ -6,6 +6,8 @@
     flex-direction: column;
     gap: 8px;
     background: #f7f9fb;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
 }
 
 .chat-box--empty {

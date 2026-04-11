@@ -5,15 +5,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #fff;
   color: #333;
+  height: 100dvh;
   overflow: hidden; /* App view is static */
+  width: 100vw;
+  position: fixed; /* Prevents scroll-bounce on rubber-banding body */
 }
 
 #root {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   margin: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Base resets */

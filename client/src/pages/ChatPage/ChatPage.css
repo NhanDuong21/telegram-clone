@@ -219,9 +219,13 @@
         width: 100%;
         height: 100%;
         transform: translateX(100%);
+        pointer-events: none;
+        visibility: hidden;
     }
     .chat-wrapper.is-active {
         transform: translateX(0);
+        pointer-events: auto;
+        visibility: visible;
     }
 }
 

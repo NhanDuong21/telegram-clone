@@ -6,7 +6,10 @@ import userRoutes from "./routes/userRoutes";
 import conversationRoutes from "./routes/conversationRoutes";
 import messageRoutes from "./routes/messageRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
+import compression from "compression";
+
 const app = express();
+app.use(compression());
 
 const isProd = process.env.NODE_ENV === "production";
 const clientUrl = isProd ? process.env.CLIENT_URL_PROD : process.env.CLIENT_URL_DEV;

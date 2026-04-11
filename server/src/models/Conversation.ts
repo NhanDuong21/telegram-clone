@@ -38,5 +38,7 @@ const conversationSchema = new Schema<IConversation>(
     }
 );
 
+conversationSchema.index({ participants: 1, updatedAt: -1 });
+
 const Conversation = mongoose.model<IConversation>("Conversation", conversationSchema);
 export default Conversation;

@@ -7,7 +7,7 @@ export const sendMessageService = async (conversationId: string, senderId: strin
     const conversation = await Conversation.findOne({
         _id: conversationId,
         participants: senderId,
-    });
+    }).select("participants").lean();
 
     if (!conversation) {
         throw new Error("Conversation không tồn tại");
@@ -38,7 +38,7 @@ export const getMessagesService = async (conversationId: string, userId: string,
     const conversation = await Conversation.findOne({
         _id: conversationId,
         participants: userId,
-    });
+    }).select("_id").lean();
 
     if (!conversation) {
         throw new Error("Conversation không tồn tại");
@@ -50,9 +50,10 @@ export const getMessagesService = async (conversationId: string, userId: string,
     }
 
     const messages = await Message.find(query)
-        .populate("sender", "-password")
+        .populate("sender", "username avatar")
         .sort({ createdAt: -1 })
-        .limit(limit + 1);
+        .limit(limit + 1)
+        .lean();
 
     const hasMore = messages.length > limit;
     if (hasMore) {

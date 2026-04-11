@@ -130,7 +130,7 @@ export const createOrGetConversationService = async (senderId: string, receiverI
 
     const existingConversation = await Conversation.findOne({
         participants: { $all: [senderId, receiverId], $size: 2 },
-    }).populate("participants", "-password");
+    }).populate("participants", "username email avatar").lean();
 
     if (existingConversation) return existingConversation;
 
@@ -145,9 +145,10 @@ export const getMyConversationsService = async (userId: string) => {
     return await Conversation.find({
         participants: userId,
     })
-    .populate("participants", "-password")
-    .populate("lastMessage")
-    .sort({ updatedAt: -1 });
+    .populate("participants", "username email avatar")
+    .populate("lastMessage", "text imageUrl createdAt")
+    .sort({ updatedAt: -1 })
+    .lean();
 };
 
 export const clearChatService = async (id: string, userId: string) => {

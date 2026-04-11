@@ -30,6 +30,7 @@ export const initSocket = (httpServer: HttpServer) => {
             origin: clientUrl || "*",
             credentials: true,
         },
+        transports: ["websocket"],
     });
 
     io.use((socket: AuthenticatedSocket, next) => {

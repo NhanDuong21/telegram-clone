@@ -5,9 +5,8 @@ import { IMessage, IConversation } from "./chat";
 export * from "./chat";
 
 export interface AuthRequest extends Request {
-    user?: any;
-    file?: any;
-    headers: any;
+    user?: IUser;
+    file?: Express.Multer.File;
 }
 
 export type { IUser, IMessage, IConversation };

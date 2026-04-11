@@ -26,7 +26,7 @@ export const connectSocket = (): Socket => {
 
     socket = io(SERVER_URL, {
         auth: { token },
-        transports: ["websocket", "polling"],
+        transports: ["websocket"],
         reconnection: true,          // auto-reconnect on disconnect
         reconnectionAttempts: 10,     // try up to 10 times
         reconnectionDelay: 1000,      // start with 1s delay

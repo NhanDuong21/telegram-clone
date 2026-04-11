@@ -15,3 +15,7 @@ export const searchUsersApi = (query: string) => {
 export const updateProfileApi = (data: any) => {
     return axiosClient.put(`${API}/me`, data, getAuthHeader());
 };
+
+export const getUserProfileApi = (id: string) => {
+    return axiosClient.get(`${API}/${id}/profile`, getAuthHeader());
+};

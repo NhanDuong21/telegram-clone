@@ -71,3 +71,51 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
         return res.status(500).json({ message: "Server error" });
     }
 };
+
+export const getUserProfile = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const currentUserId = req.user._id;
+
+        const targetUser = await User.findById(id).select("-password");
+        if (!targetUser) return res.status(404).json({ message: "User không tồn tại" });
+
+        const Conversation = (await import("../models/Conversation")).default;
+        const Message = (await import("../models/Message")).default;
+
+        // Tìm tất cả conversations mà cả 2 đều là participants
+        const sharedConvs = await Conversation.find({
+            participants: { $all: [currentUserId, id] }
+        });
+
+        const sharedConvIds = sharedConvs.map(c => c._id);
+        const commonGroupsCount = sharedConvs.filter(c => c.isGroup).length;
+
+        // Đếm shared media trong các conversation chung
+        const photosCount = await Message.countDocuments({
+            conversationId: { $in: sharedConvIds },
+            imageUrl: { $ne: "" }
+        });
+
+        // Simplified link detection
+        const linksCount = await Message.countDocuments({
+            conversationId: { $in: sharedConvIds },
+            text: { $regex: /https?:\/\/[^\s]+/ }
+        });
+
+        return res.status(200).json({
+            user: targetUser,
+            sharedMedia: {
+                photos: photosCount,
+                links: linksCount,
+                files: 0, // Placeholder
+                videos: 0, // Placeholder
+                audio: 0   // Placeholder
+            },
+            commonGroupsCount
+        });
+    } catch (error) {
+        console.error("Get user profile error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};

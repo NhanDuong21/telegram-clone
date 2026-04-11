@@ -9,6 +9,7 @@ import MessageInput from "../components/chat/MessageInput";
 import Avatar from "../components/common/Avatar";
 import GroupSettingsModal from "../components/chat/GroupSettingsModal";
 import EditProfileModal from "../components/profile/EditProfileModal";
+import UserProfileModal from "../components/profile/UserProfileModal";
 
 import { disconnectSocket, getSocket } from "../socket";
 import { useChatSocket } from "../hooks/useChatSocket";
@@ -52,6 +53,7 @@ const ChatPage = () => {
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
 
   useChatSocket({
     user,
@@ -137,6 +139,7 @@ const ChatPage = () => {
           unreadCounts={unreadCounts}
           onSelectConversation={handleSelectConversation}
           onConversationCreated={(conv) => setConversations(prev => [conv, ...prev.filter(c => c._id !== conv._id)])}
+          onViewProfile={setViewingProfileId}
         />
       </div>
 
@@ -159,9 +162,12 @@ const ChatPage = () => {
                       : "👥"}
                   </div>
                 ) : (
-                  <Avatar user={otherParticipant} size={36} />
+                  <div style={{ cursor: "pointer" }} onClick={() => otherParticipant && setViewingProfileId(otherParticipant._id)}>
+                    <Avatar user={otherParticipant} size={36} />
+                  </div>
                 )}
-                <div style={styles.headerText}>
+                <div style={{ ...styles.headerText, cursor: !selectedConversation.isGroup ? "pointer" : "default" }} 
+                     onClick={() => !selectedConversation.isGroup && otherParticipant && setViewingProfileId(otherParticipant._id)}>
                   <span>{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
                   {!selectedConversation.isGroup && otherParticipant && onlineUsers.includes(otherParticipant._id) && (
                     <span style={styles.onlineStatus}>Online</span>
@@ -218,6 +224,7 @@ const ChatPage = () => {
         )}
       </div>
       {showEditProfile && <EditProfileModal onClose={() => setShowEditProfile(false)} />}
+      {viewingProfileId && <UserProfileModal userId={viewingProfileId} onClose={() => setViewingProfileId(null)} />}
     </div>
   );
 };

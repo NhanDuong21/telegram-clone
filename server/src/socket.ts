@@ -68,9 +68,16 @@ export const initSocket = (httpServer: HttpServer) => {
             }
         });
 
-        socket.on(SOCKET_EVENTS.DISCONNECT, () => {
+        socket.on(SOCKET_EVENTS.DISCONNECT, async () => {
             userSocketMap.delete(socket.id);
             emitOnlineUsers();
+            
+            try {
+                const User = (await import("./models/User")).default;
+                await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
+            } catch (error) {
+                console.error("Update lastSeen failed:", error);
+            }
         });
     });
 

@@ -14,6 +14,7 @@ interface SidebarProps {
     unreadCounts: Record<string, number>;
     onSelectConversation: (conv: Conversation) => void;
     onConversationCreated: (conv: Conversation) => void;
+    onViewProfile: (userId: string) => void;
 }
 
 const Sidebar = ({
@@ -24,6 +25,7 @@ const Sidebar = ({
     unreadCounts,
     onSelectConversation,
     onConversationCreated,
+    onViewProfile,
 }: SidebarProps) => {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<User[]>([]);
@@ -160,7 +162,12 @@ const Sidebar = ({
                             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                         >
                             <div style={{ position: "relative", flexShrink: 0 }}>
-                                <Avatar user={user} size={38} />
+                                <div 
+                                    style={{ cursor: "pointer" }}
+                                    onClick={(e) => { e.stopPropagation(); onViewProfile(user._id); }}
+                                >
+                                  <Avatar user={user} size={38} />
+                                </div>
                                 {onlineUsers.includes(user._id) && (
                                     <div
                                         style={{
@@ -229,21 +236,31 @@ const Sidebar = ({
                             }}
                         >
                             <div style={{ position: "relative", flexShrink: 0 }}>
-                                {conv.isGroup ? (
-                                    conv.imageUrl ? (
-                                        <img src={conv.imageUrl} alt={conv.name} style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }} />
+                                <div 
+                                    style={{ cursor: "pointer" }}
+                                    onClick={(e) => { 
+                                        if (!conv.isGroup && other) {
+                                            e.stopPropagation();
+                                            onViewProfile(other._id);
+                                        }
+                                    }}
+                                >
+                                    {conv.isGroup ? (
+                                        conv.imageUrl ? (
+                                            <img src={conv.imageUrl} alt={conv.name} style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }} />
+                                        ) : (
+                                            <div style={{
+                                                width: "44px", height: "44px", borderRadius: "50%",
+                                                backgroundColor: "#0088cc", color: "white", display: "flex",
+                                                alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: "bold"
+                                            }}>
+                                                {conv.name ? conv.name.substring(0, 1).toUpperCase() : "G"}
+                                            </div>
+                                        )
                                     ) : (
-                                        <div style={{
-                                            width: "44px", height: "44px", borderRadius: "50%",
-                                            backgroundColor: "#0088cc", color: "white", display: "flex",
-                                            alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: "bold"
-                                        }}>
-                                          {conv.name ? conv.name.substring(0, 1).toUpperCase() : "G"}
-                                        </div>
-                                    )
-                                ) : (
-                                    other && <Avatar user={other} size={44} />
-                                )}
+                                        other && <Avatar user={other} size={44} />
+                                    )}
+                                </div>
                                 {other && !conv.isGroup && onlineUsers.includes(other._id) && (
                                     <div
                                         style={{

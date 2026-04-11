@@ -5,9 +5,11 @@ export interface IUser extends Document {
     email: string;
     password: string;
     avatar?: string;
+    bio?: string;
+    displayName?: string;
+    lastSeen?: Date;
     createdAt: Date;
     updatedAt: Date;
-
 }
 
 const userSchema = new Schema<IUser>(
@@ -35,6 +37,18 @@ const userSchema = new Schema<IUser>(
         avatar: {
             type: String,
             default: "",
+        },
+        bio: {
+            type: String,
+            default: "",
+        },
+        displayName: {
+            type: String,
+            default: "",
+        },
+        lastSeen: {
+            type: Date,
+            default: Date.now,
         },
     },
     {

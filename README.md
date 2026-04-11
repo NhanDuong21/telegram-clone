@@ -5,7 +5,7 @@ A professional, real-time messaging application inspired by Telegram Desktop, bu
 ##Introduction
 This project is a high-performance messaging platform that supports real-time communication, group chats, and multimedia sharing. It features a sleek, responsive UI with dark mode support and mobile-first design.
 
-## 🛠️ Tech Stack
+## Tech Stack
 - **Frontend**: React, Vite, Tailwind CSS, Vanilla CSS (Modular BEM).
 - **Backend**: Node.js, Express.
 - **Database**: MongoDB (Mongoose).

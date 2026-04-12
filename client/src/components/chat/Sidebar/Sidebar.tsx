@@ -18,6 +18,7 @@ interface SidebarProps {
     unreadCounts: Record<string, number>;
     onSelectConversation: (conv: Conversation) => void;
     onConversationCreated: (conv: Conversation) => void;
+    onTempConversationCreated: (conv: Conversation) => void;
     onLogout: () => void;
     onOpenMyProfile: () => void;
 }
@@ -31,6 +32,7 @@ const Sidebar = ({
     unreadCounts,
     onSelectConversation,
     onConversationCreated,
+    onTempConversationCreated,
     onLogout,
     onOpenMyProfile,
 }: SidebarProps) => {
@@ -40,6 +42,10 @@ const Sidebar = ({
     const [startingChat, setStartingChat] = useState<string | null>(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+    const displayedConversations = conversations.filter(conv => 
+        conv.isGroup || (conv.lastMessage && conv.lastMessage._id)
+    );
     
     // Hard Reset: Lift state to parent and initialize from localStorage ONLY
     const [recentSearches, setRecentSearches] = useState<Conversation[]>(() => {
@@ -125,16 +131,22 @@ const Sidebar = ({
 
         setStartingChat(user._id);
         try {
-            const res = await createOrGetConversationApi(user._id);
-            const conv: Conversation = res.data.conversation;
-            updateRecentSearches(conv);
-            onConversationCreated(conv);
-            onSelectConversation(conv);
+            // Create a temporary conversation object locally
+            const tempConv: Conversation = {
+                _id: 'temp_' + user._id,
+                participants: [currentUser!, user],
+                isGroup: false,
+                lastMessage: null,
+                updatedAt: new Date().toISOString(),
+                isTemporary: true
+            };
+            
+            onTempConversationCreated(tempConv);
             setQuery("");
             setResults([]);
             setIsSearchFocused(false);
         } catch (error) {
-            console.error("Failed to start conversation:", error);
+            console.error("Failed to start temporary conversation:", error);
         } finally {
             setStartingChat(null);
         }
@@ -263,7 +275,7 @@ const Sidebar = ({
                                     <p>Tìm kiếm để bắt đầu!</p>
                                 </div>
                             )}
-                            {conversations.map((conv) => {
+                            {displayedConversations.map((conv) => {
                                 const other = getOtherUser(conv);
                                 const isSelected = conv._id === selectedId;
                                 const unreadCount = unreadCounts[conv._id] !== undefined ? unreadCounts[conv._id] : (conv.unreadCount || 0);

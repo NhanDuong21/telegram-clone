@@ -79,7 +79,7 @@ export const useChatSocket = ({
           return [...prev, message];
         });
         
-        if (user?._id && message.sender._id !== user._id) {
+        if (user?._id && message.sender._id !== user._id && !String(convId).startsWith("temp_")) {
           socket.emit(SOCKET_EVENTS.MARK_AS_READ, { 
             conversationId: convId 
           });
@@ -227,6 +227,7 @@ export const useChatSocket = ({
     socket.on(SOCKET_EVENTS.CONVERSATION_DELETED, ({ conversationId }: { conversationId: string }) => {
       setConversations((prev) => prev.filter((c) => String(c._id) !== String(conversationId)));
       if (String(selectedIdRef.current) === String(conversationId)) {
+        setMessages(() => []);
         setSelectedConversationId(null);
         if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
       }

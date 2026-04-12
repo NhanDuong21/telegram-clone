@@ -95,15 +95,17 @@ const ChatPage = () => {
     targetName?: string;
   } | null>(null);
 
-  const selectedConversation = useMemo(() => 
-    conversations.find(c => c._id === selectedConversationId), 
-    [conversations, selectedConversationId]
-  );
+  const [tempConversation, setTempConversation] = useState<Conversation | null>(null);
+
+  const activeConversation = useMemo(() => {
+    if (tempConversation && tempConversation._id === selectedConversationId) return tempConversation;
+    return conversations.find(c => c._id === selectedConversationId) || null;
+  }, [conversations, selectedConversationId, tempConversation]);
 
   const otherParticipant = useMemo(() => {
-    if (!selectedConversation || selectedConversation.isGroup) return null;
-    return selectedConversation.participants.find((p: User) => p._id !== user?._id);
-  }, [selectedConversation, user?._id]);
+    if (!activeConversation || activeConversation.isGroup) return null;
+    return activeConversation.participants.find((p: User) => p._id !== user?._id);
+  }, [activeConversation, user?._id]);
 
   useEffect(() => {
     fetchConversations();
@@ -119,11 +121,16 @@ const ChatPage = () => {
 
   useEffect(() => {
     if (selectedConversationId) {
-      fetchMessages(selectedConversationId);
+      if (selectedConversationId.startsWith("temp_")) {
+        setMessages([]);
+      } else {
+        fetchMessages(selectedConversationId);
+      }
       try {
         localStorage.setItem(`tg_sel_conv_${user?._id}`, selectedConversationId);
       } catch {}
     } else {
+      setMessages([]); // Ensure messages are cleared when nothing is selected
       try {
         localStorage.removeItem(`tg_sel_conv_${user?._id}`);
       } catch {}
@@ -205,7 +212,15 @@ const ChatPage = () => {
           onlineUsers={onlineUsers}
           unreadCounts={unreadCounts}
           onSelectConversation={handleSelectConversation}
-          onConversationCreated={(conv) => setConversations(prev => [conv, ...prev])}
+          onConversationCreated={(conv) => {
+            setConversations(prev => [conv, ...prev]);
+            setSelectedConversationId(conv._id);
+            setTempConversation(null);
+          }}
+          onTempConversationCreated={(conv) => {
+            setTempConversation(conv);
+            setSelectedConversationId(conv._id);
+          }}
           onLogout={() => { disconnectSocket(); logout(); }}
           onOpenMyProfile={handleOpenMyProfile}
         />
@@ -217,7 +232,7 @@ const ChatPage = () => {
         style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', minWidth: 0 }}
       >
         <AnimatePresence mode="wait">
-          {!selectedConversation ? (
+          {!activeConversation ? (
             <motion.div 
               key="empty"
               initial={{ opacity: 0 }}
@@ -231,7 +246,7 @@ const ChatPage = () => {
             </motion.div>
           ) : (
             <motion.div 
-              key={selectedConversation._id}
+              key={activeConversation._id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -242,10 +257,10 @@ const ChatPage = () => {
                   <button className="mobile-back-btn" onClick={() => setSelectedConversationId(null)}>
                     <ArrowLeft size={24} />
                   </button>
-                  {selectedConversation.isGroup ? (
+                  {activeConversation.isGroup ? (
                     <div className="group-avatar">
-                      {selectedConversation.imageUrl ? 
-                        <img src={selectedConversation.imageUrl} alt={selectedConversation.name} /> 
+                      {activeConversation.imageUrl ? 
+                        <img src={activeConversation.imageUrl} alt={activeConversation.name} /> 
                         : "👥"}
                     </div>
                   ) : (
@@ -254,21 +269,21 @@ const ChatPage = () => {
                     </div>
                   )}
                     <div className="chat-header__text">
-                      <span className="chat-header__name">{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
-                      {!selectedConversation.isGroup && otherParticipant && (
+                      <span className="chat-header__name">{activeConversation.isGroup ? activeConversation.name : (otherParticipant?.username ?? "Chat")}</span>
+                      {!activeConversation.isGroup && otherParticipant && (
                         <span className={`chat-header__status ${typingUsers.has(otherParticipant._id) ? 'status-typing' : (onlineUsers.includes(otherParticipant._id) ? 'status-online' : 'status-offline')}`}>
                           {typingUsers.has(otherParticipant._id) 
                             ? "đang soạn tin..." 
                             : formatUserStatus(onlineUsers.includes(otherParticipant._id), otherParticipant.lastSeen)}
                         </span>
                       )}
-                      {selectedConversation.isGroup && (
+                      {activeConversation.isGroup && (
                         <span className="chat-header__status">
                           {typingUsers.size > 0 
                             ? `${Array.from(typingUsers)
-                                .map(id => selectedConversation.participants.find((p: User) => p._id === id)?.username)
+                                .map(id => activeConversation.participants.find((p: User) => p._id === id)?.username)
                                 .filter(Boolean).join(", ")} đang soạn tin...`
-                            : `${selectedConversation.participants.length} thành viên`
+                            : `${activeConversation.participants.length} thành viên`
                           }
                         </span>
                       )}
@@ -299,9 +314,9 @@ const ChatPage = () => {
                     <HeaderMenu 
                       isOpen={showOptionsMenu}
                       onClose={() => setShowOptionsMenu(false)}
-                      isGroup={selectedConversation.isGroup ?? false}
-                      isMuted={selectedConversation.isMuted ?? false}
-                      onToggleMute={() => toggleMuteConversation(selectedConversation._id)}
+                      isGroup={activeConversation.isGroup ?? false}
+                      isMuted={activeConversation.isMuted ?? false}
+                      onToggleMute={() => toggleMuteConversation(activeConversation._id)}
                       onDeleteChat={() => setDeleteModalConfig({
                           title: "Xóa cuộc trò chuyện",
                           description: "Bạn có chắc chắn muốn xóa cuộc trò chuyện này?",
@@ -331,7 +346,7 @@ const ChatPage = () => {
                   onLoadMore={() => loadOlderMessages(selectedConversationId!, messages[0].createdAt)}
                   hasMore={hasMore}
                   loadingMore={loadingMore}
-                  isGroup={selectedConversation.isGroup ?? false}
+                  isGroup={activeConversation.isGroup ?? false}
                   onImagePreview={setPreviewImageUrl}
                   onDeleteMessage={setMessageToDelete}
                   onReactMessage={handleReactMessage}
@@ -340,23 +355,30 @@ const ChatPage = () => {
                   onPinMessage={setMessageToPin}
                   onUnpinMessage={(msg) => updateMessage(msg._id, { isPinned: false })}
                   onForwardMessage={setMessageToForward}
-                  conversationId={selectedConversation._id}
+                  conversationId={activeConversation._id}
                 />
               </div>
 
 
               <MessageInput 
-                conversationId={selectedConversation._id} 
+                conversationId={activeConversation._id} 
                 onMessageSent={handleMessageSent} 
                 replyTarget={replyTarget}
                 editTarget={editTarget}
                 onCancelMode={() => { setReplyTarget(null); setEditTarget(null); }}
+                isTemporary={activeConversation.isTemporary}
+                otherUserId={otherParticipant?._id}
+                onConversationCreated={(conv) => {
+                  setConversations(prev => [conv, ...prev]);
+                  setSelectedConversationId(conv._id);
+                  setTempConversation(null);
+                }}
               />
 
               <AnimatePresence>
-                {showGroupSettings && selectedConversation.isGroup && (
+                {showGroupSettings && activeConversation.isGroup && (
                   <GroupSettingsModal
-                    conversation={selectedConversation}
+                    conversation={activeConversation}
                     currentUserId={user?._id ?? ""}
                     onClose={() => setShowGroupSettings(false)}
                     onUpdated={(updatedConv) => setConversations(prev => prev.map(c => c._id === updatedConv._id ? updatedConv : c))}
@@ -381,7 +403,7 @@ const ChatPage = () => {
               }
             }}
             isSender={(messageToDelete.sender as unknown as User)?._id === user?._id}
-            targetName={selectedConversation?.isGroup ? "mọi người" : (selectedConversation?.name || selectedConversation?.participants[0]?.username)}
+            targetName={activeConversation?.isGroup ? "mọi người" : (activeConversation?.name || activeConversation?.participants[0]?.username)}
           />
         )}
         {messageToForward && (
@@ -413,14 +435,14 @@ const ChatPage = () => {
                 setMessageToPin(null);
               }
             }}
-            targetName={selectedConversation?.isGroup ? "mọi người" : (selectedConversation?.name || selectedConversation?.participants[0]?.username)}
+            targetName={activeConversation?.isGroup ? "mọi người" : (activeConversation?.name || activeConversation?.participants[0]?.username)}
           />
         )}
-        {rightPanelMode === 'info' && selectedConversation && (
+        {rightPanelMode === 'info' && activeConversation && (
           <RightSidebar 
             onClose={() => setRightPanelMode('none')}
             user={otherParticipant ?? null}
-            conversation={selectedConversation ?? null}
+            conversation={activeConversation ?? null}
             isOnline={otherParticipant ? onlineUsers.includes(otherParticipant._id) : false}
             onToggleMute={toggleMuteConversation}
           />
@@ -431,7 +453,7 @@ const ChatPage = () => {
             onEdit={() => setShowEditProfile(true)}
           />
         )}
-        {rightPanelMode === 'search' && selectedConversation && (
+        {rightPanelMode === 'search' && activeConversation && (
             <SearchSidebar 
                 messages={messages}
                 searchQuery={searchQuery}

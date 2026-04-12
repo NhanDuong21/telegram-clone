@@ -3,6 +3,7 @@ import { Server, Socket } from "socket.io";
 import jwt from "jsonwebtoken";
 import { SOCKET_EVENTS } from "./utils/socketEvents";
 import * as messageService from "./services/messageService";
+import mongoose from "mongoose";
 
 let io: Server;
 const userSocketMap = new Map<string, string>(); // socketId -> userId
@@ -63,7 +64,7 @@ export const initSocket = (httpServer: HttpServer) => {
         emitOnlineUsers();
 
         socket.on(SOCKET_EVENTS.TYPING, async ({ conversationId }: { conversationId: string }) => {
-            if (userId && conversationId) {
+            if (userId && conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {
                 const Conversation = (await import("./models/Conversation")).default;
                 const conv = await Conversation.findById(conversationId).select("participants").lean();
                 if (conv) {
@@ -77,7 +78,7 @@ export const initSocket = (httpServer: HttpServer) => {
         });
 
         socket.on(SOCKET_EVENTS.STOP_TYPING, async ({ conversationId }: { conversationId: string }) => {
-            if (userId && conversationId) {
+            if (userId && conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {
                 const Conversation = (await import("./models/Conversation")).default;
                 const conv = await Conversation.findById(conversationId).select("participants").lean();
                 if (conv) {
@@ -95,7 +96,7 @@ export const initSocket = (httpServer: HttpServer) => {
         });
 
         socket.on(SOCKET_EVENTS.MARK_AS_READ, async ({ conversationId }: MarkAsReadPayload) => {
-            if (userId && conversationId) {
+            if (userId && conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {
                 try {
                     await messageService.markAsReadService(conversationId, userId);
                 } catch (error: unknown) {
@@ -105,7 +106,7 @@ export const initSocket = (httpServer: HttpServer) => {
         });
 
         socket.on(SOCKET_EVENTS.SEND_REACTION, async ({ messageId, emoji }: { messageId: string, emoji: string }) => {
-            if (userId && messageId && emoji) {
+            if (userId && messageId && emoji && mongoose.Types.ObjectId.isValid(messageId)) {
                 try {
                     await messageService.sendReactionService(messageId, userId, emoji);
                 } catch (error: unknown) {

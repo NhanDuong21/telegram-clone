@@ -3,7 +3,7 @@ import imageCompression from "browser-image-compression";
 import { useAuth } from "../../../context/AuthContext";
 import { sendMessageApi, updateMessageApi } from "../../../api/chatApi";
 import { getSocket } from "../../../socket";
-import type { Message } from "../../../types";
+import type { Message, Conversation, User } from "../../../types";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
 import { X, CornerUpLeft, Pencil, Paperclip, SendHorizontal } from "lucide-react";
 import './MessageInput.css';
@@ -14,9 +14,21 @@ interface MessageInputProps {
     replyTarget?: Message | null;
     editTarget?: Message | null;
     onCancelMode?: () => void;
+    isTemporary?: boolean;
+    otherUserId?: string;
+    onConversationCreated?: (conv: Conversation) => void;
 }
 
-const MessageInput = ({ conversationId, onMessageSent, replyTarget, editTarget, onCancelMode }: MessageInputProps) => {
+const MessageInput = ({ 
+    conversationId, 
+    onMessageSent, 
+    replyTarget, 
+    editTarget, 
+    onCancelMode, 
+    isTemporary, 
+    otherUserId,
+    onConversationCreated 
+}: MessageInputProps) => {
     const { user } = useAuth();
     const [text, setText] = useState("");
     const [sending, setSending] = useState(false);
@@ -91,7 +103,7 @@ const MessageInput = ({ conversationId, onMessageSent, replyTarget, editTarget, 
     };
 
     const emitTyping = (isTyping: boolean) => {
-        if (!conversationId) return;
+        if (!conversationId || conversationId.startsWith("temp_")) return;
         const socket = getSocket();
         if (socket) {
             const event = isTyping ? SOCKET_EVENTS.TYPING : SOCKET_EVENTS.STOP_TYPING;
@@ -135,7 +147,21 @@ const MessageInput = ({ conversationId, onMessageSent, replyTarget, editTarget, 
                 onMessageSent(res.data.updatedMessage);
                 onCancelMode?.();
             } else {
-                const res = await sendMessageApi(conversationId, { 
+                let actualId = conversationId;
+                if (isTemporary && otherUserId) {
+                    try {
+                        const { createOrGetConversationApi } = await import("../../../api/chatApi");
+                        const resConv = await createOrGetConversationApi(otherUserId);
+                        const newConv = resConv.data.conversation;
+                        actualId = newConv._id;
+                        if (onConversationCreated) onConversationCreated(newConv);
+                    } catch (err) {
+                        console.error("Failed to create conversation:", err);
+                        throw new Error("Không thể khởi tạo cuộc trò chuyện");
+                    }
+                }
+
+                const res = await sendMessageApi(actualId, { 
                     text: trimmedText, 
                     imageUrl: "",
                     replyTo: replyTarget?._id

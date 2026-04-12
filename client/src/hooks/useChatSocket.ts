@@ -216,17 +216,17 @@ export const useChatSocket = ({
     });
 
     socket.on(SOCKET_EVENTS.CONVERSATION_CLEARED, ({ conversationId }: { conversationId: string }) => {
-      if (selectedIdRef.current === conversationId) {
-        setMessages([]);
+      if (String(selectedIdRef.current) === String(conversationId)) {
+        setMessages(() => []);
       }
       setConversations((prev) =>
-        prev.map((c) => (c._id === conversationId ? { ...c, lastMessage: null } : c))
+        prev.map((c) => (String(c._id) === String(conversationId) ? { ...c, lastMessage: null } : c))
       );
     });
 
     socket.on(SOCKET_EVENTS.CONVERSATION_DELETED, ({ conversationId }: { conversationId: string }) => {
-      setConversations((prev) => prev.filter((c) => c._id !== conversationId));
-      if (selectedIdRef.current === conversationId) {
+      setConversations((prev) => prev.filter((c) => String(c._id) !== String(conversationId)));
+      if (String(selectedIdRef.current) === String(conversationId)) {
         setSelectedConversationId(null);
         if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
       }

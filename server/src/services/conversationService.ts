@@ -173,12 +173,12 @@ export const clearChatService = async (id: string, userId: string, deleteForBoth
         
         const io = getIO();
         conversation.participants.forEach(p => {
-            io.to(p.toString()).emit(SOCKET_EVENTS.CONVERSATION_CLEARED, { conversationId: id });
+            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.CONVERSATION_CLEARED, { conversationId: id });
         });
     } else {
         // 1-way delete: For now, just trigger local UI clear for the user
         const io = getIO();
-        io.to(userId).emit(SOCKET_EVENTS.CONVERSATION_CLEARED, { conversationId: id });
+        io.to(`user_${userId}`).emit(SOCKET_EVENTS.CONVERSATION_CLEARED, { conversationId: id });
     }
 
     return id;
@@ -194,12 +194,12 @@ export const deleteConversationService = async (id: string, userId: string, dele
 
         const io = getIO();
         conversation.participants.forEach(p => {
-            io.to(p.toString()).emit(SOCKET_EVENTS.CONVERSATION_DELETED, { conversationId: id });
+            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.CONVERSATION_DELETED, { conversationId: id });
         });
     } else {
         // 1-way delete: For now, just trigger local UI removal for the user
         const io = getIO();
-        io.to(userId).emit(SOCKET_EVENTS.CONVERSATION_DELETED, { conversationId: id });
+        io.to(`user_${userId}`).emit(SOCKET_EVENTS.CONVERSATION_DELETED, { conversationId: id });
     }
 
     return id;

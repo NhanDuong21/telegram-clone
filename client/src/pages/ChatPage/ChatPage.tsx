@@ -153,13 +153,22 @@ const ChatPage = () => {
   const handleMessageSent = (message: Message) => {
     // Optimistic Logic: Replace temp message with real one
     setMessages((prev) => {
-      // 1. If we find a message with the same ID, update it
-      if (prev.some(m => m._id === message._id)) {
-        return prev.map(m => m._id === message._id ? message : m);
-      }
-      // 2. If the new message has a tempId, find that temp message and replace it
-      if (message.tempId && prev.some(m => m._id === message.tempId)) {
+      // 1. If the message with this real ID already exists (e.g. from socket),
+      // we just want to remove the temp message and update/keep the real one.
+      const alreadyHasReal = prev.some(m => m._id === message._id);
+      
+      if (message.tempId) {
+        if (alreadyHasReal) {
+          // Remove the temp message, since the real one is already there
+          return prev.filter(m => m._id !== message.tempId);
+        }
+        // Replace temp with real
         return prev.map(m => m._id === message.tempId ? message : m);
+      }
+
+      // If no tempId, regular check
+      if (alreadyHasReal) {
+        return prev.map(m => m._id === message._id ? message : m);
       }
       // 3. Otherwise add as new
       return [...prev, message];

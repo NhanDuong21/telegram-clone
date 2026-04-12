@@ -50,6 +50,29 @@ export const useChatSocket = ({
     socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, (message: Message) => {
       const convId = message.conversationId;
 
+      // Prevent duplicate if I'm the sender (Optimistic UI handles this)
+      if (message.sender._id === user?._id) {
+          // But still update the sidebar/conversation list
+          setConversations((prev) => {
+            const index = prev.findIndex((c) => c._id === convId);
+            if (index === -1) return prev;
+            const updatedConv = {
+                ...prev[index],
+                lastMessage: { 
+                  _id: message._id, 
+                  text: message.text ?? "", 
+                  isRead: false, // Initially unread for others
+                  createdAt: message.createdAt
+                },
+                updatedAt: message.createdAt
+            };
+            const next = [...prev];
+            next.splice(index, 1);
+            return [updatedConv, ...next];
+          });
+          return;
+      }
+
       if (selectedIdRef.current === convId) {
         setMessages((prev) => {
           if (prev.some((m) => m._id === message._id)) return prev;

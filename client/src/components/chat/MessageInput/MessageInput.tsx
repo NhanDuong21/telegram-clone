@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import imageCompression from "browser-image-compression";
+import { useAuth } from "../../../context/AuthContext";
 import { sendMessageApi, updateMessageApi } from "../../../api/chatApi";
 import { getSocket } from "../../../socket";
 import type { Message } from "../../../types";
@@ -16,6 +17,7 @@ interface MessageInputProps {
 }
 
 const MessageInput = ({ conversationId, onMessageSent, replyTarget, editTarget, onCancelMode }: MessageInputProps) => {
+    const { user } = useAuth();
     const [text, setText] = useState("");
     const [sending, setSending] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -110,7 +112,7 @@ const MessageInput = ({ conversationId, onMessageSent, replyTarget, editTarget, 
             _id: tempId,
             conversationId,
             text: trimmedText,
-            sender: { _id: (window as any).currentUser?._id || "", username: "Bạn" },
+            sender: { _id: user?._id || "", username: user?.username || "Bạn" },
             isSending: true,
             createdAt: new Date().toISOString(),
             readBy: [],

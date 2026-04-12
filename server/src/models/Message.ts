@@ -72,6 +72,11 @@ const messageSchema = new Schema<IMessage>(
             type: Schema.Types.ObjectId,
             ref: "User",
         },
+        type: {
+            type: String,
+            enum: ['text', 'image', 'voice', 'system'],
+            default: 'text',
+        },
     },
     {
         timestamps: true,

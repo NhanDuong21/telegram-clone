@@ -15,6 +15,7 @@ export interface IMessage extends mongoose.Document {
     isPinned?: boolean;
     pinnedFor: mongoose.Types.ObjectId[];
     forwardFrom?: any;
+    type?: 'text' | 'image' | 'voice' | 'system';
     createdAt: Date;
     updatedAt: Date;
 }

@@ -4,18 +4,18 @@ import * as messageService from "../services/messageService";
 
 export const sendMessage = async (req: AuthRequest, res: Response) => {
     try {
-        const { conversationId, text, imageUrl, replyTo, forwardFrom } = req.body;
+        const { conversationId, text, imageUrl, replyTo, forwardFrom, type } = req.body;
         const senderId = req.user!._id;
 
         if (!conversationId) {
             return res.status(400).json({ message: "conversationId là bắt buộc" });
         }
         
-        if (!text?.trim() && !imageUrl?.trim()) {
+        if (type !== 'system' && !text?.trim() && !imageUrl?.trim()) {
             return res.status(400).json({ message: "Cần ít nhất text hoặc hình ảnh" });
         }
 
-        const message = await messageService.sendMessageService(conversationId, senderId.toString(), text, imageUrl, replyTo, forwardFrom);
+        const message = await messageService.sendMessageService(conversationId, senderId.toString(), text, imageUrl, replyTo, forwardFrom, type);
         return res.status(201).json({ message });
     } catch (error: unknown) {
         console.error("Send message error:", error);

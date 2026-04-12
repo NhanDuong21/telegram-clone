@@ -7,6 +7,7 @@ import {
   deleteConversationApi,
   deleteMessageApi,
   updateMessageApi,
+  sendMessageApi,
 } from "../api/chatApi";
 import { getSocket } from "../socket";
 import { SOCKET_EVENTS } from "../constants/socketEvents";
@@ -116,6 +117,17 @@ export const useChatActions = (user: User | null) => {
       }
 
       await updateMessageApi(messageId, data);
+
+      // Successfully pinned globally? Trigger system message
+      if (data.isPinned && data.pinForBoth && user?._id) {
+          const msg = messages.find(m => m._id === messageId);
+          if (msg) {
+              await sendMessageApi(msg.conversationId, {
+                  text: `${user.username} đã ghim một tin nhắn.`,
+                  type: 'system'
+              });
+          }
+      }
     } catch (error) {
       console.error("Failed to update message:", error);
     }

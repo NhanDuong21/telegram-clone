@@ -71,7 +71,7 @@ export const getMessagesApi = (
 
 export const sendMessageApi = (
     conversationId: string,
-    data: { text?: string; imageUrl?: string; replyTo?: string; forwardFrom?: string }
+    data: { text?: string; imageUrl?: string; replyTo?: string; forwardFrom?: string; type?: string }
 ): Promise<AxiosResponse<{ message: Message }>> =>
     axiosClient.post(`/messages`, { conversationId, ...data }, getAuthHeader());
 

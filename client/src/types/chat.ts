@@ -45,6 +45,7 @@ export interface Message {
     isEdited?: boolean;
     isPinned?: boolean;
     pinnedFor?: string[];
+    type?: 'text' | 'image' | 'voice' | 'system';
     forwardFrom?: { _id: string; username: string; avatar?: string };
     isSending?: boolean;
     tempId?: string;

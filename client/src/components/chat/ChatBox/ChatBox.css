@@ -473,3 +473,23 @@
     background-color: #ffca28;
     color: #000;
 }
+
+.system-message-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 10px 0;
+}
+
+.system-message-container span {
+  background: rgba(0, 0, 0, 0.2); 
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+[data-theme='light'] .system-message-container span {
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--text-main);
+}

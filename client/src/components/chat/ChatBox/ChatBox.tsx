@@ -221,6 +221,19 @@ const ChatBox = ({
                         const isMe = senderObj?._id === currentUserId;
                         const isRead = msg.isRead || (msg.readBy || []).some(id => id !== currentUserId);
 
+                        if (msg.type === 'system') {
+                            return (
+                                <motion.div
+                                    key={msg._id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="system-message-container"
+                                >
+                                    <span>{msg.text}</span>
+                                </motion.div>
+                            );
+                        }
+
                         return (
                             <motion.div
                                 key={msg._id}

@@ -3,7 +3,7 @@ import Conversation from "../models/Conversation";
 import { getIO } from "../socket";
 import { SOCKET_EVENTS } from "../utils/socketEvents";
 
-export const sendMessageService = async (conversationId: string, senderId: string, text?: string, imageUrl?: string, replyTo?: string, forwardFrom?: string) => {
+export const sendMessageService = async (conversationId: string, senderId: string, text?: string, imageUrl?: string, replyTo?: string, forwardFrom?: string, type: 'text' | 'image' | 'voice' | 'system' = 'text') => {
     const conversation = await Conversation.findOne({
         _id: conversationId,
         participants: senderId,
@@ -22,6 +22,7 @@ export const sendMessageService = async (conversationId: string, senderId: strin
         isRead: false,
         replyTo: replyTo || undefined,
         forwardFrom: forwardFrom || undefined,
+        type,
     });
 
     // 1. Emit ngay lập tức sau khi tạo xong Message (Không đợi update Conversation)

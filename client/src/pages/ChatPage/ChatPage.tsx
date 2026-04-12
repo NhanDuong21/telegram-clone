@@ -177,6 +177,31 @@ const ChatPage = () => {
     }
   }, [selectedConversation, otherParticipant]);
 
+  const handleReactMessage = (msg: Message, emoji: string) => {
+    const socket = getSocket();
+    if (socket && user?._id) {
+       // Optimistic UI Update
+       setMessages(prev => prev.map(m => {
+          if (m._id === msg._id) {
+            const currentReactions = m.reactions || [];
+            const existing = currentReactions.findIndex(r => r.user === user._id && r.emoji === emoji);
+            let nextReactions;
+            if (existing !== -1) {
+              nextReactions = currentReactions.filter((_, i) => i !== existing);
+            } else {
+              // Telegram style: allow only 1 reaction
+              nextReactions = currentReactions.filter(r => r.user !== user._id);
+              nextReactions.push({ user: user._id, emoji });
+            }
+            return { ...m, reactions: nextReactions };
+          }
+          return m;
+       }));
+
+       socket.emit(SOCKET_EVENTS.SEND_REACTION, { messageId: msg._id, emoji });
+    }
+  };
+
   return (
     <div className="app-container">
       <div className="sidebar-wrapper">
@@ -275,6 +300,7 @@ const ChatPage = () => {
                 onProfileClick={setViewingProfileId}
                 onImagePreview={setPreviewImageUrl}
                 onDeleteMessage={setMessageToDelete}
+                onReactMessage={handleReactMessage}
               />
 
               {typingUsers.size > 0 && (

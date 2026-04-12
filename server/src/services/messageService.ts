@@ -112,6 +112,46 @@ export const deleteMessageService = async (messageId: string, userId: string, ty
     return message;
 };
 
+export const sendReactionService = async (messageId: string, userId: string, emoji: string) => {
+    const message = await Message.findById(messageId);
+    if (!message) throw new Error("Tin nhắn không tồn tại");
+
+    const existingIndex = message.reactions.findIndex(
+        (r) => r.user.toString() === userId && r.emoji === emoji
+    );
+
+    if (existingIndex !== -1) {
+        // Toggle off
+        message.reactions.splice(existingIndex, 1);
+    } else {
+        // Remove old reaction from same user if exists (Telegram usually allows only 1 reaction per user)
+        const userReactionIndex = message.reactions.findIndex(
+            (r) => r.user.toString() === userId
+        );
+        if (userReactionIndex !== -1) {
+            message.reactions.splice(userReactionIndex, 1);
+        }
+        // Add new
+        message.reactions.push({ user: userId as any, emoji });
+    }
+
+    await message.save();
+
+    const io = getIO();
+    const conversation = await Conversation.findById(message.conversationId).select("participants").lean();
+    if (conversation) {
+        conversation.participants.forEach((p) => {
+            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.REACTION_UPDATED, {
+                messageId,
+                conversationId: message.conversationId.toString(),
+                reactions: message.reactions
+            });
+        });
+    }
+
+    return message.reactions;
+};
+
 export const markAsReadService = async (conversationId: string, userId: string) => {
     // Update all messages in this conversation where user is NOT the sender and isRead is false
     await Message.updateMany(

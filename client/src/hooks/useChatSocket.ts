@@ -232,6 +232,16 @@ export const useChatSocket = ({
       }
     });
 
+    socket.on(SOCKET_EVENTS.REACTION_UPDATED, ({ messageId, conversationId: reactionConvId, reactions }) => {
+      if (selectedIdRef.current === reactionConvId) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m._id === messageId ? { ...m, reactions } : m
+          )
+        );
+      }
+    });
+
     return () => {
       socket.off(SOCKET_EVENTS.CONNECT);
       socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE);
@@ -245,6 +255,7 @@ export const useChatSocket = ({
       socket.off(SOCKET_EVENTS.MESSAGE_READ);
       socket.off(SOCKET_EVENTS.MESSAGES_READ);
       socket.off(SOCKET_EVENTS.MESSAGE_DELETED);
+      socket.off(SOCKET_EVENTS.REACTION_UPDATED);
     };
   }, [user, selectedConversationId]);
 };

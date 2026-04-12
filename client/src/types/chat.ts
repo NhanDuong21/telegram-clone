@@ -35,5 +35,6 @@ export interface Message {
     isRead?: boolean;
     deletedFor?: string[];
     isDeleted?: boolean;
+    reactions?: { user: string; emoji: string }[];
     createdAt: string;
 }

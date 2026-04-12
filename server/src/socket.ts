@@ -88,6 +88,16 @@ export const initSocket = (httpServer: HttpServer) => {
             }
         });
 
+        socket.on(SOCKET_EVENTS.SEND_REACTION, async ({ messageId, emoji }: { messageId: string, emoji: string }) => {
+            if (userId && messageId && emoji) {
+                try {
+                    await messageService.sendReactionService(messageId, userId, emoji);
+                } catch (error: unknown) {
+                    console.error("sendReaction error:", error);
+                }
+            }
+        });
+
         socket.on(SOCKET_EVENTS.DISCONNECT, async () => {
             userSocketMap.delete(socket.id);
             emitOnlineUsers();

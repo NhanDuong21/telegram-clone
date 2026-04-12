@@ -14,4 +14,6 @@ export const SOCKET_EVENTS = {
     MARK_AS_READ: "markAsRead",
     STOP_TYPING: "stopTyping",
     MESSAGE_DELETED: "messageDeleted",
+    SEND_REACTION: "sendReaction",
+    REACTION_UPDATED: "reactionUpdated",
 };

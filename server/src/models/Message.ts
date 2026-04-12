@@ -44,6 +44,12 @@ const messageSchema = new Schema<IMessage>(
             type: Boolean,
             default: false,
         },
+        reactions: [
+            {
+                user: { type: Schema.Types.ObjectId, ref: "User" },
+                emoji: String,
+            },
+        ],
     },
     {
         timestamps: true,

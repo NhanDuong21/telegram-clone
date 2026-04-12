@@ -9,6 +9,7 @@ export interface IMessage extends mongoose.Document {
     isRead: boolean;
     deletedFor: mongoose.Types.ObjectId[];
     isDeleted?: boolean;
+    reactions: { user: mongoose.Types.ObjectId; emoji: string }[];
     createdAt: Date;
     updatedAt: Date;
 }

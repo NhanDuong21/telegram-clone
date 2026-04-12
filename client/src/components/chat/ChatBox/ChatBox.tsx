@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Message, User } from "../../../types";
+import { useContextMenu } from "../../../hooks/useContextMenu";
+import ContextMenu from "../Message/ContextMenu";
 import './ChatBox.css';
 
 interface ChatBoxProps {
@@ -13,6 +15,7 @@ interface ChatBoxProps {
     onProfileClick?: (userId: string) => void;
     onImagePreview?: (url: string) => void;
     onDeleteMessage?: (msg: Message) => void;
+    onReactMessage?: (msg: Message, emoji: string) => void;
 }
 
 const formatTime = (iso: string) => {
@@ -26,10 +29,11 @@ const messageVariants = {
     exit: { opacity: 0, scale: 0.9, transition: { duration: 0.1 } }
 };
 
-const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, onProfileClick, onImagePreview, onDeleteMessage }: ChatBoxProps) => {
+const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, onProfileClick, onImagePreview, onDeleteMessage, onReactMessage }: ChatBoxProps) => {
     const bottomRef = useRef<HTMLDivElement>(null);
     const lastMessageId = useRef<string | null>(null);
     const prevConvId = useRef<string | null>(null);
+    const { pos, targetItem, onContextMenu, onTouchStart, onTouchEnd, closeContextMenu } = useContextMenu();
 
     useEffect(() => {
         if (messages.length === 0) {
@@ -49,6 +53,28 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
             lastMessageId.current = currentLastMessage._id;
         }
     }, [messages]);
+
+    const renderReactions = (reactions: any[]) => {
+        if (!reactions || reactions.length === 0) return null;
+        
+        const counts: Record<string, number> = {};
+        reactions.forEach(r => counts[r.emoji] = (counts[r.emoji] || 0) + 1);
+
+        return (
+            <div className="message-reactions">
+                {Object.entries(counts).map(([emoji, count]) => (
+                    <motion.div 
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        key={emoji} 
+                        className="reaction-badge"
+                    >
+                        {emoji} {count > 1 && <span className="reaction-count">{count}</span>}
+                    </motion.div>
+                ))}
+            </div>
+        );
+    };
 
     if (messages.length === 0) {
         return (
@@ -123,7 +149,12 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                                     )}
                                 </div>
                             )}
-                            <div className={`message-bubble ${isMe ? "message-bubble--me" : "message-bubble--other"} ${msg.isDeleted ? "message-bubble--deleted" : ""}`}>
+                            <div 
+                                className={`message-bubble ${isMe ? "message-bubble--me" : "message-bubble--other"} ${msg.isDeleted ? "message-bubble--deleted" : ""}`}
+                                onContextMenu={(e) => !msg.isDeleted && onContextMenu(e, msg)}
+                                onTouchStart={(e) => !msg.isDeleted && onTouchStart(e, msg)}
+                                onTouchEnd={onTouchEnd}
+                            >
                                 {!isMe && isGroup && (
                                     <div
                                         className="message-sender"
@@ -160,20 +191,27 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                                     )}
                                 </div>
 
-                                {!msg.isDeleted && (
-                                    <button 
-                                        className="message-delete-trigger" 
-                                        onClick={() => onDeleteMessage?.(msg)}
-                                        title="Xóa tin nhắn"
-                                    >
-                                        ×
-                                    </button>
-                                )}
+                                {renderReactions(msg.reactions || [])}
                             </div>
                         </motion.div>
                     );
                 })}
             </AnimatePresence>
+
+            <AnimatePresence>
+                {pos && (
+                    <ContextMenu
+                        x={pos.x}
+                        y={pos.y}
+                        isMe={(targetItem?.sender?._id || targetItem?.sender) === currentUserId}
+                        text={targetItem?.text}
+                        onClose={closeContextMenu}
+                        onDelete={() => onDeleteMessage?.(targetItem)}
+                        onReact={(emoji) => onReactMessage?.(targetItem, emoji)}
+                    />
+                )}
+            </AnimatePresence>
+
             <div ref={bottomRef} />
         </div>
     );

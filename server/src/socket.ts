@@ -62,15 +62,31 @@ export const initSocket = (httpServer: HttpServer) => {
         userSocketMap.set(socket.id, userId);
         emitOnlineUsers();
 
-        socket.on(SOCKET_EVENTS.TYPING, ({ conversationId }: { conversationId: string }) => {
+        socket.on(SOCKET_EVENTS.TYPING, async ({ conversationId }: { conversationId: string }) => {
             if (userId && conversationId) {
-                socket.to(conversationId).emit(SOCKET_EVENTS.TYPING, { senderId: userId, conversationId });
+                const Conversation = (await import("./models/Conversation")).default;
+                const conv = await Conversation.findById(conversationId).select("participants").lean();
+                if (conv) {
+                    conv.participants.forEach(p => {
+                        if (p.toString() !== userId) {
+                            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.TYPING, { senderId: userId, conversationId });
+                        }
+                    });
+                }
             }
         });
 
-        socket.on(SOCKET_EVENTS.STOP_TYPING, ({ conversationId }: { conversationId: string }) => {
+        socket.on(SOCKET_EVENTS.STOP_TYPING, async ({ conversationId }: { conversationId: string }) => {
             if (userId && conversationId) {
-                socket.to(conversationId).emit(SOCKET_EVENTS.STOP_TYPING, { senderId: userId, conversationId });
+                const Conversation = (await import("./models/Conversation")).default;
+                const conv = await Conversation.findById(conversationId).select("participants").lean();
+                if (conv) {
+                    conv.participants.forEach(p => {
+                        if (p.toString() !== userId) {
+                            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.STOP_TYPING, { senderId: userId, conversationId });
+                        }
+                    });
+                }
             }
         });
 

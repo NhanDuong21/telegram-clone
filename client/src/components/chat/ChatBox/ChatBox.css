@@ -351,17 +351,13 @@
     animation: rotate 2s linear infinite;
 }
 
-.status-icon--read {
-    color: #4cd964; /* Blue in real TG, but green in some themes. Prompt asked for green/blue. I'll stick to vibrant green */
+.tick-sent {
+    color: var(--tick-sent);
+    opacity: 0.8;
 }
 
-.status-icon--sent {
-    color: rgba(255, 255, 255, 0.6);
-}
-
-:root[data-theme='light'] .status-icon--sent {
-    color: var(--text-secondary);
-    opacity: 0.6;
+.tick-read {
+    color: var(--tick-read);
 }
 
 @keyframes rotate {

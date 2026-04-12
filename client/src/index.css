@@ -13,6 +13,8 @@
   --msg-in: #ffffff;
   --msg-out: #effdde;
   --bg-modal: #ffffff;
+  --tick-sent: #707579;
+  --tick-read: #3390ec;
 }
 
 [data-theme='dark'] {
@@ -30,6 +32,8 @@
   --msg-in: #182533;
   --msg-out: #2b5278;
   --bg-modal: #17212b;
+  --tick-sent: #a1a1a1;
+  --tick-read: #3390ec;
 }
 
 body {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Phone, MoreVertical, PanelRight, ArrowLeft } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -239,16 +239,25 @@ const ChatPage = () => {
                     </div>
                   )}
                     <div className="chat-header__text">
-                    <span className="chat-header__name">{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
-                    {!selectedConversation.isGroup && otherParticipant && (
-                      <span className={`chat-header__status ${onlineUsers.includes(otherParticipant._id) ? 'status-online' : 'status-offline'}`}>
-                        {formatUserStatus(onlineUsers.includes(otherParticipant._id), otherParticipant.lastSeen)}
-                      </span>
-                    )}
-                    {selectedConversation.isGroup && (
-                      <span className="chat-header__members">{selectedConversation.participants.length} thành viên</span>
-                    )}
-                  </div>
+                      <span className="chat-header__name">{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
+                      {!selectedConversation.isGroup && otherParticipant && (
+                        <span className={`chat-header__status ${typingUsers.has(otherParticipant._id) ? 'status-typing' : (onlineUsers.includes(otherParticipant._id) ? 'status-online' : 'status-offline')}`}>
+                          {typingUsers.has(otherParticipant._id) 
+                            ? "đang soạn tin..." 
+                            : formatUserStatus(onlineUsers.includes(otherParticipant._id), otherParticipant.lastSeen)}
+                        </span>
+                      )}
+                      {selectedConversation.isGroup && (
+                        <span className="chat-header__status">
+                          {typingUsers.size > 0 
+                            ? `${Array.from(typingUsers)
+                                .map(id => selectedConversation.participants.find((p: User) => p._id === id)?.username)
+                                .filter(Boolean).join(", ")} đang soạn tin...`
+                            : `${selectedConversation.participants.length} thành viên`
+                          }
+                        </span>
+                      )}
+                    </div>
                 </div>
 
                 <div className="chat-header__actions">
@@ -301,19 +310,10 @@ const ChatPage = () => {
                   onPinMessage={setMessageToPin}
                   onUnpinMessage={(msg) => updateMessage(msg._id, { isPinned: false })}
                   onForwardMessage={setMessageToForward}
+                  conversationId={selectedConversation._id}
                 />
               </div>
 
-              {typingUsers.size > 0 && (
-                <div className="typing-indicator">
-                  <TypingDots />
-                  <span className="ml-2">
-                    {Array.from(typingUsers)
-                      .map(id => selectedConversation.participants.find((p: User) => p._id === id)?.username)
-                      .filter(Boolean).join(", ")} đang soạn tin...
-                  </span>
-                </div>
-              )}
 
               <MessageInput 
                 conversationId={selectedConversation._id} 
@@ -416,22 +416,4 @@ const ChatPage = () => {
   );
 };
 
-const TypingDots = () => (
-  <div className="flex gap-1 items-center h-4">
-    {[0, 1, 2].map((i) => (
-      <motion.div
-        key={i}
-        animate={{ y: [0, -4, 0] }}
-        transition={{
-          repeat: Infinity,
-          duration: 0.6,
-          delay: i * 0.15,
-          ease: "easeInOut"
-        }}
-        className="w-1.5 h-1.5 bg-blue-500 rounded-full"
-      />
-    ))}
-  </div>
-);
-
-export default ChatPage;
+export default memo(ChatPage);

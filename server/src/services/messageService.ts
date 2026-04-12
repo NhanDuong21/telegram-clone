@@ -250,10 +250,15 @@ export const markAsReadService = async (conversationId: string, userId: string) 
 
     if (result.modifiedCount > 0) {
         const io = getIO();
-        // 2. Broadcast to the room so the sender (if online) sees the checkmarks turn blue/green
-        io.to(conversationId).emit(SOCKET_EVENTS.MESSAGES_READ, { 
-            conversationId, 
-            readerId: userId 
-        });
+        const conversation = await Conversation.findById(conversationId).select("participants").lean();
+        
+        if (conversation) {
+            conversation.participants.forEach((p) => {
+                io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGES_READ, { 
+                    conversationId, 
+                    readerId: userId 
+                });
+            });
+        }
     }
 };

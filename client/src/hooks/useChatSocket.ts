@@ -135,13 +135,17 @@ export const useChatSocket = ({
     });
 
     socket.on(SOCKET_EVENTS.MESSAGES_READ, ({ conversationId: convId, readerId }) => {
-      if (selectedIdRef.current === convId) {
-        setMessages((prev) =>
-          prev.map((m) => {
-            if (m.sender._id !== readerId) {
-               return { ...m, isRead: true, readBy: [...(m.readBy || []), readerId] };
+      console.log("🔥 SOCKET RECEIVED: messages_read for chat:", convId, "by reader:", readerId);
+      // Use String() for safe comparison
+      if (String(selectedIdRef.current) === String(convId)) {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) => {
+            // Only update messages SENT BY ME (the current user) if someone else read them
+            // String comparison is safer
+            if (String(msg.sender._id) === String(user?._id) && !msg.isRead) {
+               return { ...msg, isRead: true };
             }
-            return m;
+            return msg;
           })
         );
       }

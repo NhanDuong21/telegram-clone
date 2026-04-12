@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Pin, CornerUpRight, X, Check, CheckCheck, Clock } from "lucide-react";
 import type { Message, User } from "../../../types";
 import { useContextMenu } from "../../../hooks/useContextMenu";
+import { getSocket } from "../../../socket";
+import { SOCKET_EVENTS } from "../../../constants/socketEvents";
 import ContextMenu from "../Message/ContextMenu";
 import './ChatBox.css';
 
@@ -22,6 +24,7 @@ interface ChatBoxProps {
     onForwardMessage?: (msg: Message) => void;
     onUnpinMessage?: (msg: Message) => void;
     searchQuery?: string;
+    conversationId?: string;
 }
 
 const HighlightText = ({ text, highlight }: { text: string; highlight: string }) => {
@@ -60,7 +63,8 @@ const ChatBox = ({
     messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, 
     onImagePreview, onDeleteMessage, onReactMessage,
     onReplyMessage, onEditMessage, onPinMessage, onForwardMessage, onUnpinMessage,
-    searchQuery = ""
+    searchQuery = "",
+    conversationId,
 }: ChatBoxProps) => {
     const bottomRef = useRef<HTMLDivElement>(null);
     const lastMessageId = useRef<string | null>(null);
@@ -71,6 +75,23 @@ const ChatBox = ({
         messages.filter(m => m.isPinned || m.pinnedFor?.includes(currentUserId)), 
     [messages, currentUserId]);
     const latestPinned = pinnedMessages[pinnedMessages.length - 1];
+
+    useEffect(() => {
+        if (!currentUserId || !conversationId || messages.length === 0) return;
+        
+        const lastMsg = messages[messages.length - 1];
+        // String conversion for safe comparison
+        if (String(lastMsg.sender._id) !== String(currentUserId) && !lastMsg.isRead) {
+            console.log("📤 SOCKET EMITTED: mark_as_read for chat:", conversationId);
+            const socket = getSocket();
+            if (socket) {
+                socket.emit(SOCKET_EVENTS.MARK_AS_READ, { 
+                    conversationId, 
+                    userId: currentUserId 
+                });
+            }
+        }
+    }, [messages.length, conversationId, currentUserId]);
 
     const scrollToMessage = (targetId: string) => {
         const element = document.getElementById(`msg-${targetId}`);
@@ -294,9 +315,9 @@ const ChatBox = ({
                                                 {msg.isSending ? (
                                                     <Clock size={12} className="status-icon--sending" />
                                                 ) : isRead ? (
-                                                    <CheckCheck size={16} className="status-icon--read" />
+                                                    <CheckCheck size={16} className="tick-read" />
                                                 ) : (
-                                                    <Check size={16} className="status-icon--sent" />
+                                                    <Check size={16} className="tick-sent" />
                                                 )}
                                             </div>
                                         )}

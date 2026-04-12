@@ -29,18 +29,19 @@ const ForwardModal = ({ message, conversations, onClose, onForward }: ForwardMod
             onClick={onClose}
         >
             <motion.div 
-                initial={{ scale: 0.95, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.95, y: 20 }}
+                initial={{ scale: 0.9, opacity: 0, y: 10 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 10 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 className="forward-modal"
                 onClick={e => e.stopPropagation()}
             >
                 <div className="forward-modal-header">
                     <div className="header-title">
-                        <CornerUpRight size={20} className="title-icon" />
-                        <h3>Chuyển tiếp</h3>
+                        <CornerUpRight size={22} className="title-icon" strokeWidth={2.5} />
+                        <h3>Chuyển tiếp tới...</h3>
                     </div>
-                    <button className="header-close-btn" onClick={onClose}>
+                    <button className="header-close-btn" onClick={onClose} aria-label="Đóng">
                         <X size={20} />
                     </button>
                 </div>
@@ -49,10 +50,10 @@ const ForwardModal = ({ message, conversations, onClose, onForward }: ForwardMod
                     <div className="preview-indicator" />
                     <div className="preview-details">
                         <div className="preview-author">
-                            Từ: {message.sender.username}
+                            {message.sender.username}
                         </div>
                         <div className="preview-text">
-                            {message.text || (message.imageUrl ? "Hình ảnh" : "Tin nhắn")}
+                            {message.text || (message.imageUrl ? "📷 Hình ảnh" : "Tin nhắn")}
                         </div>
                     </div>
                 </div>
@@ -72,8 +73,8 @@ const ForwardModal = ({ message, conversations, onClose, onForward }: ForwardMod
                 <div className="forward-list-container">
                     {filteredConversations.length > 0 ? (
                         filteredConversations.map(conv => {
-                            const otherUser = conv.participants[0]; // Simple logic for demo
-                            const displayTitle = conv.isGroup ? conv.name : otherUser?.username;
+                            const otherUser = conv.participants.find(p => p._id !== message.sender._id) || conv.participants[0];
+                            const displayTitle = conv.isGroup ? conv.name : (otherUser?.username || "Người dùng");
 
                             return (
                                 <div 

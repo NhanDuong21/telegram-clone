@@ -12,6 +12,7 @@ interface ChatBoxProps {
     isGroup?: boolean;
     onProfileClick?: (userId: string) => void;
     onImagePreview?: (url: string) => void;
+    onDeleteMessage?: (msg: Message) => void;
 }
 
 const formatTime = (iso: string) => {
@@ -25,7 +26,7 @@ const messageVariants = {
     exit: { opacity: 0, scale: 0.9, transition: { duration: 0.1 } }
 };
 
-const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, onProfileClick, onImagePreview }: ChatBoxProps) => {
+const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, onProfileClick, onImagePreview, onDeleteMessage }: ChatBoxProps) => {
     const bottomRef = useRef<HTMLDivElement>(null);
     const lastMessageId = useRef<string | null>(null);
     const prevConvId = useRef<string | null>(null);
@@ -122,7 +123,7 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                                     )}
                                 </div>
                             )}
-                            <div className={`message-bubble ${isMe ? "message-bubble--me" : "message-bubble--other"}`}>
+                            <div className={`message-bubble ${isMe ? "message-bubble--me" : "message-bubble--other"} ${msg.isDeleted ? "message-bubble--deleted" : ""}`}>
                                 {!isMe && isGroup && (
                                     <div
                                         className="message-sender"
@@ -132,7 +133,7 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                                     </div>
                                 )}
                                 
-                                {msg.imageUrl && (
+                                {msg.imageUrl && !msg.isDeleted && (
                                     <img
                                         src={msg.imageUrl}
                                         alt="Attached"
@@ -144,16 +145,30 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                                     />
                                 )}
                                 
-                                {msg.text && <div>{msg.text}</div>}
+                                {msg.text && (
+                                    <div className={msg.isDeleted ? "message-text--deleted" : ""}>
+                                        {msg.isDeleted ? "Tin nhắn đã bị xóa" : msg.text}
+                                    </div>
+                                )}
 
                                 <div className="message-footer">
                                     <span>{formatTime(msg.createdAt)}</span>
-                                    {isMe && (
+                                    {isMe && !msg.isDeleted && (
                                         <span className={`message-status ${isRead ? "message-status--read-me" : "message-status--unread-me"}`}>
                                             {isRead ? "✓✓" : "✓"}
                                         </span>
                                     )}
                                 </div>
+
+                                {!msg.isDeleted && (
+                                    <button 
+                                        className="message-delete-trigger" 
+                                        onClick={() => onDeleteMessage?.(msg)}
+                                        title="Xóa tin nhắn"
+                                    >
+                                        ×
+                                    </button>
+                                )}
                             </div>
                         </motion.div>
                     );

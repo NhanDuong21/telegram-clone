@@ -34,6 +34,16 @@ const messageSchema = new Schema<IMessage>(
             type: Boolean,
             default: false,
         },
+        deletedFor: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
+        isDeleted: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,

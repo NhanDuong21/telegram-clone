@@ -50,7 +50,10 @@ export const getMessagesService = async (conversationId: string, userId: string,
         throw new Error("Conversation không tồn tại");
     }
 
-    const query: { conversationId: string; createdAt?: { $lt: Date } } = { conversationId };
+    const query: any = { 
+        conversationId,
+        deletedFor: { $ne: userId }
+    };
     if (before) {
         query.createdAt = { $lt: new Date(before) };
     }
@@ -68,6 +71,45 @@ export const getMessagesService = async (conversationId: string, userId: string,
 
     messages.reverse();
     return { messages, hasMore };
+};
+
+export const deleteMessageService = async (messageId: string, userId: string, type: 'one-way' | 'two-way') => {
+    const message = await Message.findById(messageId);
+    if (!message) throw new Error("Tin nhắn không tồn tại");
+
+    if (type === 'two-way') {
+        if (message.sender.toString() !== userId) {
+            throw new Error("Bạn không có quyền xóa tin nhắn này cho mọi người");
+        }
+        
+        // Two-way delete: Clear content and set flag
+        message.text = "Tin nhắn đã bị xóa";
+        message.imageUrl = "";
+        message.isDeleted = true;
+        await message.save();
+    } else {
+        // One-way delete: Add to deletedFor
+        if (!message.deletedFor.includes(userId as any)) {
+            message.deletedFor.push(userId as any);
+            await message.save();
+        }
+    }
+
+    const io = getIO();
+    const conversation = await Conversation.findById(message.conversationId).select("participants").lean();
+    
+    if (conversation) {
+        conversation.participants.forEach((p) => {
+            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGE_DELETED, { 
+                messageId, 
+                conversationId: message.conversationId.toString(),
+                type,
+                userId // Who triggered the delete
+            });
+        });
+    }
+
+    return message;
 };
 
 export const markAsReadService = async (conversationId: string, userId: string) => {

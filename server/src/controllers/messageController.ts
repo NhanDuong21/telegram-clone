@@ -45,3 +45,22 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
         return res.status(500).json({ message: "Server error" });
     }
 };
+export const deleteMessage = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { type } = req.body; // 'one-way' or 'two-way'
+        const userId = req.user!._id;
+
+        if (!type || !['one-way', 'two-way'].includes(type)) {
+            return res.status(400).json({ message: "Loại xóa không hợp lệ" });
+        }
+
+        const message = await messageService.deleteMessageService(id, userId.toString(), type);
+        return res.status(200).json({ message: "Xóa thành công", deletedMessage: message });
+    } catch (error: unknown) {
+        console.error("Delete message error:", error);
+        const err = error as Error;
+        const status = err.message.includes("không tồn tại") ? 404 : err.message.includes("không có quyền") ? 403 : 500;
+        return res.status(status).json({ message: err.message || "Server error" });
+    }
+};

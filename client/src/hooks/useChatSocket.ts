@@ -205,6 +205,33 @@ export const useChatSocket = ({
         socket.emit(SOCKET_EVENTS.MARK_AS_READ, { conversationId: selectedConversationId });
     }
 
+    socket.on(SOCKET_EVENTS.MESSAGE_DELETED, ({ messageId, conversationId: deletedConvId, type, userId: actorId }) => {
+      if (selectedIdRef.current === deletedConvId) {
+        if (type === 'one-way') {
+           if (actorId === user?._id) {
+               setMessages((prev) => prev.filter((m) => m._id !== messageId));
+           }
+        } else {
+           setMessages((prev) =>
+             prev.map((m) =>
+               m._id === messageId ? { ...m, text: "Tin nhắn đã bị xóa", imageUrl: "", isDeleted: true } : m
+             )
+           );
+        }
+      }
+
+      if (type === 'two-way') {
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c._id === deletedConvId && c.lastMessage?._id === messageId) {
+              return { ...c, lastMessage: { ...c.lastMessage, text: "Tin nhắn đã xóa", isRead: true } };
+            }
+            return c;
+          })
+        );
+      }
+    });
+
     return () => {
       socket.off(SOCKET_EVENTS.CONNECT);
       socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE);
@@ -217,6 +244,7 @@ export const useChatSocket = ({
       socket.off(SOCKET_EVENTS.CONVERSATION_DELETED);
       socket.off(SOCKET_EVENTS.MESSAGE_READ);
       socket.off(SOCKET_EVENTS.MESSAGES_READ);
+      socket.off(SOCKET_EVENTS.MESSAGE_DELETED);
     };
   }, [user, selectedConversationId]);
 };

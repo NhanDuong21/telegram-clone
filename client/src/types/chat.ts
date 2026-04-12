@@ -33,5 +33,7 @@ export interface Message {
     };
     readBy?: string[];
     isRead?: boolean;
+    deletedFor?: string[];
+    isDeleted?: boolean;
     createdAt: string;
 }

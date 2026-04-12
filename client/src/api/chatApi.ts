@@ -86,3 +86,9 @@ export const uploadImageApi = (file: File) => {
         },
     });
 };
+
+export const deleteMessageApi = (messageId: string, type: 'one-way' | 'two-way') =>
+    axiosClient.delete(`/messages/${messageId}`, {
+        data: { type },
+        ...getAuthHeader()
+    });

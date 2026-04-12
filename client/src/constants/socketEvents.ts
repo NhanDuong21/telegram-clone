@@ -13,4 +13,5 @@ export const SOCKET_EVENTS = {
     JOIN_ROOM: "joinRoom",
     MARK_AS_READ: "markAsRead",
     STOP_TYPING: "stopTyping",
+    MESSAGE_DELETED: "messageDeleted",
 };

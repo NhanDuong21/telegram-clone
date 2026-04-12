@@ -11,6 +11,7 @@ import GroupSettingsModal from "../../components/chat/GroupSettingsModal/GroupSe
 import EditProfileModal from "../../components/profile/EditProfileModal/EditProfileModal";
 import UserProfileModal from "../../components/profile/UserProfileModal/UserProfileModal";
 import ImagePreviewModal from "../../components/chat/ImagePreviewModal/ImagePreviewModal";
+import DeleteMessageModal from "../../components/chat/DeleteMessageModal/DeleteMessageModal";
 
 import { disconnectSocket, getSocket } from "../../socket";
 import { useChatSocket } from "../../hooks/useChatSocket";
@@ -46,6 +47,7 @@ const ChatPage = () => {
     loadOlderMessages,
     clearChat,
     deleteConversation,
+    deleteMessage,
   } = useChatActions(user);
 
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
@@ -57,6 +59,7 @@ const ChatPage = () => {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [messageToDelete, setMessageToDelete] = useState<Message | null>(null);
 
   useChatSocket({
     user,
@@ -271,6 +274,7 @@ const ChatPage = () => {
                 isGroup={selectedConversation.isGroup}
                 onProfileClick={setViewingProfileId}
                 onImagePreview={setPreviewImageUrl}
+                onDeleteMessage={setMessageToDelete}
               />
 
               {typingUsers.size > 0 && (
@@ -309,6 +313,20 @@ const ChatPage = () => {
       </AnimatePresence>
       <AnimatePresence>
         {previewImageUrl && <ImagePreviewModal imageUrl={previewImageUrl} onClose={() => setPreviewImageUrl(null)} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {messageToDelete && (
+          <DeleteMessageModal 
+            onClose={() => setMessageToDelete(null)}
+            onConfirm={(type) => {
+              if (messageToDelete) {
+                deleteMessage(messageToDelete, type);
+                setMessageToDelete(null);
+              }
+            }}
+            isSender={(messageToDelete.sender as unknown as User)?._id === user?._id}
+          />
+        )}
       </AnimatePresence>
     </div>
   );

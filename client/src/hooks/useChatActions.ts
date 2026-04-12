@@ -5,6 +5,7 @@ import {
   getMessagesApi,
   clearChatApi,
   deleteConversationApi,
+  deleteMessageApi,
 } from "../api/chatApi";
 import { getSocket } from "../socket";
 import { SOCKET_EVENTS } from "../constants/socketEvents";
@@ -80,6 +81,36 @@ export const useChatActions = (user: User | null) => {
     }
   };
 
+  const deleteMessageAction = async (msg: Message, type: 'one-way' | 'two-way') => {
+    try {
+      // Optimistic Update
+      if (type === 'one-way') {
+        setMessages(prev => prev.filter(m => m._id !== msg._id));
+      } else {
+        setMessages(prev => prev.map(m => m._id === msg._id ? { ...m, text: "Tin nhắn đã bị xóa", imageUrl: "", isDeleted: true } : m));
+      }
+
+      // Update sidebar if last message
+      setConversations(prev => prev.map(c => {
+        if (c._id === msg.conversationId && c.lastMessage?._id === msg._id) {
+          if (type === 'one-way') {
+             // We don't have the "previous" last message easily here without another API call or more state
+             // But for now, we leave it as is or show "Tin nhắn đã xóa"
+             return { ...c, lastMessage: { ...c.lastMessage, text: "Tin nhắn đã xóa" } };
+          } else {
+            return { ...c, lastMessage: { ...c.lastMessage?._id ? { _id: msg._id, text: "Tin nhắn đã xóa" } : null, text: "Tin nhắn đã xóa" } };
+          }
+        }
+        return c;
+      }));
+
+      await deleteMessageApi(msg._id, type);
+    } catch (error) {
+       console.error("Failed to delete message:", error);
+       fetchMessages(msg.conversationId); // Revert on error
+    }
+  };
+
   return {
     conversations,
     setConversations,
@@ -92,5 +123,6 @@ export const useChatActions = (user: User | null) => {
     loadOlderMessages,
     clearChat,
     deleteConversation,
+    deleteMessage: deleteMessageAction,
   };
 };

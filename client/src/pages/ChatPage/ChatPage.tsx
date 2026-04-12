@@ -8,6 +8,7 @@ import ChatBox from "../../components/chat/ChatBox/ChatBox";
 import MessageInput from "../../components/chat/MessageInput/MessageInput";
 import Avatar from "../../components/common/Avatar";
 import HeaderMenu from "../../components/chat/ChatBox/HeaderMenu";
+import DeleteConfirmModal from "../../components/chat/Modals/DeleteConfirmModal";
 import RightSidebar from "../../components/chat/RightSidebar/RightSidebar";
 import GroupSettingsModal from "../../components/chat/GroupSettingsModal/GroupSettingsModal";
 import EditProfileModal from "../../components/profile/EditProfileModal/EditProfileModal";
@@ -18,6 +19,7 @@ import ForwardModal from "../../components/chat/ForwardModal/ForwardModal";
 import PinModal from "../../components/chat/PinModal/PinModal";
 import SearchSidebar from "../../components/chat/RightSidebar/SearchSidebar";
 import CallModal from "../../components/chat/CallModal/CallModal";
+import ConfirmModal from "../../components/chat/Modals/ConfirmModal";
 import { sendMessageApi } from "../../api/chatApi";
 
 import { disconnectSocket, getSocket } from "../../socket";
@@ -79,6 +81,19 @@ const ChatPage = () => {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [isMyProfileOpen, setIsMyProfileOpen] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [confirmModalConfig, setConfirmModalConfig] = useState<{
+    title: string;
+    description: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    isDanger?: boolean;
+  } | null>(null);
+  const [deleteModalConfig, setDeleteModalConfig] = useState<{
+    title: string;
+    description: string;
+    onConfirm: (deleteForBoth: boolean) => void;
+    targetName?: string;
+  } | null>(null);
 
   const selectedConversation = useMemo(() => 
     conversations.find(c => c._id === selectedConversationId), 
@@ -285,8 +300,23 @@ const ChatPage = () => {
                       isOpen={showOptionsMenu}
                       onClose={() => setShowOptionsMenu(false)}
                       isGroup={selectedConversation.isGroup ?? false}
-                      onDeleteChat={() => deleteConversation(selectedConversationId!)}
-                      onClearChat={() => clearChat(selectedConversationId!)}
+                      isMuted={selectedConversation.isMuted ?? false}
+                      onToggleMute={() => toggleMuteConversation(selectedConversation._id)}
+                      onDeleteChat={() => setDeleteModalConfig({
+                          title: "Xóa cuộc trò chuyện",
+                          description: "Bạn có chắc chắn muốn xóa cuộc trò chuyện này?",
+                          targetName: otherParticipant?.username || "người kia",
+                          onConfirm: (deleteForBoth) => {
+                              deleteConversation(selectedConversationId!, deleteForBoth);
+                              setSelectedConversationId(null);
+                          }
+                      })}
+                      onClearChat={() => setDeleteModalConfig({
+                          title: "Xóa lịch sử",
+                          description: "Bạn có chắc chắn muốn xóa toàn bộ lịch sử tin nhắn? Hành động này không thể hoàn tác.",
+                          targetName: otherParticipant?.username || "người kia",
+                          onConfirm: (deleteForBoth) => clearChat(selectedConversationId!, deleteForBoth)
+                      })}
                       onSettingsClick={() => setShowGroupSettings(true)}
                     />
                   </div>
@@ -410,7 +440,28 @@ const ChatPage = () => {
                 onScrollToMessage={handleScrollToMessage}
             />
         )}
+        {confirmModalConfig && (
+            <ConfirmModal 
+                isOpen={!!confirmModalConfig}
+                onClose={() => setConfirmModalConfig(null)}
+                onConfirm={confirmModalConfig.onConfirm}
+                title={confirmModalConfig.title}
+                description={confirmModalConfig.description}
+                confirmText={confirmModalConfig.confirmText}
+                isDanger={confirmModalConfig.isDanger}
+            />
+        )}
         {showCallModal && <CallModal onClose={() => setShowCallModal(false)} />}
+        {deleteModalConfig && (
+            <DeleteConfirmModal 
+                isOpen={!!deleteModalConfig}
+                onClose={() => setDeleteModalConfig(null)}
+                onConfirm={deleteModalConfig.onConfirm}
+                title={deleteModalConfig.title}
+                description={deleteModalConfig.description}
+                targetName={deleteModalConfig.targetName}
+            />
+        )}
       </AnimatePresence>
     </div>
   );

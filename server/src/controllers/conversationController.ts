@@ -119,9 +119,10 @@ export const getMyConversations = async (req: AuthRequest, res: Response) => {
 export const clearChat = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
+        const { deleteForBoth } = req.body;
         const userId = req.user!._id.toString();
 
-        const clearedId = await conversationService.clearChatService(id as string, userId);
+        const clearedId = await conversationService.clearChatService(id as string, userId, deleteForBoth);
         return res.status(200).json({ message: "Đã xóa toàn bộ tin nhắn", clearedConversationId: clearedId });
     } catch (error: unknown) {
         console.error("Clear chat error:", error);
@@ -133,9 +134,10 @@ export const clearChat = async (req: AuthRequest, res: Response) => {
 export const deleteConversation = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
+        const { deleteForBoth } = req.body;
         const userId = req.user!._id.toString();
 
-        const deletedId = await conversationService.deleteConversationService(id as string, userId);
+        const deletedId = await conversationService.deleteConversationService(id as string, userId, deleteForBoth);
         return res.status(200).json({ message: "Đã xóa hiển thị chat", deletedConversationId: deletedId });
     } catch (error: unknown) {
         console.error("Delete conversation error:", error);

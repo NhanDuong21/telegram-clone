@@ -63,20 +63,18 @@ export const useChatActions = (user: User | null) => {
     }
   }, [hasMore, loadingMore]);
 
-  const clearChat = async (conversationId: string) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa lịch sử trò chuyện?")) return;
+  const clearChat = async (conversationId: string, deleteForBoth: boolean = false) => {
     try {
-      await clearChatApi(conversationId);
+      await clearChatApi(conversationId, deleteForBoth);
     } catch (e) {
       console.error("Clear chat error:", e);
       throw e;
     }
   };
 
-  const deleteConversation = async (conversationId: string) => {
-    if (!confirm("Bạn có chắc chắn muốn Xóa hiển thị toàn bộ đoạn chat này?")) return;
+  const deleteConversation = async (conversationId: string, deleteForBoth: boolean = false) => {
     try {
-      await deleteConversationApi(conversationId);
+      await deleteConversationApi(conversationId, deleteForBoth);
     } catch (e) {
       console.error("Delete conversation error:", e);
       throw e;

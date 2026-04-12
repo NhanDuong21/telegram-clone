@@ -162,34 +162,45 @@ export const getMyConversationsService = async (userId: string) => {
     return withUnread;
 };
 
-export const clearChatService = async (id: string, userId: string) => {
+export const clearChatService = async (id: string, userId: string, deleteForBoth: boolean = false) => {
     const conversation = await Conversation.findOne({ _id: id, participants: userId });
     if (!conversation) throw new Error("Conversation không tồn tại hoặc bạn không có quyền");
 
-    await Message.deleteMany({ conversationId: id });
-    
-    conversation.lastMessage = undefined;
-    await conversation.save();
-
-    const io = getIO();
-    conversation.participants.forEach(p => {
-        io.to(p.toString()).emit(SOCKET_EVENTS.CONVERSATION_CLEARED, { conversationId: id });
-    });
+    if (deleteForBoth || conversation.isGroup) {
+        await Message.deleteMany({ conversationId: id });
+        conversation.lastMessage = undefined;
+        await conversation.save();
+        
+        const io = getIO();
+        conversation.participants.forEach(p => {
+            io.to(p.toString()).emit(SOCKET_EVENTS.CONVERSATION_CLEARED, { conversationId: id });
+        });
+    } else {
+        // 1-way delete: For now, just trigger local UI clear for the user
+        const io = getIO();
+        io.to(userId).emit(SOCKET_EVENTS.CONVERSATION_CLEARED, { conversationId: id });
+    }
 
     return id;
 };
 
-export const deleteConversationService = async (id: string, userId: string) => {
-    const conversation = await Conversation.findOne({ _id: id, isGroup: false, participants: userId });
-    if (!conversation) throw new Error("Chat không tồn tại, bạn không có quyền, hoặc đây là Group Chat");
+export const deleteConversationService = async (id: string, userId: string, deleteForBoth: boolean = false) => {
+    const conversation = await Conversation.findOne({ _id: id, participants: userId });
+    if (!conversation) throw new Error("Chat không tồn tại hoặc bạn không có quyền");
 
-    await Message.deleteMany({ conversationId: id });
-    await Conversation.findByIdAndDelete(id);
+    if (deleteForBoth || conversation.isGroup) {
+        await Message.deleteMany({ conversationId: id });
+        await Conversation.findByIdAndDelete(id);
 
-    const io = getIO();
-    conversation.participants.forEach(p => {
-        io.to(p.toString()).emit(SOCKET_EVENTS.CONVERSATION_DELETED, { conversationId: id });
-    });
+        const io = getIO();
+        conversation.participants.forEach(p => {
+            io.to(p.toString()).emit(SOCKET_EVENTS.CONVERSATION_DELETED, { conversationId: id });
+        });
+    } else {
+        // 1-way delete: For now, just trigger local UI removal for the user
+        const io = getIO();
+        io.to(userId).emit(SOCKET_EVENTS.CONVERSATION_DELETED, { conversationId: id });
+    }
 
     return id;
 };

@@ -50,14 +50,14 @@ export const removeMemberApi = (conversationId: string, memberId: string) =>
 export const deleteGroupApi = (conversationId: string) =>
     axiosClient.delete(`/conversations/${conversationId}/group`, getAuthHeader());
 
-export const clearChatApi = (conversationId: string) =>
+export const clearChatApi = (conversationId: string, deleteForBoth: boolean = false) =>
     axiosClient.delete(
         `/conversations/${conversationId}/messages`,
-        getAuthHeader()
+        { data: { deleteForBoth }, ...getAuthHeader() }
     );
 
-export const deleteConversationApi = (conversationId: string) =>
-    axiosClient.delete(`/conversations/${conversationId}`, getAuthHeader());
+export const deleteConversationApi = (conversationId: string, deleteForBoth: boolean = false) =>
+    axiosClient.delete(`/conversations/${conversationId}`, { data: { deleteForBoth }, ...getAuthHeader() });
 
 export const getMessagesApi = (
     conversationId: string,

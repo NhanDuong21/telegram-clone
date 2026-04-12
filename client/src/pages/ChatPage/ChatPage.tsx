@@ -367,6 +367,7 @@ const ChatPage = () => {
               }
             }}
             isSender={(messageToDelete.sender as unknown as User)?._id === user?._id}
+            targetName={selectedConversation?.isGroup ? "mọi người" : (selectedConversation?.name || selectedConversation?.participants[0]?.username)}
           />
         )}
       </AnimatePresence>

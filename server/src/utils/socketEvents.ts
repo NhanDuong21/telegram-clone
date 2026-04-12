@@ -3,6 +3,7 @@ export const SOCKET_EVENTS = {
     DISCONNECT: "disconnect",
     RECEIVE_MESSAGE: "receiveMessage",
     MESSAGE_READ: "messageRead",
+    MESSAGES_READ: "messagesRead",
     ONLINE_USERS: "onlineUsers",
     TYPING: "typing",
     GROUP_UPDATED: "groupUpdated",

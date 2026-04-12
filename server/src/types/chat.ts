@@ -6,6 +6,7 @@ export interface IMessage extends mongoose.Document {
     text?: string;
     imageUrl?: string;
     readBy: mongoose.Types.ObjectId[];
+    isRead: boolean;
     createdAt: Date;
     updatedAt: Date;
 }

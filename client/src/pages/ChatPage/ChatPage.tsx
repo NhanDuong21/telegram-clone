@@ -75,8 +75,19 @@ const ChatPage = () => {
   );
 
   useEffect(() => {
-    fetchConversations();
+    fetchConversations().then(() => {
+        // We need the data from conversations which were just fetched
+    });
   }, [fetchConversations]);
+
+  // Sync unread counts from conversations list
+  useEffect(() => {
+    const counts: Record<string, number> = {};
+    conversations.forEach(c => {
+        if (c.unreadCount) counts[c._id] = c.unreadCount;
+    });
+    setUnreadCounts(counts);
+  }, [conversations]);
 
   useEffect(() => {
     if (selectedConversationId) {

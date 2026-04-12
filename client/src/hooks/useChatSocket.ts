@@ -58,7 +58,6 @@ export const useChatSocket = ({
         
         if (user?._id && message.sender._id !== user._id) {
           socket.emit(SOCKET_EVENTS.MARK_AS_READ, { 
-            messageId: message._id, 
             conversationId: convId 
           });
         }
@@ -96,8 +95,23 @@ export const useChatSocket = ({
             if (m._id === messageId) {
               const currentReadBy = m.readBy || [];
               if (!currentReadBy.includes(userId)) {
-                return { ...m, readBy: [...currentReadBy, userId] };
+                return { ...m, readBy: [...currentReadBy, userId], isRead: true };
               }
+              return { ...m, isRead: true };
+            }
+            return m;
+          })
+        );
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.MESSAGES_READ, ({ conversationId: convId, readerId }) => {
+      if (selectedIdRef.current === convId) {
+        setMessages((prev) =>
+          prev.map((m) => {
+            if (m.sender._id !== readerId) {
+               // If the reader is NOT the sender, it means the sender's messages are being read
+               return { ...m, isRead: true, readBy: [...(m.readBy || []), readerId] };
             }
             return m;
           })
@@ -173,6 +187,11 @@ export const useChatSocket = ({
       }
     });
 
+    // Emit MARK_AS_READ when switching to a conversation
+    if (selectedConversationId) {
+        socket.emit(SOCKET_EVENTS.MARK_AS_READ, { conversationId: selectedConversationId });
+    }
+
     return () => {
       socket.off(SOCKET_EVENTS.CONNECT);
       socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE);
@@ -184,6 +203,7 @@ export const useChatSocket = ({
       socket.off(SOCKET_EVENTS.CONVERSATION_CLEARED);
       socket.off(SOCKET_EVENTS.CONVERSATION_DELETED);
       socket.off(SOCKET_EVENTS.MESSAGE_READ);
+      socket.off(SOCKET_EVENTS.MESSAGES_READ);
     };
-  }, [user]);
+  }, [user, selectedConversationId]);
 };

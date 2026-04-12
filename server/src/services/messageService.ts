@@ -19,6 +19,7 @@ export const sendMessageService = async (conversationId: string, senderId: strin
         text: text ? text.trim() : "",
         imageUrl: imageUrl ? imageUrl.trim() : "",
         readBy: [senderId],
+        isRead: false,
     });
 
     // 1. Emit ngay lập tức sau khi tạo xong Message (Không đợi update Conversation)
@@ -69,16 +70,25 @@ export const getMessagesService = async (conversationId: string, userId: string,
     return { messages, hasMore };
 };
 
-export const markAsReadService = async (messageId: string, conversationId: string, userId: string) => {
-    await Message.findByIdAndUpdate(messageId, {
-        $addToSet: { readBy: userId }
-    });
+export const markAsReadService = async (conversationId: string, userId: string) => {
+    // Update all messages in this conversation where user is NOT the sender and isRead is false
+    await Message.updateMany(
+        { 
+            conversationId, 
+            sender: { $ne: userId }, 
+            isRead: false 
+        },
+        { 
+            $set: { isRead: true },
+            $addToSet: { readBy: userId }
+        }
+    );
     
     const io = getIO();
-    const conversation = await Conversation.findById(conversationId);
+    const conversation = await Conversation.findById(conversationId).select("participants").lean();
     if (conversation) {
         conversation.participants.forEach((p) => {
-            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGE_READ, { messageId, userId, conversationId });
+            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGES_READ, { conversationId, readerId: userId });
         });
     }
 };

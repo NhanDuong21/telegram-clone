@@ -17,6 +17,7 @@ export interface Conversation {
         text: string;
     } | null;
     updatedAt: string;
+    unreadCount?: number;
 }
 
 export interface Message {
@@ -30,5 +31,6 @@ export interface Message {
         avatar?: string;
     };
     readBy?: string[];
+    isRead?: boolean;
     createdAt: string;
 }

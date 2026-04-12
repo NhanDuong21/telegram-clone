@@ -33,11 +33,12 @@ export const useChatActions = (user: User | null) => {
 
       const socket = getSocket();
       if (socket && user?._id) {
-        fetchedMessages.forEach((m: Message) => {
-          if (m.sender._id !== user._id && !(m.readBy || []).includes(user._id)) {
-            socket.emit(SOCKET_EVENTS.MARK_AS_READ, { messageId: m._id, conversationId: m.conversationId });
-          }
-        });
+        const hasUnread = fetchedMessages.some((m: Message) => 
+          m.sender._id !== user._id && !(m.readBy || []).includes(user._id)
+        );
+        if (hasUnread) {
+          socket.emit(SOCKET_EVENTS.MARK_AS_READ, { conversationId });
+        }
       }
     } catch (error) {
       console.error("Failed to load messages:", error);

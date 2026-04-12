@@ -158,8 +158,12 @@
     align-items: center;
 }
 
+.message-status--unread-me {
+    color: rgba(255, 255, 255, 0.6);
+}
+
 .message-status--read-me {
-    color: #e0f7fa;
+    color: #4cd964; /* Green ticks for seen */
 }
 
 .message-status--read-other {

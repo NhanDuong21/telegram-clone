@@ -76,7 +76,7 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                 {messages.map((msg) => {
                     const senderObj = msg.sender as unknown as User;
                     const isMe = senderObj?._id === currentUserId;
-                    const isRead = (msg.readBy || []).some(id => id !== currentUserId);
+                    const isRead = msg.isRead || (msg.readBy || []).some(id => id !== currentUserId);
 
                     return (
                         <motion.div
@@ -149,7 +149,7 @@ const ChatBox = ({ messages, currentUserId, onLoadMore, hasMore, loadingMore, is
                                 <div className="message-footer">
                                     <span>{formatTime(msg.createdAt)}</span>
                                     {isMe && (
-                                        <span className={`message-status ${isRead ? "message-status--read-me" : ""}`}>
+                                        <span className={`message-status ${isRead ? "message-status--read-me" : "message-status--unread-me"}`}>
                                             {isRead ? "✓✓" : "✓"}
                                         </span>
                                     )}

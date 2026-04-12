@@ -30,6 +30,10 @@ const messageSchema = new Schema<IMessage>(
                 ref: "User",
             },
         ],
+        isRead: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,

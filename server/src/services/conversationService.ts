@@ -142,13 +142,24 @@ export const createOrGetConversationService = async (senderId: string, receiverI
 };
 
 export const getMyConversationsService = async (userId: string) => {
-    return await Conversation.find({
+    const conversations = await Conversation.find({
         participants: userId,
     })
     .populate("participants", "username email avatar")
-    .populate("lastMessage", "text imageUrl createdAt")
+    .populate("lastMessage", "text imageUrl createdAt isRead")
     .sort({ updatedAt: -1 })
     .lean();
+
+    const withUnread = await Promise.all(conversations.map(async (conv) => {
+        const unreadCount = await Message.countDocuments({
+            conversationId: conv._id,
+            sender: { $ne: userId },
+            readBy: { $ne: userId }
+        });
+        return { ...conv, unreadCount };
+    }));
+
+    return withUnread;
 };
 
 export const clearChatService = async (id: string, userId: string) => {

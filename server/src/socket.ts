@@ -17,7 +17,6 @@ interface TypingPayload {
 }
 
 interface MarkAsReadPayload {
-    messageId: string;
     conversationId: string;
 }
 
@@ -79,10 +78,10 @@ export const initSocket = (httpServer: HttpServer) => {
             socket.join(roomId);
         });
 
-        socket.on(SOCKET_EVENTS.MARK_AS_READ, async ({ messageId, conversationId }: MarkAsReadPayload) => {
-            if (userId && messageId && conversationId) {
+        socket.on(SOCKET_EVENTS.MARK_AS_READ, async ({ conversationId }: MarkAsReadPayload) => {
+            if (userId && conversationId) {
                 try {
-                    await messageService.markAsReadService(messageId, conversationId, userId);
+                    await messageService.markAsReadService(conversationId, userId);
                 } catch (error: unknown) {
                     console.error("markAsRead error:", error);
                 }

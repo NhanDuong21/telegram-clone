@@ -55,7 +55,7 @@ const DeleteConfirmModal = ({
                                 Hủy
                             </button>
                             <button 
-                                className="del-btn del-btn--confirm"
+                                className="del-btn del-btn--confirm danger"
                                 onClick={() => {
                                     onConfirm(deleteForBoth);
                                     onClose();

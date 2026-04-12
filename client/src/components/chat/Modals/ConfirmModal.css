@@ -14,7 +14,8 @@
 
 .confirm-modal-container {
     width: 330px;
-    background-color: var(--bg-paper);
+    background-color: var(--bg-modal);
+    opacity: 1;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
     display: flex;

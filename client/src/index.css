@@ -21,6 +21,9 @@
   --text-pinned-bar: #707579;
   --border-pinned-bar: #dfe1e5;
   --pinned-bar-accent: #3390ec;
+  --bg-modal-bar: #ffffff;
+  --text-modal-bar: #707579;
+  --modal-bar-accent: #3390ec;
 }
 
 [data-theme='dark'] {
@@ -46,6 +49,9 @@
   --text-pinned-bar: #ffffff;
   --border-pinned-bar: #24303f;
   --pinned-bar-accent: #3390ec;
+  --bg-modal-bar: #17212b;
+  --text-modal-bar: #ffffff;
+  --modal-bar-accent: #3390ec;
 }
 
 body {

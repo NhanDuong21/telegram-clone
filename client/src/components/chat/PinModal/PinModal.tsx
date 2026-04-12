@@ -41,7 +41,7 @@ const PinModal = ({ onClose, onConfirm, targetName }: PinModalProps) => {
                                 onChange={(e) => setPinForBoth(e.target.checked)} 
                             />
                             <span className="pin-checkbox-custom"></span>
-                            <span className="pin-checkbox-label">Ghim cho cả {targetName}</span>
+                            <span className="pin-checkbox-label">Ghim 2 chiều</span>
                         </label>
                     )}
                 </div>

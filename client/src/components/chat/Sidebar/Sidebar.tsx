@@ -160,7 +160,7 @@ const Sidebar = ({
                     {conversations.map((conv) => {
                         const other = getOtherUser(conv);
                         const isSelected = conv._id === selectedId;
-                        const unreadCount = unreadCounts[conv._id] || 0;
+                        const unreadCount = unreadCounts[conv._id] !== undefined ? unreadCounts[conv._id] : (conv.unreadCount || 0);
 
                         return (
                             <motion.div

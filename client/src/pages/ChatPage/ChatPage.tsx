@@ -118,6 +118,12 @@ const ChatPage = () => {
       return copy;
     });
     if (user?._id) localStorage.setItem(`tg_sel_conv_${user._id}`, conv._id);
+    
+    // Explicitly mark as read when user clicks
+    const socket = getSocket();
+    if (socket) {
+      socket.emit(SOCKET_EVENTS.MARK_AS_READ, { conversationId: conv._id });
+    }
   };
 
   const handleMessageSent = (message: Message) => {

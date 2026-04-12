@@ -76,7 +76,7 @@ export const markAsReadService = async (conversationId: string, userId: string) 
         { 
             conversationId, 
             sender: { $ne: userId }, 
-            isRead: false 
+            readBy: { $ne: userId } 
         },
         { 
             $set: { isRead: true },

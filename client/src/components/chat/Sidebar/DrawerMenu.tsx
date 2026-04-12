@@ -40,9 +40,7 @@ const DrawerMenu = ({ isOpen, onClose, user, onLogout }: DrawerMenuProps) => {
                             <div className="drawer-user-info">
                                 <Avatar user={user} size={64} />
                                 <div className="user-details-wrapper">
-                                    <div className="user-name-row">
-                                        <span className="drawer-user-name">{user?.username || "Người dùng"}</span>
-                                    </div>
+                                    <span className="drawer-user-name">{user?.username || "Người dùng"}</span>
                                 </div>
                             </div>
                         </div>

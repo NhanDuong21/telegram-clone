@@ -15,7 +15,7 @@
     left: 0;
     width: 300px;
     height: 100vh;
-    background: var(--sidebar-bg);
+    background: var(--bg-sidebar);
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
     z-index: 2001;
     display: flex;
@@ -23,22 +23,22 @@
 }
 
 .drawer-header {
-    background: var(--sidebar-bg);
+    background: var(--bg-header);
     padding: 24px 28px 16px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .drawer-user-name {
     font-size: 16px;
     font-weight: 600;
-    color: var(--text-color);
+    color: var(--text-main);
 }
 
 .drawer-content {
     flex: 1;
     padding-top: 8px;
     overflow-y: auto;
-    background: var(--sidebar-bg);
+    background: var(--bg-sidebar);
 }
 
 .menu-item {
@@ -52,7 +52,7 @@
     cursor: pointer;
     font-size: 15px;
     font-weight: 500;
-    color: var(--text-color);
+    color: var(--text-main);
     transition: background 0.2s;
 }
 
@@ -61,7 +61,7 @@
 }
 
 .menu-icon {
-    color: #8a8a8a;
+    color: var(--text-secondary);
 }
 
 .menu-divider {
@@ -75,6 +75,7 @@
     margin-top: auto;
     border-top: 1px solid var(--border-color);
 }
+
 
 .menu-item--logout .menu-icon {
     color: #ff5252;

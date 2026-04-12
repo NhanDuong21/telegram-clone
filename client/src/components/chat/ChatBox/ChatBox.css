@@ -4,7 +4,7 @@
     flex-direction: column;
     position: relative;
     overflow: hidden;
-    background: var(--bg-color);
+    background: var(--bg-chat);
 }
 
 .pinned-messages-bar {
@@ -13,7 +13,7 @@
     left: 0;
     right: 0;
     z-index: 5;
-    background: var(--header-bg);
+    background: var(--bg-header);
     backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
@@ -21,7 +21,7 @@
     padding: 8px 16px;
     border-bottom: 1px solid var(--border-color);
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .pinned-bar-main {
@@ -266,14 +266,14 @@
 .message-bubble--me {
     border-radius: 18px 18px 4px 18px;
     background: var(--msg-out);
-    color: #fff;
+    color: #ffffff;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .message-bubble--other {
     border-radius: 18px 18px 18px 4px;
     background: var(--msg-in);
-    color: var(--text-color);
+    color: #ffffff;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 

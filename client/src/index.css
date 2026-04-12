@@ -1,27 +1,31 @@
 :root {
   --bg-color: #ffffff;
-  --sidebar-bg: #ffffff;
-  --text-color: #000000;
-  --msg-in: #ffffff;
-  --msg-out: #effdde;
-  --header-bg: #ffffff;
+  --bg-sidebar: #ffffff;
+  --bg-header: #ffffff;
+  --bg-chat: #f4f4f5;
+  --text-main: #000000;
+  --text-secondary: #707579;
   --border-color: #dfe1e5;
   --input-bg: #f4f4f5;
   --sidebar-hover: #f4f4f5;
   --accent-color: #3390ec;
+  --msg-in: #ffffff;
+  --msg-out: #effdde;
 }
 
 [data-theme='dark'] {
-  --bg-color: #1c242f;
-  --sidebar-bg: #17212b;
-  --text-color: #ffffff;
-  --msg-in: #24303f;
-  --msg-out: #2b5278;
-  --header-bg: #24303f;
+  --bg-color: #0e1621;
+  --bg-sidebar: #17212b;
+  --bg-header: #24303f;
+  --bg-chat: #0e1621;
+  --text-main: #ffffff;
+  --text-secondary: #aaaaaa;
   --border-color: #101921;
   --input-bg: #24303f;
   --sidebar-hover: #24303f;
   --accent-color: #3390ec;
+  --msg-in: #182533;
+  --msg-out: #2b5278;
 }
 
 body {
@@ -30,7 +34,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--bg-color);
-  color: var(--text-color);
+  color: var(--text-main);
   height: 100dvh;
   overflow: hidden; /* App view is static */
   width: 100vw;

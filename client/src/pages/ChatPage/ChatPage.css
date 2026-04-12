@@ -135,25 +135,31 @@
     object-fit: cover;
 }
 
-.options-btn {
+.chat-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-action-btn {
     background: transparent;
     border: none;
-    cursor: pointer;
-    font-size: 20px;
-    color: #0088cc;
-    padding: 4px;
-    width: 32px;
-    height: 32px;
+    color: var(--text-secondary);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    transition: background 0.2s;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
 }
 
-.options-btn:hover {
-    background: rgba(0, 136, 204, 0.08);
+.header-action-btn:hover {
+    background: var(--sidebar-hover);
+    color: var(--text-main);
 }
+
 
 .options-menu {
     position: absolute;

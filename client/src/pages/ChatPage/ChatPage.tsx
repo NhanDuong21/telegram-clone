@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Search, Phone, PanelRight, MoreVertical } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 import Sidebar from "../../components/chat/Sidebar/Sidebar";
 import ChatBox from "../../components/chat/ChatBox/ChatBox";
 import MessageInput from "../../components/chat/MessageInput/MessageInput";
 import Avatar from "../../components/common/Avatar";
+import HeaderMenu from "../../components/chat/ChatBox/HeaderMenu";
 import GroupSettingsModal from "../../components/chat/GroupSettingsModal/GroupSettingsModal";
 import EditProfileModal from "../../components/profile/EditProfileModal/EditProfileModal";
 import UserProfileModal from "../../components/profile/UserProfileModal/UserProfileModal";
@@ -264,34 +266,35 @@ const ChatPage = () => {
                   <div className={`chat-header__text ${!selectedConversation.isGroup ? "chat-header__text-clickable" : ""}`} 
                        onClick={() => !selectedConversation.isGroup && otherParticipant && setViewingProfileId(otherParticipant._id)}>
                     <span className="chat-header__name">{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
-                    {!selectedConversation.isGroup && otherParticipant && onlineUsers.includes(otherParticipant._id) && (
-                      <span className="chat-header__status">Online</span>
+                    {!selectedConversation.isGroup && otherParticipant && (
+                      <span className="chat-header__status">
+                        {onlineUsers.includes(otherParticipant._id) ? "Online" : "Offline"}
+                      </span>
                     )}
                     {selectedConversation.isGroup && (
                       <span className="chat-header__members">{selectedConversation.participants.length} thành viên</span>
                     )}
                   </div>
                 </div>
-                <div className="chat-header__options-container">
-                  <button onClick={() => setShowOptionsMenu(!showOptionsMenu)} className="options-btn">⋮</button>
-                  <AnimatePresence>
-                    {showOptionsMenu && (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        className="options-menu"
-                      >
-                        {selectedConversation.isGroup && (
-                          <div onClick={() => { setShowOptionsMenu(false); setShowGroupSettings(true); }} className="menu-item">Cài đặt nhóm</div>
-                        )}
-                        <div onClick={() => { setShowOptionsMenu(false); clearChat(selectedConversationId!); }} className="menu-item menu-item--delete">Clear chat</div>
-                        {!selectedConversation.isGroup && (
-                          <div onClick={() => { setShowOptionsMenu(false); deleteConversation(selectedConversationId!); }} className="menu-item menu-item--delete-bold">Delete conversation</div>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+
+                <div className="chat-header__actions">
+                  <button className="header-action-btn"><Search size={22} /></button>
+                  <button className="header-action-btn"><Phone size={22} /></button>
+                  <button className="header-action-btn"><PanelRight size={22} /></button>
+                  
+                  <div className="chat-header__options-container">
+                    <button onClick={() => setShowOptionsMenu(!showOptionsMenu)} className="header-action-btn">
+                      <MoreVertical size={22} />
+                    </button>
+                    <HeaderMenu 
+                      isOpen={showOptionsMenu}
+                      onClose={() => setShowOptionsMenu(false)}
+                      isGroup={selectedConversation.isGroup}
+                      onDeleteChat={() => deleteConversation(selectedConversationId!)}
+                      onClearChat={() => clearChat(selectedConversationId!)}
+                      onSettingsClick={() => setShowGroupSettings(true)}
+                    />
+                  </div>
                 </div>
               </div>
 

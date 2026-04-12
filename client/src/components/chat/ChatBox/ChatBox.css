@@ -32,14 +32,20 @@
 .pinned-messages-bar {
     position: relative;
     z-index: 5;
-    background: var(--bg-header);
-    backdrop-filter: blur(10px);
+    background: var(--bg-pinned-bar);
+    border-bottom: 1px solid var(--border-pinned-bar);
+    border-left: 3px solid var(--pinned-bar-accent);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 8px 16px;
-    border-bottom: 1px solid var(--border-color);
     cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.pinned-messages-bar:hover {
+    background: var(--sidebar-hover);
 }
 
 .pinned-bar-main {
@@ -51,46 +57,70 @@
 }
 
 .pinned-bar-icon {
-    color: var(--accent-color);
+    color: var(--pinned-bar-accent);
+    flex-shrink: 0;
 }
 
 .pinned-bar-content {
     flex: 1;
     overflow: hidden;
-}
-
-.pinned-bar-unpin {
-    background: transparent;
-    border: none;
-    color: #999;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-    margin-left: 8px;
-}
-
-.pinned-bar-unpin:hover {
-    background: var(--sidebar-hover);
-    color: #e53935;
+    flex-direction: column;
 }
 
 .pinned-bar-title {
     font-size: 13px;
     font-weight: 600;
-    color: var(--accent-color);
+    color: var(--pinned-bar-accent);
+    line-height: 1.2;
 }
 
 .pinned-bar-text {
-    font-size: 13px;
-    color: var(--text-color);
-    opacity: 0.8;
+    font-size: 14px;
+    color: var(--text-pinned-bar);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+.pinned-bar-unpin {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.pinned-bar-unpin:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #e53935;
+}
+
+[data-theme='dark'] .pinned-bar-unpin:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+    .pinned-messages-bar {
+        padding: 6px 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .pinned-bar-title {
+        font-size: 12px;
+    }
+    
+    .pinned-bar-text {
+        font-size: 13px;
+    }
 }
 
 .chat-box {

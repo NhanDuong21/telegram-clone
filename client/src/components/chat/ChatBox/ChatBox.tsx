@@ -358,7 +358,13 @@ const ChatBox = ({
                             onReact={(emoji) => onReactMessage?.(targetItem, emoji)}
                             onReply={() => onReplyMessage?.(targetItem)}
                             onEdit={() => onEditMessage?.(targetItem)}
-                            onPin={() => onPinMessage?.(targetItem)}
+                            onPin={() => {
+                                if (targetItem?.isPinned) {
+                                    onUnpinMessage?.(targetItem);
+                                } else {
+                                    onPinMessage?.(targetItem);
+                                }
+                            }}
                             onForward={() => onForwardMessage?.(targetItem)}
                         />
                     )}

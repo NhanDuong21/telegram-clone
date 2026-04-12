@@ -118,14 +118,22 @@ export const useChatActions = (user: User | null) => {
 
       await updateMessageApi(messageId, data);
 
-      // Successfully pinned globally? Trigger system message
-      if (data.isPinned && data.pinForBoth && user?._id) {
+      // Successfully pinned/unpinned globally? Trigger system message
+      if (data.isPinned !== undefined && user?._id) {
           const msg = messages.find(m => m._id === messageId);
           if (msg) {
-              await sendMessageApi(msg.conversationId, {
-                  text: `${user.username} đã ghim một tin nhắn.`,
-                  type: 'system'
-              });
+              if (data.isPinned && data.pinForBoth) {
+                await sendMessageApi(msg.conversationId, {
+                    text: `${user.username} đã ghim một tin nhắn.`,
+                    type: 'system'
+                });
+              } else if (data.isPinned === false && msg.isPinned) {
+                // Was pinned globally before, now unpinning globally
+                await sendMessageApi(msg.conversationId, {
+                    text: `${user.username} đã bỏ ghim tin nhắn.`,
+                    type: 'system'
+                });
+              }
           }
       }
     } catch (error) {

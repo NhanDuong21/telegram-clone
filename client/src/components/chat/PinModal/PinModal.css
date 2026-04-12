@@ -4,8 +4,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -14,17 +13,17 @@
 
 .pin-modal-container {
     width: 330px;
-    background: var(--sidebar-bg);
+    background-color: var(--bg-paper);
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    color: var(--text-color);
+    color: var(--text-primary);
 }
 
 .pin-modal-header {
-    padding: 20px 24px 8px;
+    padding: 24px 24px 8px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -34,13 +33,13 @@
     margin: 0;
     font-size: 18px;
     font-weight: 600;
-    color: var(--text-color);
+    color: var(--text-primary);
 }
 
 .pin-modal-close {
     background: transparent;
     border: none;
-    color: #999;
+    color: var(--text-secondary);
     cursor: pointer;
     padding: 4px;
     border-radius: 50%;
@@ -49,7 +48,7 @@
 
 .pin-modal-close:hover {
     background: var(--sidebar-hover);
-    color: var(--text-color);
+    color: var(--text-primary);
 }
 
 .pin-modal-body {
@@ -62,8 +61,7 @@
 
 .pin-modal-desc {
     font-size: 15px;
-    color: var(--text-color);
-    opacity: 0.85;
+    color: var(--text-secondary);
     margin-bottom: 20px;
     line-height: 1.5;
 }
@@ -116,7 +114,7 @@
 
 .pin-checkbox-label {
     font-size: 15px;
-    color: var(--text-color);
+    color: var(--text-primary);
 }
 
 .pin-modal-footer {
@@ -138,7 +136,7 @@
 
 .pin-btn--cancel {
     background: transparent;
-    color: var(--accent-color);
+    color: var(--text-secondary);
 }
 
 .pin-btn--cancel:hover {
@@ -146,11 +144,19 @@
 }
 
 .pin-btn--confirm {
-    background: transparent;
-    color: var(--accent-color);
+    background: var(--accent-color);
+    color: #ffffff;
 }
 
 .pin-btn--confirm:hover {
-    background: var(--sidebar-hover);
+    opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+    .pin-modal-container {
+        width: 90%;
+        max-width: 320px;
+        margin: 0 auto;
+    }
 }
 

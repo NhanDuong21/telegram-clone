@@ -204,10 +204,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #b0b8c1;
+    color: var(--text-secondary);
     font-size: 15px;
     gap: 6px;
-    background: var(--bg-color);
+    background: var(--bg-chat);
 }
 
 .chat-box__empty-icon {
@@ -414,9 +414,9 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #fff;
-    border: 1px solid #eee;
-    color: #adb5bd;
+    background: var(--bg-header);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -448,12 +448,12 @@
 }
 
 .reaction-badge {
-    background: #fff;
+    background: var(--bg-header);
     padding: 2px 6px;
     border-radius: 20px;
     font-size: 14px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    border: 1px solid #efefef;
+    border: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     gap: 2px;

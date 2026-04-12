@@ -13,7 +13,6 @@ interface ChatBoxProps {
     hasMore?: boolean;
     loadingMore?: boolean;
     isGroup?: boolean;
-    onProfileClick?: (userId: string) => void;
     onImagePreview?: (url: string) => void;
     onDeleteMessage?: (msg: Message) => void;
     onReactMessage?: (msg: Message, emoji: string) => void;
@@ -59,7 +58,7 @@ const messageVariants = {
 
 const ChatBox = ({ 
     messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, 
-    onProfileClick, onImagePreview, onDeleteMessage, onReactMessage,
+    onImagePreview, onDeleteMessage, onReactMessage,
     onReplyMessage, onEditMessage, onPinMessage, onForwardMessage, onUnpinMessage,
     searchQuery = ""
 }: ChatBoxProps) => {
@@ -215,10 +214,7 @@ const ChatBox = ({
                                 className={`message-row ${isMe ? "message-row--me" : "message-row--other"}`}
                             >
                                 {!isMe && (
-                                    <div 
-                                        className="message-avatar"
-                                        onClick={() => onProfileClick?.(senderObj?._id)}
-                                    >
+                                    <div className="message-avatar">
                                         {senderObj?.avatar ? (
                                             <img 
                                                 src={senderObj.avatar} 
@@ -258,10 +254,7 @@ const ChatBox = ({
                                     )}
 
                                     {!isMe && isGroup && (
-                                        <div
-                                            className="message-sender"
-                                            onClick={() => onProfileClick?.(senderObj?._id)}
-                                        >
+                                        <div className="message-sender">
                                             {senderObj?.username}
                                         </div>
                                     )}

@@ -11,6 +11,7 @@ import HeaderMenu from "../../components/chat/ChatBox/HeaderMenu";
 import RightSidebar from "../../components/chat/RightSidebar/RightSidebar";
 import GroupSettingsModal from "../../components/chat/GroupSettingsModal/GroupSettingsModal";
 import EditProfileModal from "../../components/profile/EditProfileModal/EditProfileModal";
+import MyProfileModal from "../../components/chat/Sidebar/MyProfileModal";
 import ImagePreviewModal from "../../components/chat/ImagePreviewModal/ImagePreviewModal";
 import DeleteMessageModal from "../../components/chat/DeleteMessageModal/DeleteMessageModal";
 import ForwardModal from "../../components/chat/ForwardModal/ForwardModal";
@@ -69,12 +70,13 @@ const ChatPage = () => {
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   
-  type RightPanelMode = 'none' | 'info' | 'search' | 'my-profile';
+  type RightPanelMode = 'none' | 'info' | 'search';
   const [rightPanelMode, setRightPanelMode] = useState<RightPanelMode>('none');
   
   const [searchQuery, setSearchQuery] = useState("");
   const [showCallModal, setShowCallModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [isMyProfileOpen, setIsMyProfileOpen] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
   const selectedConversation = useMemo(() => 
@@ -173,7 +175,7 @@ const ChatPage = () => {
   };
 
   const handleOpenMyProfile = () => {
-    setRightPanelMode('my-profile');
+    setIsMyProfileOpen(true);
   };
 
   return (
@@ -187,7 +189,6 @@ const ChatPage = () => {
         unreadCounts={unreadCounts}
         onSelectConversation={handleSelectConversation}
         onConversationCreated={(conv) => setConversations(prev => [conv, ...prev])}
-        onViewProfile={() => setRightPanelMode('info')}
         onLogout={() => { disconnectSocket(); logout(); }}
         onOpenMyProfile={handleOpenMyProfile}
       />
@@ -388,12 +389,10 @@ const ChatPage = () => {
             isOnline={otherParticipant ? onlineUsers.includes(otherParticipant._id) : false}
           />
         )}
-        {rightPanelMode === 'my-profile' && user && (
-          <RightSidebar 
-            onClose={() => setRightPanelMode('none')}
-            user={user}
-            mode="my-profile"
-            isOnline={true}
+        {isMyProfileOpen && (
+          <MyProfileModal 
+            onClose={() => setIsMyProfileOpen(false)} 
+            onEdit={() => setShowEditProfile(true)}
           />
         )}
         {rightPanelMode === 'search' && selectedConversation && (

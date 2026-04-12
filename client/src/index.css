@@ -12,6 +12,7 @@
   --accent-color: #3390ec;
   --msg-in: #ffffff;
   --msg-out: #effdde;
+  --bg-modal: #ffffff;
 }
 
 [data-theme='dark'] {
@@ -28,6 +29,7 @@
   --accent-color: #3390ec;
   --msg-in: #182533;
   --msg-out: #2b5278;
+  --bg-modal: #17212b;
 }
 
 body {

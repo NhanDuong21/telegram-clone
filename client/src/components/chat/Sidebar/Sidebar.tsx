@@ -18,7 +18,6 @@ interface SidebarProps {
     unreadCounts: Record<string, number>;
     onSelectConversation: (conv: Conversation) => void;
     onConversationCreated: (conv: Conversation) => void;
-    onViewProfile: (userId: string) => void;
     onLogout: () => void;
     onOpenMyProfile: () => void;
 }
@@ -32,7 +31,6 @@ const Sidebar = ({
     unreadCounts,
     onSelectConversation,
     onConversationCreated,
-    onViewProfile,
     onLogout,
     onOpenMyProfile,
 }: SidebarProps) => {
@@ -279,12 +277,7 @@ const Sidebar = ({
                                         className={`conversation-item ${isSelected ? "conversation-item--selected" : ""}`}
                                         onClick={() => onSelectConversation(conv)}
                                     >
-                                        <div className="item-avatar-wrapper" onClick={(e) => {
-                                            if (!conv.isGroup && other) {
-                                                e.stopPropagation();
-                                                onViewProfile(other._id);
-                                            }
-                                        }}>
+                                        <div className="item-avatar-wrapper">
                                             {conv.isGroup ? (
                                                 <div className="group-avatar-fallback">
                                                     {conv.name?.substring(0, 1).toUpperCase()}

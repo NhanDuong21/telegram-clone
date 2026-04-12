@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Phone, PanelRight, MoreVertical } from "lucide-react";
+import { Search, Phone, MoreVertical, PanelRight, ArrowLeft } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 import Sidebar from "../../components/chat/Sidebar/Sidebar";
@@ -181,22 +181,24 @@ const ChatPage = () => {
 
   return (
     <div className="chat-page-container" style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
-      <Sidebar 
-        conversations={conversations}
-        selectedId={selectedConversationId ?? ""}
-        currentUserId={user?._id ?? ""}
-        currentUser={user}
-        onlineUsers={onlineUsers}
-        unreadCounts={unreadCounts}
-        onSelectConversation={handleSelectConversation}
-        onConversationCreated={(conv) => setConversations(prev => [conv, ...prev])}
-        onLogout={() => { disconnectSocket(); logout(); }}
-        onOpenMyProfile={handleOpenMyProfile}
-      />
+      <div className={`sidebar-wrapper ${selectedConversationId ? 'hidden-on-mobile' : ''}`}>
+        <Sidebar 
+          conversations={conversations}
+          selectedId={selectedConversationId ?? ""}
+          currentUserId={user?._id ?? ""}
+          currentUser={user}
+          onlineUsers={onlineUsers}
+          unreadCounts={unreadCounts}
+          onSelectConversation={handleSelectConversation}
+          onConversationCreated={(conv) => setConversations(prev => [conv, ...prev])}
+          onLogout={() => { disconnectSocket(); logout(); }}
+          onOpenMyProfile={handleOpenMyProfile}
+        />
+      </div>
 
       <motion.div 
         layout
-        className={`chat-main-area ${selectedConversation ? "is-active" : ""}`}
+        className={`chat-main-area ${selectedConversationId ? 'is-active' : 'hidden-on-mobile'}`}
         style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', minWidth: 0 }}
       >
         <AnimatePresence mode="wait">
@@ -222,7 +224,9 @@ const ChatPage = () => {
             >
               <div className="chat-header">
                 <div className="chat-header__info">
-                  <button className="mobile-back-btn" onClick={() => setSelectedConversationId(null)}>←</button>
+                  <button className="mobile-back-btn" onClick={() => setSelectedConversationId(null)}>
+                    <ArrowLeft size={24} />
+                  </button>
                   {selectedConversation.isGroup ? (
                     <div className="group-avatar">
                       {selectedConversation.imageUrl ? 

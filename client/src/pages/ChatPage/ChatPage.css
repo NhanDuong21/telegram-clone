@@ -242,17 +242,41 @@
     display: none;
 }
 
+.hidden-on-mobile {
+  display: block;
+}
+
 @media (max-width: 768px) {
+    .hidden-on-mobile { 
+        display: none !important; 
+    }
+
+    .sidebar-wrapper {
+        width: 100% !important;
+        height: 100%;
+        border-right: none;
+    }
+
+    .chat-main-area {
+        width: 100% !important;
+        height: 100%;
+    }
+
     .mobile-back-btn {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
+        padding: 8px;
+        margin-right: 8px;
         background: transparent;
         border: none;
-        font-size: 20px;
-        color: #0088cc;
+        color: var(--accent-color);
         cursor: pointer;
+        border-radius: 50%;
+        transition: background 0.2s;
+    }
+
+    .mobile-back-btn:hover {
+        background: var(--sidebar-hover);
     }
 }

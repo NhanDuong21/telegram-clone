@@ -50,8 +50,8 @@ export const useChatSocket = ({
     socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, (message: Message) => {
       const convId = message.conversationId;
 
-      // Prevent duplicate if I'm the sender (Optimistic UI handles this)
-      if (message.sender._id === user?._id) {
+      // Prevent duplicate if I'm the sender (Optimistic UI handles normal text/image messages)
+      if (message.sender._id === user?._id && message.type !== 'system') {
           // But still update the sidebar/conversation list
           setConversations((prev) => {
             const index = prev.findIndex((c) => c._id === convId);

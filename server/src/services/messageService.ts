@@ -168,7 +168,7 @@ export const sendReactionService = async (messageId: string, userId: string, emo
     return message.reactions;
 };
 
-export const updateMessageService = async (messageId: string, userId: string, data: { text?: string, isPinned?: boolean }) => {
+export const updateMessageService = async (messageId: string, userId: string, data: { text?: string, isPinned?: boolean, pinForBoth?: boolean }) => {
     const message = await Message.findById(messageId);
     if (!message) throw new Error("Tin nhắn không tồn tại");
 
@@ -180,10 +180,29 @@ export const updateMessageService = async (messageId: string, userId: string, da
         message.isEdited = true;
     }
 
+    let shouldBroadcastGlobally = (data.text !== undefined);
+
     if (data.isPinned !== undefined) {
-        // Any participant can pin usually, or maybe owner only? 
-        // For simplicity, let any participant toggle pin.
-        message.isPinned = data.isPinned;
+        if (data.isPinned) {
+            if (data.pinForBoth) {
+                message.isPinned = true;
+                shouldBroadcastGlobally = true;
+            } else {
+                if (!message.pinnedFor.includes(userId as any)) {
+                    message.pinnedFor.push(userId as any);
+                }
+                // No global broadcast for local pin
+            }
+        } else {
+            // Unpinning
+            if (message.isPinned) {
+                // If it was global, unpinning makes it unpinned for everyone
+                message.isPinned = false;
+                shouldBroadcastGlobally = true;
+            }
+            // Always remove from local pins too
+            message.pinnedFor = message.pinnedFor.filter(id => id.toString() !== userId);
+        }
     }
 
     await message.save();
@@ -200,10 +219,16 @@ export const updateMessageService = async (messageId: string, userId: string, da
 
     const io = getIO();
     const conversation = await Conversation.findById(message.conversationId).select("participants").lean();
+    
     if (conversation) {
-        conversation.participants.forEach((p) => {
-            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGE_UPDATED, populated);
-        });
+        if (shouldBroadcastGlobally) {
+            conversation.participants.forEach((p) => {
+                io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGE_UPDATED, populated);
+            });
+        } else {
+            // Local pin update: only send to the actor
+            io.to(`user_${userId}`).emit(SOCKET_EVENTS.MESSAGE_UPDATED, populated);
+        }
     }
 
     return populated;

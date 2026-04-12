@@ -1,6 +1,6 @@
 import { useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Pin, CornerUpRight } from "lucide-react";
+import { Pin, CornerUpRight, X } from "lucide-react";
 import type { Message, User } from "../../../types";
 import { useContextMenu } from "../../../hooks/useContextMenu";
 import ContextMenu from "../Message/ContextMenu";
@@ -21,6 +21,7 @@ interface ChatBoxProps {
     onEditMessage?: (msg: Message) => void;
     onPinMessage?: (msg: Message) => void;
     onForwardMessage?: (msg: Message) => void;
+    onUnpinMessage?: (msg: Message) => void;
 }
 
 const formatTime = (iso: string) => {
@@ -37,14 +38,17 @@ const messageVariants = {
 const ChatBox = ({ 
     messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, 
     onProfileClick, onImagePreview, onDeleteMessage, onReactMessage,
-    onReplyMessage, onEditMessage, onPinMessage, onForwardMessage
+    onReplyMessage, onEditMessage, onPinMessage, onForwardMessage, onUnpinMessage
 }: ChatBoxProps) => {
     const bottomRef = useRef<HTMLDivElement>(null);
     const lastMessageId = useRef<string | null>(null);
     const prevConvId = useRef<string | null>(null);
     const { pos, targetItem, onContextMenu, onTouchStart, onTouchEnd, closeContextMenu } = useContextMenu();
 
-    const pinnedMessages = useMemo(() => messages.filter(m => m.isPinned), [messages]);
+    const pinnedMessages = useMemo(() => 
+        messages.filter(m => m.isPinned || m.pinnedFor?.includes(currentUserId)), 
+    [messages, currentUserId]);
+    const latestPinned = pinnedMessages[pinnedMessages.length - 1];
 
     const scrollToMessage = (targetId: string) => {
         const element = document.getElementById(`msg-${targetId}`);
@@ -56,7 +60,6 @@ const ChatBox = ({
             }, 2000);
         } else {
             console.warn(`Message with ID ${targetId} not found in DOM`);
-            // Optionally show a toast here
         }
     };
 
@@ -129,18 +132,30 @@ const ChatBox = ({
     return (
         <div className="chat-box-area">
             <AnimatePresence>
-                {pinnedMessages.length > 0 && (
+                {latestPinned && (
                     <motion.div 
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         className="pinned-messages-bar"
+                        onClick={() => scrollToMessage(latestPinned._id)}
                     >
-                        <Pin size={16} className="pinned-bar-icon" />
-                        <div className="pinned-bar-content">
-                            <div className="pinned-bar-title">Tin nhắn đã ghim</div>
-                            <div className="pinned-bar-text">{pinnedMessages[pinnedMessages.length - 1].text || "Hình ảnh"}</div>
+                        <div className="pinned-bar-main">
+                            <Pin size={16} className="pinned-bar-icon" />
+                            <div className="pinned-bar-content">
+                                <div className="pinned-bar-title">Tin nhắn đã ghim</div>
+                                <div className="pinned-bar-text">{latestPinned.text || "Hình ảnh"}</div>
+                            </div>
                         </div>
+                        <button 
+                            className="pinned-bar-unpin"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onUnpinMessage?.(latestPinned);
+                            }}
+                        >
+                            <X size={18} />
+                        </button>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -210,7 +225,7 @@ const ChatBox = ({
                                 )}
                                 <div 
                                     id={`msg-${msg._id}`}
-                                    className={`message-bubble ${isMe ? "message-bubble--me" : "message-bubble--other"} ${msg.isDeleted ? "message-bubble--deleted" : ""} ${msg.isPinned ? "message-bubble--pinned" : ""}`}
+                                    className={`message-bubble ${isMe ? "message-bubble--me" : "message-bubble--other"} ${msg.isDeleted ? "message-bubble--deleted" : ""} ${msg.isPinned || msg.pinnedFor?.includes(currentUserId) ? "message-bubble--pinned" : ""}`}
                                     onContextMenu={(e) => !msg.isDeleted && onContextMenu(e, msg)}
                                     onTouchStart={(e) => !msg.isDeleted && onTouchStart(e, msg)}
                                     onTouchEnd={onTouchEnd}

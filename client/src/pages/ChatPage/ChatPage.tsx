@@ -13,6 +13,7 @@ import UserProfileModal from "../../components/profile/UserProfileModal/UserProf
 import ImagePreviewModal from "../../components/chat/ImagePreviewModal/ImagePreviewModal";
 import DeleteMessageModal from "../../components/chat/DeleteMessageModal/DeleteMessageModal";
 import ForwardModal from "../../components/chat/ForwardModal/ForwardModal";
+import PinModal from "../../components/chat/PinModal/PinModal";
 import { sendMessageApi } from "../../api/chatApi";
 
 import { disconnectSocket, getSocket } from "../../socket";
@@ -66,6 +67,7 @@ const ChatPage = () => {
   const [replyTarget, setReplyTarget] = useState<Message | null>(null);
   const [editTarget, setEditTarget] = useState<Message | null>(null);
   const [messageToForward, setMessageToForward] = useState<Message | null>(null);
+  const [messageToPin, setMessageToPin] = useState<Message | null>(null);
 
   useChatSocket({
     user,
@@ -309,7 +311,8 @@ const ChatPage = () => {
                 onReactMessage={handleReactMessage}
                 onReplyMessage={(msg) => { setEditTarget(null); setReplyTarget(msg); }}
                 onEditMessage={(msg) => { setReplyTarget(null); setEditTarget(msg); }}
-                onPinMessage={(msg) => updateMessage(msg._id, { isPinned: !msg.isPinned })}
+                onPinMessage={setMessageToPin}
+                onUnpinMessage={(msg) => updateMessage(msg._id, { isPinned: false })}
                 onForwardMessage={setMessageToForward}
               />
 
@@ -391,6 +394,21 @@ const ChatPage = () => {
                 console.error("Forward failed", e);
               }
             }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {messageToPin && (
+          <PinModal 
+            onClose={() => setMessageToPin(null)}
+            onConfirm={(isPinned, pinForBoth) => {
+              if (messageToPin) {
+                updateMessage(messageToPin._id, { isPinned, pinForBoth });
+                setMessageToPin(null);
+              }
+            }}
+            targetName={selectedConversation?.isGroup ? "mọi người" : (selectedConversation?.name || selectedConversation?.participants[0]?.username)}
           />
         )}
       </AnimatePresence>

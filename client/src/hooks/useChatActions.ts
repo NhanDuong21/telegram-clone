@@ -82,10 +82,29 @@ export const useChatActions = (user: User | null) => {
     }
   };
 
-  const updateMessageAction = async (messageId: string, data: { text?: string, isPinned?: boolean }) => {
+  const updateMessageAction = async (messageId: string, data: { text?: string, isPinned?: boolean, pinForBoth?: boolean }) => {
     try {
       // Optimistic Update
-      setMessages(prev => prev.map(m => m._id === messageId ? { ...m, ...data, isEdited: data.text !== undefined ? true : m.isEdited } : m));
+      setMessages(prev => prev.map(m => {
+          if (m._id !== messageId) return m;
+          const updated = { ...m, ...data, isEdited: data.text !== undefined ? true : m.isEdited };
+          
+          if (data.isPinned !== undefined) {
+              if (data.isPinned) {
+                  if (data.pinForBoth) {
+                      updated.isPinned = true;
+                  } else if (user?._id) {
+                      updated.pinnedFor = [...(m.pinnedFor || []), user._id];
+                  }
+              } else {
+                  updated.isPinned = false;
+                  if (user?._id) {
+                      updated.pinnedFor = (m.pinnedFor || []).filter(id => id !== user._id);
+                  }
+              }
+          }
+          return updated as Message;
+      }));
       
       // Update sidebar if last message and text changed
       if (data.text) {
@@ -99,7 +118,6 @@ export const useChatActions = (user: User | null) => {
       await updateMessageApi(messageId, data);
     } catch (error) {
       console.error("Failed to update message:", error);
-      // Revert could be implemented by fetching messages again or storing previous state
     }
   };
 

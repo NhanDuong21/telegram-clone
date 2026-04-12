@@ -1,0 +1,152 @@
+.pin-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.pin-modal-container {
+    width: 320px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.pin-modal-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.pin-modal-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.pin-modal-close {
+    background: transparent;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.pin-modal-close:hover {
+    background: #f0f0f0;
+    color: #1a1a1a;
+}
+
+.pin-modal-body {
+    padding: 0 20px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.pin-modal-desc {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 24px;
+    line-height: 1.4;
+}
+
+.pin-checkbox-wrapper {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 10px 0;
+    user-select: none;
+}
+
+.pin-checkbox-wrapper input {
+    display: none;
+}
+
+.pin-checkbox-custom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.pin-checkbox-wrapper input:checked + .pin-checkbox-custom {
+    background: #3390ec;
+    border-color: #3390ec;
+}
+
+.pin-checkbox-custom::after {
+    content: '';
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.pin-checkbox-wrapper input:checked + .pin-checkbox-custom::after {
+    display: block;
+}
+
+.pin-checkbox-label {
+    font-size: 14px;
+    color: #1a1a1a;
+}
+
+.pin-modal-footer {
+    padding: 12px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.pin-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.pin-btn--cancel {
+    background: transparent;
+    color: #3390ec;
+}
+
+.pin-btn--cancel:hover {
+    background: #f0f7ff;
+}
+
+.pin-btn--confirm {
+    background: transparent;
+    color: #3390ec;
+}
+
+.pin-btn--confirm:hover {
+    background: #f0f7ff;
+}

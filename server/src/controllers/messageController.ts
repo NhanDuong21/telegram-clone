@@ -67,10 +67,10 @@ export const deleteMessage = async (req: AuthRequest, res: Response) => {
 export const updateMessage = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const { text, isPinned } = req.body;
+        const { text, isPinned, pinForBoth } = req.body;
         const userId = req.user!._id;
 
-        const message = await messageService.updateMessageService(id, userId.toString(), { text, isPinned });
+        const message = await messageService.updateMessageService(id, userId.toString(), { text, isPinned, pinForBoth });
         return res.status(200).json({ message: "Cập nhật thành công", updatedMessage: message });
     } catch (error: unknown) {
         console.error("Update message error:", error);

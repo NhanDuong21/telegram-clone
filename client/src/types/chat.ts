@@ -39,6 +39,7 @@ export interface Message {
     replyTo?: Message;
     isEdited?: boolean;
     isPinned?: boolean;
+    pinnedFor?: string[];
     forwardFrom?: { _id: string; username: string; avatar?: string };
     createdAt: string;
 }

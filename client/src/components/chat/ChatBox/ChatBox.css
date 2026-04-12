@@ -17,11 +17,19 @@
     backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
     padding: 8px 16px;
     border-bottom: 1px solid #efefef;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.pinned-bar-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    overflow: hidden;
 }
 
 .pinned-bar-icon {
@@ -31,6 +39,25 @@
 .pinned-bar-content {
     flex: 1;
     overflow: hidden;
+}
+
+.pinned-bar-unpin {
+    background: transparent;
+    border: none;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    margin-left: 8px;
+}
+
+.pinned-bar-unpin:hover {
+    background: #f0f0f0;
+    color: #e53935;
 }
 
 .pinned-bar-title {

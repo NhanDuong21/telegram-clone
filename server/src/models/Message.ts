@@ -62,6 +62,12 @@ const messageSchema = new Schema<IMessage>(
             type: Boolean,
             default: false,
         },
+        pinnedFor: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
         forwardFrom: {
             type: Schema.Types.ObjectId,
             ref: "User",

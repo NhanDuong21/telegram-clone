@@ -77,7 +77,7 @@ export const sendMessageApi = (
 
 export const updateMessageApi = (
     messageId: string,
-    data: { text?: string; isPinned?: boolean }
+    data: { text?: string; isPinned?: boolean; pinForBoth?: boolean }
 ): Promise<AxiosResponse<{ updatedMessage: Message }>> =>
     axiosClient.patch(`/messages/${messageId}`, data, getAuthHeader());
 

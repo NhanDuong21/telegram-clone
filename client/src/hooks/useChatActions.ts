@@ -133,13 +133,10 @@ export const useChatActions = (user: User | null) => {
       // Update sidebar if last message
       setConversations(prev => prev.map(c => {
         if (c._id === msg.conversationId && c.lastMessage?._id === msg._id) {
-          if (type === 'one-way') {
-             // We don't have the "previous" last message easily here without another API call or more state
-             // But for now, we leave it as is or show "Tin nhắn đã xóa"
-             return { ...c, lastMessage: { ...c.lastMessage, text: "Tin nhắn đã xóa" } };
-          } else {
-            return { ...c, lastMessage: { ...c.lastMessage?._id ? { _id: msg._id, text: "Tin nhắn đã xóa" } : null, text: "Tin nhắn đã xóa" } };
-          }
+          return { 
+            ...c, 
+            lastMessage: c.lastMessage ? { ...c.lastMessage, text: "Tin nhắn đã xóa" } : null 
+          };
         }
         return c;
       }));
@@ -165,5 +162,11 @@ export const useChatActions = (user: User | null) => {
     deleteConversation,
     deleteMessage: deleteMessageAction,
     updateMessage: updateMessageAction,
+    toggleMuteConversation: (conversationId: string) => {
+      setConversations(prev => prev.map(c => 
+        c._id === conversationId ? { ...c, isMuted: !c.isMuted } : c
+      ));
+      // In a real app, you would call: await axios.put(`/api/conversations/${conversationId}/mute`);
+    },
   };
 };

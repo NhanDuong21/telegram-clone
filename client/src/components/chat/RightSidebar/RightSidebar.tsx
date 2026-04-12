@@ -3,6 +3,7 @@ import {
   X,
   MessageCircle,
   Bell,
+  BellOff,
   UserPlus,
   Image as ImageIcon,
   Users,
@@ -17,6 +18,7 @@ interface RightSidebarProps {
   conversation?: Conversation | null;
   isOnline: boolean;
   mode?: 'info' | 'my-profile';
+  onToggleMute?: (conversationId: string) => void;
 }
 
 const RightSidebar = ({
@@ -25,10 +27,12 @@ const RightSidebar = ({
   conversation,
   isOnline,
   mode = 'info',
+  onToggleMute,
 }: RightSidebarProps) => {
   if (mode === 'info' && !conversation) return null;
 
   const isGroup = conversation?.isGroup || false;
+  const isMuted = conversation?.isMuted || false;
   const displayName = mode === 'my-profile' ? user?.username : (isGroup ? conversation?.name : user?.username);
   const displayStatus = mode === 'my-profile' 
     ? "Online" 
@@ -81,11 +85,18 @@ const RightSidebar = ({
             </div>
             <span>{mode === 'my-profile' ? 'Chỉnh sửa' : 'Nhắn tin'}</span>
           </button>
-          <button className="q-action-item">
+          <button 
+            className="q-action-item"
+            onClick={() => conversation && onToggleMute?.(conversation._id)}
+          >
             <div className="q-action-icon">
-              <Bell size={22} />
+              {mode === 'my-profile' ? <Bell size={22} /> : (isMuted ? <Bell size={22} /> : <BellOff size={22} />)}
             </div>
-            <span>{mode === 'my-profile' ? 'Trạng thái' : 'Tắt âm'}</span>
+            <span>
+              {mode === 'my-profile' 
+                ? 'Trạng thái' 
+                : (isMuted ? 'Bật âm' : 'Tắt âm')}
+            </span>
           </button>
         </div>
 

@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef } from "react";
-import { Menu, Search as SearchIcon, ArrowLeft } from "lucide-react";
+import { Menu, Search as SearchIcon, ArrowLeft, BellOff } from "lucide-react";
 import { searchUsersApi } from "../../../api/userApi";
 import { createOrGetConversationApi } from "../../../api/chatApi";
 import Avatar from "../../common/Avatar";
@@ -291,13 +291,18 @@ const Sidebar = ({
                                         </div>
                                         <div className="conversation-item__info">
                                             <div className="item-row">
-                                                <span className="item-name">{displayTitle}</span>
+                                                <div className="item-name-row">
+                                                    <span className="item-name">{displayTitle}</span>
+                                                    {conv.isMuted && <BellOff size={12} className="mute-icon" />}
+                                                </div>
                                                 <span className="item-time">{time}</span>
                                             </div>
                                             <div className="item-row">
                                                 <span className="item-preview">{lastMsg}</span>
                                                 {unreadCount > 0 && (
-                                                    <div className="item-unread-badge">{unreadCount}</div>
+                                                    <div className={`item-unread-badge ${conv.isMuted ? 'item-unread-badge--muted' : ''}`}>
+                                                        {unreadCount}
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>

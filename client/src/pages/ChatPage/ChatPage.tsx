@@ -56,6 +56,7 @@ const ChatPage = () => {
     deleteConversation,
     deleteMessage,
     updateMessage,
+    toggleMuteConversation,
   } = useChatActions(user);
 
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
@@ -387,6 +388,7 @@ const ChatPage = () => {
             user={otherParticipant}
             conversation={selectedConversation}
             isOnline={otherParticipant ? onlineUsers.includes(otherParticipant._id) : false}
+            onToggleMute={toggleMuteConversation}
           />
         )}
         {isMyProfileOpen && (

@@ -23,6 +23,7 @@ export interface Conversation {
     } | null;
     updatedAt: string;
     unreadCount?: number;
+    isMuted?: boolean;
 }
 
 export interface Message {

@@ -177,9 +177,29 @@
     justify-content: center;
 }
 
-.conversation-item--selected .item-unread-badge {
-    background: #ffffff;
-    color: var(--accent-color);
+.item-unread-badge--muted {
+    background: var(--text-secondary);
+}
+
+.conversation-item--selected .item-unread-badge--muted {
+    background: rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+}
+
+.item-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+}
+
+.mute-icon {
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.conversation-item--selected .mute-icon {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .group-avatar-fallback {

@@ -210,7 +210,28 @@
         position: fixed;
         top: 0;
         right: 0;
-        width: 100%;
-        z-index: 2000;
+        bottom: 0;
+        width: 100% !important;
+        max-width: 100vw;
+        height: 100vh;
+        z-index: 2500;
+        border-left: none;
+    }
+
+    .right-sidebar-header {
+        height: 60px;
+        padding: 0 8px;
+    }
+    
+    .sidebar-close-btn {
+        padding: 12px;
+    }
+
+    .right-sidebar-content {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .right-sidebar > div {
+        width: 100% !important;
     }
 }

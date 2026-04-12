@@ -166,3 +166,35 @@
 [data-theme='dark'] .search-sidebar {
     border-color: rgba(255, 255, 255, 0.1);
 }
+
+@media (max-width: 768px) {
+    .search-sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 100% !important;
+        max-width: 100vw;
+        height: 100vh;
+        z-index: 2500;
+        border-left: none;
+    }
+
+    .search-sidebar-header {
+        height: 60px;
+        padding: 0 8px;
+    }
+
+    .search-sidebar-close {
+        padding: 12px;
+    }
+
+    /* Target the inner anti-squish div */
+    .search-sidebar > div {
+        width: 100% !important;
+    }
+    
+    .search-results-list {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}

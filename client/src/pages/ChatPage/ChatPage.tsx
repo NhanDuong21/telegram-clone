@@ -202,7 +202,7 @@ const ChatPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ type: "tween", duration: 0.2 }}
+          transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
           className={`chat-wrapper ${selectedConversation ? "is-active" : ""}`}
         >
           {!selectedConversation ? (

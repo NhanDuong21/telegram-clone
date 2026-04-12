@@ -61,18 +61,20 @@ const SearchSidebar = ({ messages, onClose, onScrollToMessage, searchQuery, onSe
 
     return (
         <motion.div 
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            initial={{ width: 0, x: 20, opacity: 0 }}
+            animate={{ width: 350, x: 0, opacity: 1 }}
+            exit={{ width: 0, x: 20, opacity: 0 }}
+            transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
             className="search-sidebar"
+            style={{ overflow: 'hidden' }}
         >
-            <div className="search-sidebar-header">
-                <button className="search-sidebar-close" onClick={onClose} aria-label="Close search">
-                    <X size={22} />
-                </button>
-                <div className="search-sidebar-title">Tìm kiếm</div>
-            </div>
+            <div style={{ width: 350 }}> {/* Fixed width inner container to prevent content squushing */}
+                <div className="search-sidebar-header">
+                    <button className="search-sidebar-close" onClick={onClose} aria-label="Close search">
+                        <X size={22} />
+                    </button>
+                    <div className="search-sidebar-title">Tìm kiếm</div>
+                </div>
 
             <div className="search-sidebar-input-row">
                 <div className="search-sidebar-input-wrapper">
@@ -123,6 +125,7 @@ const SearchSidebar = ({ messages, onClose, onScrollToMessage, searchQuery, onSe
                     })
                 )}
             </div>
+          </div>
         </motion.div>
     );
 };

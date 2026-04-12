@@ -37,12 +37,13 @@ const RightSidebar = ({
   return (
     <motion.div
       initial={{ width: 0, x: "20px", opacity: 0 }}
-      animate={{ width: "320px", x: 0, opacity: 1 }}
+      animate={{ width: "350px", x: 0, opacity: 1 }}
       exit={{ width: 0, x: "20px", opacity: 0 }}
       transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
       className="right-sidebar"
       style={{ overflow: "hidden" }}
     >
+      <div style={{ width: "350px" }}>
       <div className="right-sidebar-header">
         <div className="header-left">
           <button className="sidebar-close-btn" onClick={onClose}>
@@ -135,6 +136,7 @@ const RightSidebar = ({
             </div>
           )}
         </div>
+      </div>
       </div>
     </motion.div>
   );

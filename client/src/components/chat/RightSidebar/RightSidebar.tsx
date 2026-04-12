@@ -14,8 +14,9 @@ import "./RightSidebar.css";
 interface RightSidebarProps {
   onClose: () => void;
   user: User | null;
-  conversation: Conversation | null;
+  conversation?: Conversation | null;
   isOnline: boolean;
+  mode?: 'info' | 'my-profile';
 }
 
 const RightSidebar = ({
@@ -23,16 +24,19 @@ const RightSidebar = ({
   user,
   conversation,
   isOnline,
+  mode = 'info',
 }: RightSidebarProps) => {
-  if (!conversation) return null;
+  if (mode === 'info' && !conversation) return null;
 
-  const isGroup = conversation.isGroup;
-  const displayName = isGroup ? conversation.name : user?.username;
-  const displayStatus = isGroup
-    ? `${conversation.participants.length} thành viên`
-    : isOnline
-      ? "Online"
-      : "Offline";
+  const isGroup = conversation?.isGroup || false;
+  const displayName = mode === 'my-profile' ? user?.username : (isGroup ? conversation?.name : user?.username);
+  const displayStatus = mode === 'my-profile' 
+    ? "Online" 
+    : (isGroup
+      ? `${conversation?.participants.length} thành viên`
+      : isOnline
+        ? "Online"
+        : "Offline");
 
   return (
     <motion.div
@@ -49,7 +53,7 @@ const RightSidebar = ({
           <button className="sidebar-close-btn" onClick={onClose}>
             <X size={22} />
           </button>
-          <h3>Thông tin</h3>
+          <h3>{mode === 'my-profile' ? "Thông tin cá nhân" : "Thông tin"}</h3>
         </div>
       </div>
 
@@ -75,13 +79,13 @@ const RightSidebar = ({
             <div className="q-action-icon">
               <MessageCircle size={22} />
             </div>
-            <span>Nhắn tin</span>
+            <span>{mode === 'my-profile' ? 'Chỉnh sửa' : 'Nhắn tin'}</span>
           </button>
           <button className="q-action-item">
             <div className="q-action-icon">
               <Bell size={22} />
             </div>
-            <span>Tắt âm</span>
+            <span>{mode === 'my-profile' ? 'Trạng thái' : 'Tắt âm'}</span>
           </button>
         </div>
 
@@ -93,7 +97,7 @@ const RightSidebar = ({
                   <UserPlus size={20} />
                 </div>
                 <div className="info-details">
-                  <div className="info-value">None</div>
+                  <div className="info-value">{user?.bio || "None"}</div>
                   <div className="info-label">Bio</div>
                 </div>
               </div>
@@ -108,6 +112,17 @@ const RightSidebar = ({
                   <div className="info-label">Tên người dùng</div>
                 </div>
               </div>
+              {mode === 'my-profile' && (
+                  <div className="info-item">
+                    <div className="info-icon" style={{ opacity: 0 }}>
+                      <UserPlus size={20} />
+                    </div>
+                    <div className="info-details">
+                      <div className="info-value">{user?.phone || "Chưa cập nhật"}</div>
+                      <div className="info-label">Số điện thoại</div>
+                    </div>
+                  </div>
+              )}
             </>
           )}
           {isGroup && (
@@ -126,13 +141,13 @@ const RightSidebar = ({
         <div className="media-tabs-section">
           <div className="media-tab-item">
             <ImageIcon size={20} className="tab-icon" />
-            <span className="tab-label">53 ảnh</span>
+            <span className="tab-label">0 ảnh</span>
           </div>
 
-          {!isGroup && (
+          {!isGroup && mode !== 'my-profile' && (
             <div className="media-tab-item">
               <Users size={20} className="tab-icon" />
-              <span className="tab-label">2 nhóm chung</span>
+              <span className="tab-label">0 nhóm chung</span>
             </div>
           )}
         </div>

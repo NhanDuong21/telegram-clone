@@ -4,6 +4,8 @@ export interface User {
     email: string;
     avatar?: string;
     lastSeen?: string;
+    bio?: string;
+    phone?: string;
 }
 
 export interface Conversation {

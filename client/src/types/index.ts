@@ -8,6 +8,7 @@ export interface User {
     bio?: string;
     displayName?: string;
     lastSeen?: string;
+    phone?: string;
 }
 
 export interface AuthContextType {

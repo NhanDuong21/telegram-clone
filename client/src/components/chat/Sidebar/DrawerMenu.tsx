@@ -13,9 +13,10 @@ interface DrawerMenuProps {
     onClose: () => void;
     user: UserType | null;
     onLogout: () => void;
+    onOpenMyProfile: () => void;
 }
 
-const DrawerMenu = ({ isOpen, onClose, user, onLogout }: DrawerMenuProps) => {
+const DrawerMenu = ({ isOpen, onClose, user, onLogout, onOpenMyProfile }: DrawerMenuProps) => {
     const { isDarkMode, toggleTheme } = useTheme();
 
     return (
@@ -47,7 +48,7 @@ const DrawerMenu = ({ isOpen, onClose, user, onLogout }: DrawerMenuProps) => {
 
                         <div className="drawer-content">
                             <div className="menu-item-group">
-                                <button className="menu-item">
+                                <button className="menu-item" onClick={() => { onOpenMyProfile(); onClose(); }}>
                                     <User size={22} className="menu-icon" />
                                     <span>Trang cá nhân</span>
                                 </button>

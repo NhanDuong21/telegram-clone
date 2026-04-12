@@ -20,6 +20,7 @@ interface SidebarProps {
     onConversationCreated: (conv: Conversation) => void;
     onViewProfile: (userId: string) => void;
     onLogout: () => void;
+    onOpenMyProfile: () => void;
 }
 
 const Sidebar = ({
@@ -33,6 +34,7 @@ const Sidebar = ({
     onConversationCreated,
     onViewProfile,
     onLogout,
+    onOpenMyProfile,
 }: SidebarProps) => {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<User[]>([]);
@@ -40,6 +42,17 @@ const Sidebar = ({
     const [startingChat, setStartingChat] = useState<string | null>(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
+    
+    // Hard Reset: Lift state to parent and initialize from localStorage ONLY
+    const [recentSearches, setRecentSearches] = useState<Conversation[]>(() => {
+        try {
+            const saved = localStorage.getItem('tg_recent_searches');
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
+    });
+
     const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -86,12 +99,25 @@ const Sidebar = ({
     };
 
     const handleStartChat = async (user: User) => {
-        // Optimism: check local state first
+        // Find existing conversation
         const existingConv = conversations.find(c => 
-            !c.isGroup && c.participants.some(p => p._id === user._id)
+            !c.isGroup && c.participants.some(p => String(p._id) === String(user._id))
         );
 
+        const updateRecentSearches = (conv: Conversation) => {
+            setRecentSearches(prev => {
+                const current = Array.isArray(prev) ? prev : [];
+                const filtered = current.filter(c => 
+                    String(c._id || (c as any).id) !== String(conv._id || (conv as any).id)
+                );
+                const newList = [conv, ...filtered].slice(0, 10);
+                localStorage.setItem('tg_recent_searches', JSON.stringify(newList));
+                return newList;
+            });
+        };
+
         if (existingConv) {
+            updateRecentSearches(existingConv);
             onSelectConversation(existingConv);
             setQuery("");
             setResults([]);
@@ -103,6 +129,7 @@ const Sidebar = ({
         try {
             const res = await createOrGetConversationApi(user._id);
             const conv: Conversation = res.data.conversation;
+            updateRecentSearches(conv);
             onConversationCreated(conv);
             onSelectConversation(conv);
             setQuery("");
@@ -169,6 +196,7 @@ const Sidebar = ({
                 onClose={() => setIsDrawerOpen(false)}
                 user={currentUser}
                 onLogout={onLogout}
+                onOpenMyProfile={onOpenMyProfile}
             />
 
             <div className="sidebar__main-content">
@@ -177,12 +205,19 @@ const Sidebar = ({
                         <SearchDefaultView 
                             key="search-default"
                             frequentContacts={conversations.slice(0, 5).map(c => getOtherUser(c)).filter(Boolean) as User[]}
-                            recentConversations={conversations.slice(0, 3)}
-                            conversations={conversations}
+                            recentSearches={recentSearches}
+                            setRecentSearches={setRecentSearches}
                             onlineUsers={onlineUsers}
-                            onClearRecent={() => console.log("Clear recent")}
+                            currentUserId={currentUserId}
                             onSelectUser={handleStartChat}
                             onSelectConversation={(conv) => {
+                                // Update recent searches in parent
+                                setRecentSearches(prev => {
+                                    const filtered = prev.filter(c => String(c._id) !== String(conv._id));
+                                    const newList = [conv, ...filtered].slice(0, 10);
+                                    localStorage.setItem('tg_recent_searches', JSON.stringify(newList));
+                                    return newList;
+                                });
                                 onSelectConversation(conv);
                                 setIsSearchFocused(false);
                                 setQuery("");

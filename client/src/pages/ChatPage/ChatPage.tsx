@@ -11,7 +11,6 @@ import HeaderMenu from "../../components/chat/ChatBox/HeaderMenu";
 import RightSidebar from "../../components/chat/RightSidebar/RightSidebar";
 import GroupSettingsModal from "../../components/chat/GroupSettingsModal/GroupSettingsModal";
 import EditProfileModal from "../../components/profile/EditProfileModal/EditProfileModal";
-import UserProfileModal from "../../components/profile/UserProfileModal/UserProfileModal";
 import ImagePreviewModal from "../../components/chat/ImagePreviewModal/ImagePreviewModal";
 import DeleteMessageModal from "../../components/chat/DeleteMessageModal/DeleteMessageModal";
 import ForwardModal from "../../components/chat/ForwardModal/ForwardModal";
@@ -29,7 +28,7 @@ import { formatUserStatus } from "../../utils/formatters";
 import './ChatPage.css';
 
 const ChatPage = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(() => {
     if (user?._id) {
@@ -70,13 +69,12 @@ const ChatPage = () => {
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   
-  type RightPanelMode = 'none' | 'info' | 'search';
+  type RightPanelMode = 'none' | 'info' | 'search' | 'my-profile';
   const [rightPanelMode, setRightPanelMode] = useState<RightPanelMode>('none');
   
   const [searchQuery, setSearchQuery] = useState("");
   const [showCallModal, setShowCallModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
   const selectedConversation = useMemo(() => 
@@ -162,11 +160,6 @@ const ChatPage = () => {
     socket?.emit(SOCKET_EVENTS.SEND_REACTION, { messageId: msg._id, emoji });
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("tg_token");
-    window.location.href = "/login";
-  };
-
   const handleScrollToMessage = (messageId: string) => {
     const element = document.getElementById(`msg-${messageId}`);
     if (element) {
@@ -179,41 +172,52 @@ const ChatPage = () => {
     }
   };
 
-  return (
-    <div className="app-container">
-      <div className="sidebar-wrapper">
-        <Sidebar
-          conversations={conversations}
-          selectedId={selectedConversationId}
-          currentUserId={user?._id ?? ""}
-          currentUser={user}
-          onlineUsers={onlineUsers}
-          unreadCounts={unreadCounts}
-          onSelectConversation={handleSelectConversation}
-          onConversationCreated={(conv) => setConversations(prev => [conv, ...prev.filter(c => c._id !== conv._id)])}
-          onViewProfile={setViewingProfileId}
-          onLogout={handleLogout}
-        />
-      </div>
+  const handleOpenMyProfile = () => {
+    setRightPanelMode('my-profile');
+  };
 
-      <AnimatePresence mode="wait">
-        <motion.div 
-          key={selectedConversationId || "empty"}
-          layout
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
-          className={`chat-wrapper ${selectedConversation ? "is-active" : ""}`}
-        >
+  return (
+    <div className="chat-page-container" style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+      <Sidebar 
+        conversations={conversations}
+        selectedId={selectedConversationId ?? ""}
+        currentUserId={user?._id ?? ""}
+        currentUser={user}
+        onlineUsers={onlineUsers}
+        unreadCounts={unreadCounts}
+        onSelectConversation={handleSelectConversation}
+        onConversationCreated={(conv) => setConversations(prev => [conv, ...prev])}
+        onViewProfile={() => setRightPanelMode('info')}
+        onLogout={() => { disconnectSocket(); logout(); }}
+        onOpenMyProfile={handleOpenMyProfile}
+      />
+
+      <motion.div 
+        layout
+        className={`chat-main-area ${selectedConversation ? "is-active" : ""}`}
+        style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', minWidth: 0 }}
+      >
+        <AnimatePresence mode="wait">
           {!selectedConversation ? (
-            <div className="no-chat-placeholder">
+            <motion.div 
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="no-chat-placeholder"
+            >
               <div className="placeholder-icon">💬</div>
               <div className="placeholder-title">Chọn một cuộc trò chuyện để bắt đầu</div>
               <div className="placeholder-subtitle">Hoặc tìm kiếm người dùng ở thanh bên trái</div>
-            </div>
+            </motion.div>
           ) : (
-            <>
+            <motion.div 
+              key={selectedConversation._id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+            >
               <div className="chat-header">
                 <div className="chat-header__info">
                   <button className="mobile-back-btn" onClick={() => setSelectedConversationId(null)}>←</button>
@@ -224,12 +228,11 @@ const ChatPage = () => {
                         : "👥"}
                     </div>
                   ) : (
-                    <div className="chat-header__avatar-clickable" onClick={() => otherParticipant && setViewingProfileId(otherParticipant._id)}>
+                    <div className="chat-header__avatar">
                       <Avatar user={otherParticipant} size={36} />
                     </div>
                   )}
-                    <div className={`chat-header__text ${!selectedConversation.isGroup ? "chat-header__text-clickable" : ""}`} 
-                       onClick={() => !selectedConversation.isGroup && otherParticipant && setViewingProfileId(otherParticipant._id)}>
+                    <div className="chat-header__text">
                     <span className="chat-header__name">{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
                     {!selectedConversation.isGroup && otherParticipant && (
                       <span className={`chat-header__status ${onlineUsers.includes(otherParticipant._id) ? 'status-online' : 'status-offline'}`}>
@@ -284,7 +287,6 @@ const ChatPage = () => {
                   hasMore={hasMore}
                   loadingMore={loadingMore}
                   isGroup={selectedConversation.isGroup}
-                  onProfileClick={setViewingProfileId}
                   onImagePreview={setPreviewImageUrl}
                   onDeleteMessage={setMessageToDelete}
                   onReactMessage={handleReactMessage}
@@ -325,14 +327,13 @@ const ChatPage = () => {
                   />
                 )}
               </AnimatePresence>
-            </>
+            </motion.div>
           )}
-        </motion.div>
-      </AnimatePresence>
+        </AnimatePresence>
+      </motion.div>
 
       <AnimatePresence>
         {showEditProfile && <EditProfileModal onClose={() => setShowEditProfile(false)} />}
-        {viewingProfileId && <UserProfileModal userId={viewingProfileId} onClose={() => setViewingProfileId(null)} />}
         {previewImageUrl && <ImagePreviewModal imageUrl={previewImageUrl} onClose={() => setPreviewImageUrl(null)} />}
         {messageToDelete && (
           <DeleteMessageModal 
@@ -385,6 +386,14 @@ const ChatPage = () => {
             user={otherParticipant}
             conversation={selectedConversation}
             isOnline={otherParticipant ? onlineUsers.includes(otherParticipant._id) : false}
+          />
+        )}
+        {rightPanelMode === 'my-profile' && user && (
+          <RightSidebar 
+            onClose={() => setRightPanelMode('none')}
+            user={user}
+            mode="my-profile"
+            isOnline={true}
           />
         )}
         {rightPanelMode === 'search' && selectedConversation && (

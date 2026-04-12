@@ -9,51 +9,38 @@ import "./SearchDefaultView.css";
 
 interface SearchDefaultViewProps {
     frequentContacts: User[];
-    recentConversations: Conversation[];
-    conversations: Conversation[];
+    recentSearches: Conversation[];
+    setRecentSearches: React.Dispatch<React.SetStateAction<Conversation[]>>;
     onlineUsers: string[];
-    onClearRecent: () => void;
+    currentUserId: string;
     onSelectUser: (user: User) => void;
     onSelectConversation: (conv: Conversation) => void;
 }
 
 const SearchDefaultView = ({ 
     frequentContacts, 
-    recentConversations: initialRecent, 
-    conversations,
+    recentSearches, 
+    setRecentSearches,
     onlineUsers,
-    onClearRecent,
+    currentUserId,
     onSelectUser,
     onSelectConversation
 }: SearchDefaultViewProps) => {
-    const [recentSearches, setRecentSearches] = useState<Conversation[]>(initialRecent);
     const [isClearModalOpen, setIsClearModalOpen] = useState(false);
 
     const handleClearHistory = () => {
         setRecentSearches([]);
-        onClearRecent();
+        setIsClearModalOpen(false);
+        try {
+            localStorage.removeItem('tg_recent_searches');
+        } catch {}
     };
 
     const handleSelectConversation = (conv: Conversation) => {
-        setRecentSearches(prev => {
-            const filtered = prev.filter(c => c._id !== conv._id);
-            return [conv, ...filtered].slice(0, 10);
-        });
         onSelectConversation(conv);
     };
 
     const handleSelectUser = (user: User) => {
-        // Find existing conversation in the full list
-        const existingConv = conversations.find(c => 
-            !c.isGroup && c.participants.some(p => p._id === user._id)
-        );
-
-        if (existingConv) {
-            setRecentSearches(prev => {
-                const filtered = prev.filter(c => c._id !== existingConv._id);
-                return [existingConv, ...filtered].slice(0, 10);
-            });
-        }
         onSelectUser(user);
     };
 
@@ -99,12 +86,12 @@ const SearchDefaultView = ({
                         </div>
                         <div className="recent-list">
                             {recentSearches.map((conv) => {
-                                const otherUser = conv.isGroup ? null : conv.participants[0];
-                                const isOnline = otherUser ? onlineUsers.includes(otherUser._id) : false;
+                                // Find the OTHER user to display for 1-on-1 chats
+                                const userToDisplay = conv.isGroup 
+                                    ? null 
+                                    : conv.participants.find(p => String(p._id) !== String(currentUserId)) || conv.participants[0];
                                 
-                                // Show last message if exists, otherwise show status
-                                const statusText = conv.lastMessage?.text 
-                                    || (otherUser ? formatUserStatus(isOnline, otherUser.lastSeen) : (conv.isGroup ? `${conv.participants.length} thành viên` : ""));
+                                const isOnline = userToDisplay ? onlineUsers.includes(userToDisplay._id) : false;
 
                                 return (
                                     <div 
@@ -116,17 +103,17 @@ const SearchDefaultView = ({
                                             {conv.isGroup ? (
                                                 <div className="recent-group-avatar">👥</div>
                                             ) : (
-                                                <Avatar user={otherUser} size={48} />
+                                                <Avatar user={userToDisplay} size={48} />
                                             )}
                                         </div>
                                         <div className="recent-info">
                                             <div className="recent-name-row">
-                                                <span className="recent-title">{conv.isGroup ? conv.name : otherUser?.username}</span>
+                                                <span className="recent-title">{conv.isGroup ? conv.name : userToDisplay?.username}</span>
                                             </div>
                                             <div className="recent-status">
-                                                <span className={isOnline && !conv.lastMessage ? 'status-online' : 'status-offline'}>
-                                                    {statusText}
-                                                </span>
+                                                <p className={`status-text ${isOnline ? 'online' : 'offline'}`}>
+                                                    {formatUserStatus(isOnline, userToDisplay?.lastSeen)}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>

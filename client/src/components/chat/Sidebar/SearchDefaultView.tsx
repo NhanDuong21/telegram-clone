@@ -10,6 +10,7 @@ import "./SearchDefaultView.css";
 interface SearchDefaultViewProps {
     frequentContacts: User[];
     recentConversations: Conversation[];
+    conversations: Conversation[];
     onlineUsers: string[];
     onClearRecent: () => void;
     onSelectUser: (user: User) => void;
@@ -19,6 +20,7 @@ interface SearchDefaultViewProps {
 const SearchDefaultView = ({ 
     frequentContacts, 
     recentConversations: initialRecent, 
+    conversations,
     onlineUsers,
     onClearRecent,
     onSelectUser,
@@ -32,6 +34,29 @@ const SearchDefaultView = ({
         onClearRecent();
     };
 
+    const handleSelectConversation = (conv: Conversation) => {
+        setRecentSearches(prev => {
+            const filtered = prev.filter(c => c._id !== conv._id);
+            return [conv, ...filtered].slice(0, 10);
+        });
+        onSelectConversation(conv);
+    };
+
+    const handleSelectUser = (user: User) => {
+        // Find existing conversation in the full list
+        const existingConv = conversations.find(c => 
+            !c.isGroup && c.participants.some(p => p._id === user._id)
+        );
+
+        if (existingConv) {
+            setRecentSearches(prev => {
+                const filtered = prev.filter(c => c._id !== existingConv._id);
+                return [existingConv, ...filtered].slice(0, 10);
+            });
+        }
+        onSelectUser(user);
+    };
+
     return (
         <motion.div 
             initial={{ opacity: 0 }}
@@ -43,13 +68,13 @@ const SearchDefaultView = ({
             <div className="search-section">
                 <div className="search-section-header">Liên lạc thường xuyên</div>
                 <div className="frequent-contacts-scroll">
-                    {frequentContacts.map(user => {
+                    {frequentContacts.map((user) => {
                         const isOnline = onlineUsers.includes(user._id);
                         return (
                             <div 
-                                key={user._id} 
+                                key={`frequent-${user._id}`} 
                                 className="frequent-contact-item"
-                                onClick={() => onSelectUser(user)}
+                                onClick={() => handleSelectUser(user)}
                             >
                                 <div className="frequent-avatar-wrapper">
                                     <Avatar user={user} size={54} />
@@ -73,18 +98,19 @@ const SearchDefaultView = ({
                             <button className="clear-recent-btn" onClick={() => setIsClearModalOpen(true)}>Xóa</button>
                         </div>
                         <div className="recent-list">
-                            {recentSearches.map(conv => {
+                            {recentSearches.map((conv) => {
                                 const otherUser = conv.isGroup ? null : conv.participants[0];
                                 const isOnline = otherUser ? onlineUsers.includes(otherUser._id) : false;
-                                const statusText = otherUser 
-                                    ? formatUserStatus(isOnline, otherUser.lastSeen)
-                                    : (conv.isGroup ? `${conv.participants.length} thành viên` : "");
+                                
+                                // Show last message if exists, otherwise show status
+                                const statusText = conv.lastMessage?.text 
+                                    || (otherUser ? formatUserStatus(isOnline, otherUser.lastSeen) : (conv.isGroup ? `${conv.participants.length} thành viên` : ""));
 
                                 return (
                                     <div 
-                                        key={conv._id} 
+                                        key={`recent-${conv._id}`} 
                                         className="recent-item"
-                                        onClick={() => onSelectConversation(conv)}
+                                        onClick={() => handleSelectConversation(conv)}
                                     >
                                         <div className="recent-avatar">
                                             {conv.isGroup ? (
@@ -98,7 +124,7 @@ const SearchDefaultView = ({
                                                 <span className="recent-title">{conv.isGroup ? conv.name : otherUser?.username}</span>
                                             </div>
                                             <div className="recent-status">
-                                                <span className={isOnline ? 'status-online' : 'status-offline'}>
+                                                <span className={isOnline && !conv.lastMessage ? 'status-online' : 'status-offline'}>
                                                     {statusText}
                                                 </span>
                                             </div>

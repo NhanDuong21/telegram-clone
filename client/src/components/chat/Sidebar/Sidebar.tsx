@@ -70,7 +70,35 @@ const Sidebar = ({
         }, 300);
     };
 
+    const getOtherUser = (conv: Conversation): User | undefined =>
+        conv.participants.find((p) => p._id !== currentUserId);
+
+    const getSubtitle = (user: User) => {
+        const existingConv = conversations.find(c => 
+            !c.isGroup && c.participants.some(p => p._id === user._id)
+        );
+
+        if (existingConv?.lastMessage) {
+            return existingConv.lastMessage.text;
+        }
+
+        return onlineUsers.includes(user._id) ? "Online" : "Gửi tin nhắn đầu tiên";
+    };
+
     const handleStartChat = async (user: User) => {
+        // Optimism: check local state first
+        const existingConv = conversations.find(c => 
+            !c.isGroup && c.participants.some(p => p._id === user._id)
+        );
+
+        if (existingConv) {
+            onSelectConversation(existingConv);
+            setQuery("");
+            setResults([]);
+            setIsSearchFocused(false);
+            return;
+        }
+
         setStartingChat(user._id);
         try {
             const res = await createOrGetConversationApi(user._id);
@@ -86,9 +114,6 @@ const Sidebar = ({
             setStartingChat(null);
         }
     };
-
-    const getOtherUser = (conv: Conversation): User | undefined =>
-        conv.participants.find((p) => p._id !== currentUserId);
 
     const formatTimestamp = (dateStr: string) => {
         const date = new Date(dateStr);
@@ -153,6 +178,7 @@ const Sidebar = ({
                             key="search-default"
                             frequentContacts={conversations.slice(0, 5).map(c => getOtherUser(c)).filter(Boolean) as User[]}
                             recentConversations={conversations.slice(0, 3)}
+                            conversations={conversations}
                             onlineUsers={onlineUsers}
                             onClearRecent={() => console.log("Clear recent")}
                             onSelectUser={handleStartChat}
@@ -184,7 +210,7 @@ const Sidebar = ({
                                     <div className="search-item__info">
                                         <div className="search-item__name">{user.username}</div>
                                         <div className="search-item__status">
-                                            {onlineUsers.includes(user._id) ? "Đang trực tuyến" : "Ngoại tuyến"}
+                                            {getSubtitle(user)}
                                         </div>
                                     </div>
                                 </div>

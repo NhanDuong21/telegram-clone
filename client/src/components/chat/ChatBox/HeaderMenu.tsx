@@ -57,8 +57,8 @@ const HeaderMenu = ({ isOpen, onClose, isGroup, onDeleteChat, onClearChat, onSet
                         <ChevronRight size={16} className="chevron-right" />
                     </button>
 
-                    <div className="header-menu-divider" />
-
+                    <div className="header-menu-divider" />       
+                    
                     <button className="header-menu-item" onClick={onClose}>
                         <div className="item-content">
                             <ImageIcon size={18} />
@@ -79,7 +79,7 @@ const HeaderMenu = ({ isOpen, onClose, isGroup, onDeleteChat, onClearChat, onSet
                             <span>Xuất lịch sử chat</span>
                         </div>
                     </button>
-
+                    
                     {isGroup && onSettingsClick && (
                          <button className="header-menu-item" onClick={() => { onSettingsClick(); onClose(); }}>
                             <div className="item-content">

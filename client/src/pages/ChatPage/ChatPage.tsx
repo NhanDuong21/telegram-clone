@@ -8,6 +8,7 @@ import ChatBox from "../../components/chat/ChatBox/ChatBox";
 import MessageInput from "../../components/chat/MessageInput/MessageInput";
 import Avatar from "../../components/common/Avatar";
 import HeaderMenu from "../../components/chat/ChatBox/HeaderMenu";
+import RightSidebar from "../../components/chat/RightSidebar/RightSidebar";
 import GroupSettingsModal from "../../components/chat/GroupSettingsModal/GroupSettingsModal";
 import EditProfileModal from "../../components/profile/EditProfileModal/EditProfileModal";
 import UserProfileModal from "../../components/profile/UserProfileModal/UserProfileModal";
@@ -60,6 +61,7 @@ const ChatPage = () => {
 
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [showRightSidebar, setShowRightSidebar] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
@@ -280,7 +282,12 @@ const ChatPage = () => {
                 <div className="chat-header__actions">
                   <button className="header-action-btn"><Search size={22} /></button>
                   <button className="header-action-btn"><Phone size={22} /></button>
-                  <button className="header-action-btn"><PanelRight size={22} /></button>
+                  <button 
+                    className={`header-action-btn ${showRightSidebar ? "active" : ""}`}
+                    onClick={() => setShowRightSidebar(!showRightSidebar)}
+                  >
+                    <PanelRight size={22} />
+                  </button>
                   
                   <div className="chat-header__options-container">
                     <button onClick={() => setShowOptionsMenu(!showOptionsMenu)} className="header-action-btn">
@@ -409,6 +416,16 @@ const ChatPage = () => {
               }
             }}
             targetName={selectedConversation?.isGroup ? "mọi người" : (selectedConversation?.name || selectedConversation?.participants[0]?.username)}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showRightSidebar && selectedConversation && (
+          <RightSidebar 
+            onClose={() => setShowRightSidebar(false)}
+            user={otherParticipant}
+            conversation={selectedConversation}
+            isOnline={otherParticipant ? onlineUsers.includes(otherParticipant._id) : false}
           />
         )}
       </AnimatePresence>

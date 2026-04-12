@@ -46,6 +46,20 @@ const ChatBox = ({
 
     const pinnedMessages = useMemo(() => messages.filter(m => m.isPinned), [messages]);
 
+    const scrollToMessage = (targetId: string) => {
+        const element = document.getElementById(`msg-${targetId}`);
+        if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            element.classList.add("highlight-target");
+            setTimeout(() => {
+                element.classList.remove("highlight-target");
+            }, 2000);
+        } else {
+            console.warn(`Message with ID ${targetId} not found in DOM`);
+            // Optionally show a toast here
+        }
+    };
+
     useEffect(() => {
         if (messages.length === 0) {
             lastMessageId.current = null;
@@ -91,7 +105,10 @@ const ChatBox = ({
         if (!msg.replyTo) return null;
         
         return (
-            <div className="message-reply-snippet">
+            <div 
+                className="message-reply-snippet"
+                onClick={() => scrollToMessage(msg.replyTo!._id)}
+            >
                 <div className="reply-sender">{msg.replyTo.sender.username}</div>
                 <div className="reply-text">
                     {msg.replyTo.text || (msg.replyTo.imageUrl ? "📷 Ảnh" : "Tin nhắn")}
@@ -192,6 +209,7 @@ const ChatBox = ({
                                     </div>
                                 )}
                                 <div 
+                                    id={`msg-${msg._id}`}
                                     className={`message-bubble ${isMe ? "message-bubble--me" : "message-bubble--other"} ${msg.isDeleted ? "message-bubble--deleted" : ""} ${msg.isPinned ? "message-bubble--pinned" : ""}`}
                                     onContextMenu={(e) => !msg.isDeleted && onContextMenu(e, msg)}
                                     onTouchStart={(e) => !msg.isDeleted && onTouchStart(e, msg)}

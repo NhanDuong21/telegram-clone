@@ -246,9 +246,51 @@
     margin: 0;
 }
 
-.conversation-list--empty {
-    padding: 40px 20px;
+.sidebar-back-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.sidebar-back-btn:hover {
+    background: var(--sidebar-hover);
+}
+
+.sidebar-back-btn:active {
+    transform: scale(0.9);
+}
+
+.sidebar__main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.sidebar__search-results-persistent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background: var(--bg-sidebar);
+}
+
+.no-results-text {
+    padding: 20px;
     text-align: center;
-    color: #707579;
-    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+.sidebar-search-loading {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-secondary);
 }

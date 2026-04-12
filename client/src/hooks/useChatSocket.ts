@@ -256,7 +256,10 @@ export const useChatSocket = ({
         setConversations((prev) =>
           prev.map((c) => {
             if (c._id === deletedConvId && c.lastMessage?._id === messageId) {
-              return { ...c, lastMessage: { ...c.lastMessage, text: "Tin nhắn đã xóa", isRead: true } };
+              return { 
+                ...c, 
+                lastMessage: c.lastMessage ? { ...c.lastMessage, text: "Tin nhắn đã xóa", isRead: true } : null 
+              };
             }
             return c;
           })
@@ -284,7 +287,7 @@ export const useChatSocket = ({
       // Update sidebar if it's the last message
       setConversations(prev => prev.map(c => 
         c._id === updatedMsg.conversationId && c.lastMessage?._id === updatedMsg._id
-          ? { ...c, lastMessage: { ...c.lastMessage, text: updatedMsg.text || "" } }
+          ? { ...c, lastMessage: c.lastMessage ? { ...c.lastMessage, text: updatedMsg.text || "" } : null }
           : c
       ));
     });

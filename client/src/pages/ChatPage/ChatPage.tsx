@@ -284,7 +284,7 @@ const ChatPage = () => {
                     <HeaderMenu 
                       isOpen={showOptionsMenu}
                       onClose={() => setShowOptionsMenu(false)}
-                      isGroup={selectedConversation.isGroup}
+                      isGroup={selectedConversation.isGroup ?? false}
                       onDeleteChat={() => deleteConversation(selectedConversationId!)}
                       onClearChat={() => clearChat(selectedConversationId!)}
                       onSettingsClick={() => setShowGroupSettings(true)}
@@ -301,7 +301,7 @@ const ChatPage = () => {
                   onLoadMore={() => loadOlderMessages(selectedConversationId!, messages[0].createdAt)}
                   hasMore={hasMore}
                   loadingMore={loadingMore}
-                  isGroup={selectedConversation.isGroup}
+                  isGroup={selectedConversation.isGroup ?? false}
                   onImagePreview={setPreviewImageUrl}
                   onDeleteMessage={setMessageToDelete}
                   onReactMessage={handleReactMessage}
@@ -389,8 +389,8 @@ const ChatPage = () => {
         {rightPanelMode === 'info' && selectedConversation && (
           <RightSidebar 
             onClose={() => setRightPanelMode('none')}
-            user={otherParticipant}
-            conversation={selectedConversation}
+            user={otherParticipant ?? null}
+            conversation={selectedConversation ?? null}
             isOnline={otherParticipant ? onlineUsers.includes(otherParticipant._id) : false}
             onToggleMute={toggleMuteConversation}
           />

@@ -76,10 +76,10 @@ export const useChatSocket = ({
             lastMessage: { 
               _id: message._id, 
               text: message.text ?? "", 
-              isRead: selectedIdRef.current === convId,
+              isRead: (message.sender._id !== user._id) && (selectedIdRef.current === convId),
               createdAt: message.createdAt
             },
-            unreadCount: selectedIdRef.current === convId ? 0 : (prev[index].unreadCount || 0) + 1,
+            unreadCount: (message.sender._id !== user._id) && (selectedIdRef.current === convId) ? 0 : (prev[index].unreadCount || 0) + (message.sender._id !== user._id ? 1 : 0),
             updatedAt: message.createdAt
           };
           const next = [...prev];

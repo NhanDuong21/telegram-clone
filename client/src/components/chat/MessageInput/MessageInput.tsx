@@ -105,6 +105,28 @@ const MessageInput = ({ conversationId, onMessageSent, replyTarget, editTarget, 
         emitTyping(false);
 
         setSending(true);
+        const tempId = `temp-${Date.now()}`;
+        const tempMsg: any = {
+            _id: tempId,
+            conversationId,
+            text: trimmedText,
+            sender: { _id: (window as any).currentUser?._id || "", username: "Bạn" },
+            isSending: true,
+            createdAt: new Date().toISOString(),
+            readBy: [],
+            isRead: false,
+            reactions: []
+        };
+
+        if (replyTarget) {
+            tempMsg.replyTo = replyTarget;
+        }
+
+        // Optimistically add to UI
+        if (!editTarget) {
+            onMessageSent(tempMsg);
+        }
+
         try {
             if (editTarget) {
                 const res = await updateMessageApi(editTarget._id, { text: trimmedText });
@@ -116,12 +138,14 @@ const MessageInput = ({ conversationId, onMessageSent, replyTarget, editTarget, 
                     imageUrl: "",
                     replyTo: replyTarget?._id
                 });
-                onMessageSent(res.data.message); 
+                // Replace temp with real (handled by _id in setMessages usually)
+                onMessageSent({ ...res.data.message, tempId }); 
                 if (replyTarget) onCancelMode?.();
             }
             setText("");
         } catch (error) {
             console.error("Send/Edit message failed:", error);
+            // Optionally remove temp message here
         } finally {
             setSending(false);
         }

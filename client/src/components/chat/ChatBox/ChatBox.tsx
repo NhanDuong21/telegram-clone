@@ -1,6 +1,6 @@
 import { useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Pin, CornerUpRight, X } from "lucide-react";
+import { Pin, CornerUpRight, X, Check, CheckCheck, Clock } from "lucide-react";
 import type { Message, User } from "../../../types";
 import { useContextMenu } from "../../../hooks/useContextMenu";
 import ContextMenu from "../Message/ContextMenu";
@@ -270,12 +270,18 @@ const ChatBox = ({
                                         <div className="footer-left">
                                             {msg.isPinned && <Pin size={10} className="pin-hint-icon" />}
                                             {msg.isEdited && <span className="edited-hint">đã sửa</span>}
-                                            <span>{formatTime(msg.createdAt)}</span>
+                                            <span className="timestamp">{formatTime(msg.createdAt)}</span>
                                         </div>
                                         {isMe && !msg.isDeleted && (
-                                            <span className={`message-status ${isRead ? "message-status--read-me" : "message-status--unread-me"}`}>
-                                                {isRead ? "✓✓" : "✓"}
-                                            </span>
+                                            <div className="message-status-icons">
+                                                {msg.isSending ? (
+                                                    <Clock size={12} className="status-icon--sending" />
+                                                ) : isRead ? (
+                                                    <CheckCheck size={16} className="status-icon--read" />
+                                                ) : (
+                                                    <Check size={16} className="status-icon--sent" />
+                                                )}
+                                            </div>
                                         )}
                                     </div>
 

@@ -42,5 +42,7 @@ export interface Message {
     isPinned?: boolean;
     pinnedFor?: string[];
     forwardFrom?: { _id: string; username: string; avatar?: string };
+    isSending?: boolean;
+    tempId?: string;
     createdAt: string;
 }

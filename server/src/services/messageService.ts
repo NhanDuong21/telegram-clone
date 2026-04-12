@@ -235,8 +235,8 @@ export const updateMessageService = async (messageId: string, userId: string, da
 };
 
 export const markAsReadService = async (conversationId: string, userId: string) => {
-    // Update all messages in this conversation where user is NOT the sender and isRead is false
-    await Message.updateMany(
+    // 1. Bulk update in DB: mark all messages as read by this user
+    const result = await Message.updateMany(
         { 
             conversationId, 
             sender: { $ne: userId }, 
@@ -247,12 +247,13 @@ export const markAsReadService = async (conversationId: string, userId: string) 
             $addToSet: { readBy: userId }
         }
     );
-    
-    const io = getIO();
-    const conversation = await Conversation.findById(conversationId).select("participants").lean();
-    if (conversation) {
-        conversation.participants.forEach((p) => {
-            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGES_READ, { conversationId, readerId: userId });
+
+    if (result.modifiedCount > 0) {
+        const io = getIO();
+        // 2. Broadcast to the room so the sender (if online) sees the checkmarks turn blue/green
+        io.to(conversationId).emit(SOCKET_EVENTS.MESSAGES_READ, { 
+            conversationId, 
+            readerId: userId 
         });
     }
 };

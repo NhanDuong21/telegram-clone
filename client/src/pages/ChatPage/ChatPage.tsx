@@ -151,9 +151,17 @@ const ChatPage = () => {
   };
 
   const handleMessageSent = (message: Message) => {
-    // Optimistic Update: Add to message list immediately if it's not already there (socket will also try to add it)
+    // Optimistic Logic: Replace temp message with real one
     setMessages((prev) => {
-      if (prev.some(m => m._id === message._id)) return prev;
+      // 1. If we find a message with the same ID, update it
+      if (prev.some(m => m._id === message._id)) {
+        return prev.map(m => m._id === message._id ? message : m);
+      }
+      // 2. If the new message has a tempId, find that temp message and replace it
+      if (message.tempId && prev.some(m => m._id === message.tempId)) {
+        return prev.map(m => m._id === message.tempId ? message : m);
+      }
+      // 3. Otherwise add as new
       return [...prev, message];
     });
 

@@ -153,6 +153,7 @@ const Sidebar = ({
                             key="search-default"
                             frequentContacts={conversations.slice(0, 5).map(c => getOtherUser(c)).filter(Boolean) as User[]}
                             recentConversations={conversations.slice(0, 3)}
+                            onlineUsers={onlineUsers}
                             onClearRecent={() => console.log("Clear recent")}
                             onSelectUser={handleStartChat}
                             onSelectConversation={(conv) => {

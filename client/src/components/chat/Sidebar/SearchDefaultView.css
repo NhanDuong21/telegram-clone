@@ -150,3 +150,57 @@
     font-size: 13px;
     color: var(--text-secondary);
 }
+
+.status-online {
+    color: #3390ec;
+    font-weight: 500;
+}
+
+.status-offline {
+    color: var(--text-secondary);
+}
+
+.search-section--flexible {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.search-empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 20%;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.empty-state-icon-wrapper {
+    background: var(--sidebar-hover);
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.empty-state-icon {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+.empty-state-text {
+    color: var(--text-secondary);
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

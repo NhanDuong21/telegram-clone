@@ -3,6 +3,7 @@ export interface User {
     username: string;
     email: string;
     avatar?: string;
+    lastSeen?: string;
 }
 
 export interface Conversation {

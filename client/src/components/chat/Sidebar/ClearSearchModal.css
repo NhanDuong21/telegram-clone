@@ -1,0 +1,99 @@
+.clear-search-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+}
+
+.clear-search-modal-container {
+    width: 320px;
+    background: var(--bg-sidebar);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: var(--text-main);
+}
+
+.clear-search-modal-header {
+    padding: 20px 24px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.clear-search-modal-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.clear-search-modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.clear-search-modal-close:hover {
+    background: var(--sidebar-hover);
+    color: var(--text-main);
+}
+
+.clear-search-modal-body {
+    padding: 8px 24px 16px;
+}
+
+.clear-search-modal-desc {
+    font-size: 15px;
+    color: var(--text-main);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.clear-search-modal-footer {
+    padding: 8px 16px 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.clear-search-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.clear-search-btn--cancel {
+    background: transparent;
+    color: var(--accent-color);
+}
+
+.clear-search-btn--cancel:hover {
+    background: var(--sidebar-hover);
+}
+
+.clear-search-btn--confirm {
+    background: transparent;
+    color: #e53935;
+}
+
+.clear-search-btn--confirm:hover {
+    background: rgba(229, 57, 53, 0.1);
+}

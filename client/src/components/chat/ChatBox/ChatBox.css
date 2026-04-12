@@ -30,10 +30,7 @@
 }
 
 .pinned-messages-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    position: relative;
     z-index: 5;
     background: var(--bg-header);
     backdrop-filter: blur(10px);
@@ -43,7 +40,6 @@
     padding: 8px 16px;
     border-bottom: 1px solid var(--border-color);
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .pinned-bar-main {

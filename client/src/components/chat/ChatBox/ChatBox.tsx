@@ -165,13 +165,15 @@ const ChatBox = ({
 
     return (
         <div className="chat-box-area">
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
                 {latestPinned && (
                     <motion.div 
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeInOut" }}
                         className="pinned-messages-bar"
+                        style={{ overflow: 'hidden' }}
                         onClick={() => scrollToMessage(latestPinned._id)}
                     >
                         <div className="pinned-bar-main">

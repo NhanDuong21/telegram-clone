@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 
 const LoginPage = lazy(() => import("./pages/LoginPage/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage/RegisterPage"));
@@ -16,23 +17,25 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
-        <Routes>
-          <Route
-            path="/login"
-            element={user ? <Navigate to="/" /> : <LoginPage />}
-          />
-          <Route
-            path="/register"
-            element={user ? <Navigate to="/" /> : <RegisterPage />}
-          />
-          <Route
-            path="/"
-            element={user ? <ChatPage /> : <Navigate to="/login" />}
-          />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
+          <Routes>
+            <Route
+              path="/login"
+              element={user ? <Navigate to="/" /> : <LoginPage />}
+            />
+            <Route
+              path="/register"
+              element={user ? <Navigate to="/" /> : <RegisterPage />}
+            />
+            <Route
+              path="/"
+              element={user ? <ChatPage /> : <Navigate to="/login" />}
+            />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }

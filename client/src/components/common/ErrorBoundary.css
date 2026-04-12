@@ -1,0 +1,45 @@
+.error-boundary-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100vw;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    text-align: center;
+    padding: 20px;
+}
+
+.error-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.error-title {
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.error-text {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    max-width: 400px;
+}
+
+.error-reload-btn {
+    padding: 12px 24px;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.error-reload-btn:hover {
+    background-color: #0077b5;
+}

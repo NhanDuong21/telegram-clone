@@ -16,7 +16,7 @@ import ImagePreviewModal from "../../components/chat/ImagePreviewModal/ImagePrev
 import DeleteMessageModal from "../../components/chat/DeleteMessageModal/DeleteMessageModal";
 import ForwardModal from "../../components/chat/ForwardModal/ForwardModal";
 import PinModal from "../../components/chat/PinModal/PinModal";
-import ChatSearch from "../../components/chat/ChatBox/ChatSearch";
+import SearchSidebar from "../../components/chat/RightSidebar/SearchSidebar";
 import CallModal from "../../components/chat/CallModal/CallModal";
 import { sendMessageApi } from "../../api/chatApi";
 
@@ -68,8 +68,10 @@ const ChatPage = () => {
 
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
-  const [showRightSidebar, setShowRightSidebar] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
+  
+  type RightPanelMode = 'none' | 'info' | 'search';
+  const [rightPanelMode, setRightPanelMode] = useState<RightPanelMode>('none');
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [showCallModal, setShowCallModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -89,7 +91,9 @@ const ChatPage = () => {
   useEffect(() => {
     fetchConversations();
     const socket = getSocket();
-    socket.emit(SOCKET_EVENTS.JOIN_USER_ROOM, user?._id);
+    if (socket) {
+      socket.emit(SOCKET_EVENTS.JOIN_ROOM, user?._id);
+    }
     
     return () => {
       disconnectSocket();
@@ -117,11 +121,12 @@ const ChatPage = () => {
     setUnreadCounts,
     setOnlineUsers,
     setTypingUsers,
+    setSelectedConversationId,
   });
 
-  const handleSelectConversation = (id: string) => {
-    setSelectedConversationId(id);
-    setUnreadCounts(prev => ({ ...prev, [id]: 0 }));
+  const handleSelectConversation = (conv: Conversation) => {
+    setSelectedConversationId(conv._id);
+    setUnreadCounts(prev => ({ ...prev, [conv._id]: 0 }));
   };
 
   const handleMessageSent = (message: Message) => {
@@ -147,18 +152,30 @@ const ChatPage = () => {
       const updatedConv = { ...prev[index], lastMessage: message, updatedAt: message.createdAt };
       const next = [...prev];
       next.splice(index, 1);
-      return [updatedConv, ...next];
+      return [updatedConv, ...next] as Conversation[];
     });
   };
 
   const handleReactMessage = (msg: Message, emoji: string) => {
     const socket = getSocket();
-    socket.emit(SOCKET_EVENTS.ADD_REACTION, { messageId: msg._id, emoji });
+    socket?.emit(SOCKET_EVENTS.SEND_REACTION, { messageId: msg._id, emoji });
   };
 
   const handleLogout = () => {
     localStorage.removeItem("tg_token");
     window.location.href = "/login";
+  };
+
+  const handleScrollToMessage = (messageId: string) => {
+    const element = document.getElementById(`msg-${messageId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.classList.add("highlight-pulse");
+      setTimeout(() => element.classList.remove("highlight-pulse"), 2000);
+    } else {
+      // Possible scenario: message not in history chunk
+      alert("Tin nhắn này ở xa quá, chưa tải lên kịp! Hãy cuộn lên để xem thêm.");
+    }
   };
 
   return (
@@ -226,8 +243,8 @@ const ChatPage = () => {
 
                 <div className="chat-header__actions">
                   <button 
-                    className={`header-action-btn ${isSearching ? "active" : ""}`}
-                    onClick={() => setIsSearching(!isSearching)}
+                    className={`header-action-btn ${rightPanelMode === 'search' ? "active" : ""}`}
+                    onClick={() => setRightPanelMode(prev => prev === 'search' ? 'none' : 'search')}
                   >
                     <Search size={22} />
                   </button>
@@ -235,8 +252,8 @@ const ChatPage = () => {
                     <Phone size={22} />
                   </button>
                   <button 
-                    className={`header-action-btn ${showRightSidebar ? "active" : ""}`}
-                    onClick={() => setShowRightSidebar(!showRightSidebar)}
+                    className={`header-action-btn ${rightPanelMode === 'info' ? "active" : ""}`}
+                    onClick={() => setRightPanelMode(prev => prev === 'info' ? 'none' : 'info')}
                   >
                     <PanelRight size={22} />
                   </button>
@@ -258,19 +275,6 @@ const ChatPage = () => {
               </div>
 
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
-                <AnimatePresence>
-                  {isSearching && (
-                    <ChatSearch 
-                      query={searchQuery}
-                      onQueryChange={setSearchQuery}
-                      onClose={() => {
-                        setIsSearching(false);
-                        setSearchQuery("");
-                      }}
-                    />
-                  )}
-                </AnimatePresence>
-
                 <ChatBox
                   messages={messages}
                   currentUserId={user?._id ?? ""}
@@ -374,13 +378,22 @@ const ChatPage = () => {
             targetName={selectedConversation?.isGroup ? "mọi người" : (selectedConversation?.name || selectedConversation?.participants[0]?.username)}
           />
         )}
-        {showRightSidebar && selectedConversation && (
+        {rightPanelMode === 'info' && selectedConversation && (
           <RightSidebar 
-            onClose={() => setShowRightSidebar(false)}
+            onClose={() => setRightPanelMode('none')}
             user={otherParticipant}
             conversation={selectedConversation}
             isOnline={otherParticipant ? onlineUsers.includes(otherParticipant._id) : false}
           />
+        )}
+        {rightPanelMode === 'search' && selectedConversation && (
+            <SearchSidebar 
+                messages={messages}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onClose={() => setRightPanelMode('none')}
+                onScrollToMessage={handleScrollToMessage}
+            />
         )}
         {showCallModal && <CallModal onClose={() => setShowCallModal(false)} />}
       </AnimatePresence>

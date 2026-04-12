@@ -3,13 +3,8 @@ import {
   X,
   MessageCircle,
   Bell,
-  Gift,
   UserPlus,
   Image as ImageIcon,
-  Video,
-  FileText,
-  Music,
-  Link as LinkIcon,
   Users,
 } from "lucide-react";
 import type { User, Conversation } from "../../../types";
@@ -41,11 +36,12 @@ const RightSidebar = ({
 
   return (
     <motion.div
-      initial={{ x: "100%" }}
-      animate={{ x: 0 }}
-      exit={{ x: "100%" }}
-      transition={{ type: "spring", damping: 30, stiffness: 300 }}
+      initial={{ width: 0, x: "20px", opacity: 0 }}
+      animate={{ width: "320px", x: 0, opacity: 1 }}
+      exit={{ width: 0, x: "20px", opacity: 0 }}
+      transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
       className="right-sidebar"
+      style={{ overflow: "hidden" }}
     >
       <div className="right-sidebar-header">
         <div className="header-left">

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pin, CornerUpRight, X, Check, CheckCheck, Clock } from "lucide-react";
 import type { Message, User } from "../../../types";
@@ -317,4 +317,4 @@ const ChatBox = ({
     );
 };
 
-export default ChatBox;
+export default memo(ChatBox);

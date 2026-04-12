@@ -1,5 +1,4 @@
 .right-sidebar {
-    width: 320px;
     height: 100%;
     background-color: var(--bg-sidebar);
     border-left: 1px solid var(--border-color);
@@ -7,6 +6,8 @@
     flex-direction: column;
     overflow: hidden;
     z-index: 100;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
 }
 
 .right-sidebar-header {

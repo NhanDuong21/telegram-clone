@@ -3,7 +3,7 @@ import Conversation from "../models/Conversation";
 import { getIO } from "../socket";
 import { SOCKET_EVENTS } from "../utils/socketEvents";
 
-export const sendMessageService = async (conversationId: string, senderId: string, text?: string, imageUrl?: string, replyTo?: string) => {
+export const sendMessageService = async (conversationId: string, senderId: string, text?: string, imageUrl?: string, replyTo?: string, forwardFrom?: string) => {
     const conversation = await Conversation.findOne({
         _id: conversationId,
         participants: senderId,
@@ -21,6 +21,7 @@ export const sendMessageService = async (conversationId: string, senderId: strin
         readBy: [senderId],
         isRead: false,
         replyTo: replyTo || undefined,
+        forwardFrom: forwardFrom || undefined,
     });
 
     // 1. Emit ngay lập tức sau khi tạo xong Message (Không đợi update Conversation)
@@ -30,7 +31,8 @@ export const sendMessageService = async (conversationId: string, senderId: strin
             path: "replyTo", 
             populate: { path: "sender", select: "username" },
             select: "text imageUrl sender"
-        }
+        },
+        { path: "forwardFrom", select: "username avatar" }
     ]);
     const io = getIO();
     
@@ -73,6 +75,7 @@ export const getMessagesService = async (conversationId: string, userId: string,
             populate: { path: "sender", select: "username" },
             select: "text imageUrl sender"
         })
+        .populate("forwardFrom", "username avatar")
         .sort({ createdAt: -1 })
         .limit(limit + 1)
         .lean();
@@ -192,6 +195,7 @@ export const updateMessageService = async (messageId: string, userId: string, da
             populate: { path: "sender", select: "username" },
             select: "text imageUrl sender"
         })
+        .populate("forwardFrom", "username avatar")
         .lean();
 
     const io = getIO();

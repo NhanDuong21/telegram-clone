@@ -1,6 +1,6 @@
 import { useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Pin } from "lucide-react";
+import { Pin, CornerUpRight } from "lucide-react";
 import type { Message, User } from "../../../types";
 import { useContextMenu } from "../../../hooks/useContextMenu";
 import ContextMenu from "../Message/ContextMenu";
@@ -215,6 +215,13 @@ const ChatBox = ({
                                     onTouchStart={(e) => !msg.isDeleted && onTouchStart(e, msg)}
                                     onTouchEnd={onTouchEnd}
                                 >
+                                    {msg.forwardFrom && (
+                                        <div className="message-forwarded-info">
+                                            <CornerUpRight size={12} className="forward-info-icon" />
+                                            <span>Chuyển tiếp từ <b>{msg.forwardFrom.username}</b></span>
+                                        </div>
+                                    )}
+
                                     {!isMe && isGroup && (
                                         <div
                                             className="message-sender"

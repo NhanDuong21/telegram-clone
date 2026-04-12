@@ -378,9 +378,14 @@ const ChatPage = () => {
             onClose={() => setMessageToForward(null)}
             onForward={async (convId, msg) => {
               try {
-                await sendMessageApi(convId, { text: msg.text, imageUrl: msg.imageUrl });
+                // Determine original sender: if it was already forwarded, keep that source.
+                const originalSourceId = msg.forwardFrom?._id || msg.sender._id;
+                await sendMessageApi(convId, { 
+                    text: msg.text, 
+                    imageUrl: msg.imageUrl,
+                    forwardFrom: originalSourceId
+                });
                 setMessageToForward(null);
-                // Optionally switch to that conversation
               } catch (e) {
                 console.error("Forward failed", e);
               }

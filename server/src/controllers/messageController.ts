@@ -4,7 +4,7 @@ import * as messageService from "../services/messageService";
 
 export const sendMessage = async (req: AuthRequest, res: Response) => {
     try {
-        const { conversationId, text, imageUrl, replyTo } = req.body;
+        const { conversationId, text, imageUrl, replyTo, forwardFrom } = req.body;
         const senderId = req.user!._id;
 
         if (!conversationId) {
@@ -15,7 +15,7 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: "Cần ít nhất text hoặc hình ảnh" });
         }
 
-        const message = await messageService.sendMessageService(conversationId, senderId.toString(), text, imageUrl, replyTo);
+        const message = await messageService.sendMessageService(conversationId, senderId.toString(), text, imageUrl, replyTo, forwardFrom);
         return res.status(201).json({ message });
     } catch (error: unknown) {
         console.error("Send message error:", error);

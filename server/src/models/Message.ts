@@ -62,6 +62,10 @@ const messageSchema = new Schema<IMessage>(
             type: Boolean,
             default: false,
         },
+        forwardFrom: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+        },
     },
     {
         timestamps: true,

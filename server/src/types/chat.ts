@@ -13,6 +13,7 @@ export interface IMessage extends mongoose.Document {
     replyTo?: mongoose.Types.ObjectId;
     isEdited?: boolean;
     isPinned?: boolean;
+    forwardFrom?: any;
     createdAt: Date;
     updatedAt: Date;
 }

@@ -112,11 +112,21 @@ const ChatPage = () => {
 
   const handleSelectConversation = (conv: Conversation) => {
     setSelectedConversationId(conv._id);
-    setUnreadCounts((prev) => {
-      const copy = { ...prev };
-      delete copy[conv._id];
-      return copy;
-    });
+    
+    // Optimistic Update: Clear unread count immediately
+    setUnreadCounts((prev) => ({
+        ...prev,
+        [conv._id]: 0
+    }));
+
+    setConversations((prev) => 
+        prev.map((c) => 
+            c._id === conv._id 
+                ? { ...c, unreadCount: 0, lastMessage: c.lastMessage ? { ...c.lastMessage, isRead: true } : null } 
+                : c
+        )
+    );
+
     if (user?._id) localStorage.setItem(`tg_sel_conv_${user._id}`, conv._id);
     
     // Explicitly mark as read when user clicks

@@ -73,7 +73,8 @@ export const useChatSocket = ({
         if (index !== -1) {
           const updatedConv = {
             ...prev[index],
-            lastMessage: { _id: message._id, text: message.text ?? "" },
+            lastMessage: { _id: message._id, text: message.text ?? "", isRead: selectedIdRef.current === convId },
+            unreadCount: selectedIdRef.current === convId ? 0 : (prev[index].unreadCount || 0) + 1,
             updatedAt: message.createdAt
           };
           const next = [...prev];
@@ -110,13 +111,25 @@ export const useChatSocket = ({
         setMessages((prev) =>
           prev.map((m) => {
             if (m.sender._id !== readerId) {
-               // If the reader is NOT the sender, it means the sender's messages are being read
                return { ...m, isRead: true, readBy: [...(m.readBy || []), readerId] };
             }
             return m;
           })
         );
       }
+
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c._id === convId && c.lastMessage) {
+              // If the current user is NOT the reader, but sent the last message, they should see ticks
+              return {
+                  ...c,
+                  lastMessage: { ...c.lastMessage, isRead: true }
+              };
+          }
+          return c;
+        })
+      );
     });
 
     socket.on(SOCKET_EVENTS.ONLINE_USERS, (users: string[]) => {

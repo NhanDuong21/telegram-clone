@@ -15,6 +15,7 @@ export interface Conversation {
     lastMessage?: {
         _id: string;
         text: string;
+        isRead?: boolean;
     } | null;
     updatedAt: string;
     unreadCount?: number;

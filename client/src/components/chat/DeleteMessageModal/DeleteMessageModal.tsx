@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Trash2, X } from "lucide-react";
+import { X } from "lucide-react";
 import "./DeleteMessageModal.css";
 
 interface DeleteMessageModalProps {
@@ -34,9 +34,10 @@ const DeleteMessageModal = ({ onClose, onConfirm, isSender, targetName }: Delete
                 </div>
 
                 <div className="delete-modal-body">
-                    <Trash2 size={48} className="delete-modal-icon" />
                     <p className="delete-modal-desc">
-                        Tin nhắn sẽ bị xóa khỏi lịch sử của bạn.
+                        {deleteForBoth 
+                            ? "Tin nhắn sẽ bị xóa khỏi lịch sử của bạn và đối phương."
+                            : "Tin nhắn sẽ bị xóa khỏi lịch sử của bạn."}
                     </p>
 
                     {isSender && targetName && (

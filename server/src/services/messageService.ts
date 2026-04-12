@@ -3,7 +3,7 @@ import Conversation from "../models/Conversation";
 import { getIO } from "../socket";
 import { SOCKET_EVENTS } from "../utils/socketEvents";
 
-export const sendMessageService = async (conversationId: string, senderId: string, text?: string, imageUrl?: string) => {
+export const sendMessageService = async (conversationId: string, senderId: string, text?: string, imageUrl?: string, replyTo?: string) => {
     const conversation = await Conversation.findOne({
         _id: conversationId,
         participants: senderId,
@@ -20,10 +20,18 @@ export const sendMessageService = async (conversationId: string, senderId: strin
         imageUrl: imageUrl ? imageUrl.trim() : "",
         readBy: [senderId],
         isRead: false,
+        replyTo: replyTo || undefined,
     });
 
     // 1. Emit ngay lập tức sau khi tạo xong Message (Không đợi update Conversation)
-    const populated = await newMessage.populate("sender", "username avatar email");
+    const populated = await newMessage.populate([
+        { path: "sender", select: "username avatar email" },
+        { 
+            path: "replyTo", 
+            populate: { path: "sender", select: "username" },
+            select: "text imageUrl sender"
+        }
+    ]);
     const io = getIO();
     
     // Broadcast message ngay (Non-blocking)
@@ -60,6 +68,11 @@ export const getMessagesService = async (conversationId: string, userId: string,
 
     const messages = await Message.find(query)
         .populate("sender", "username avatar")
+        .populate({
+            path: "replyTo",
+            populate: { path: "sender", select: "username" },
+            select: "text imageUrl sender"
+        })
         .sort({ createdAt: -1 })
         .limit(limit + 1)
         .lean();
@@ -150,6 +163,46 @@ export const sendReactionService = async (messageId: string, userId: string, emo
     }
 
     return message.reactions;
+};
+
+export const updateMessageService = async (messageId: string, userId: string, data: { text?: string, isPinned?: boolean }) => {
+    const message = await Message.findById(messageId);
+    if (!message) throw new Error("Tin nhắn không tồn tại");
+
+    if (data.text !== undefined) {
+        if (message.sender.toString() !== userId) {
+            throw new Error("Bạn không có quyền sửa tin nhắn này");
+        }
+        message.text = data.text.trim();
+        message.isEdited = true;
+    }
+
+    if (data.isPinned !== undefined) {
+        // Any participant can pin usually, or maybe owner only? 
+        // For simplicity, let any participant toggle pin.
+        message.isPinned = data.isPinned;
+    }
+
+    await message.save();
+
+    const populated = await Message.findById(messageId)
+        .populate("sender", "username avatar")
+        .populate({
+            path: "replyTo",
+            populate: { path: "sender", select: "username" },
+            select: "text imageUrl sender"
+        })
+        .lean();
+
+    const io = getIO();
+    const conversation = await Conversation.findById(message.conversationId).select("participants").lean();
+    if (conversation) {
+        conversation.participants.forEach((p) => {
+            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGE_UPDATED, populated);
+        });
+    }
+
+    return populated;
 };
 
 export const markAsReadService = async (conversationId: string, userId: string) => {

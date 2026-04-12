@@ -1,6 +1,65 @@
 .message-input-container {
     display: flex;
     flex-direction: column;
+    background: #fff;
+    border-top: 1px solid #efefef;
+    position: relative;
+    z-index: 10;
+}
+
+.message-input-mode-preview {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    animation: slideUp 0.15s ease-out;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.mode-preview-icon {
+    color: #2481cc;
+}
+
+.mode-preview-content {
+    flex: 1;
+    overflow: hidden;
+}
+
+.mode-preview-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2481cc;
+}
+
+.mode-preview-text {
+    font-size: 13px;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mode-preview-close {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.mode-preview-close:hover {
+    color: #333;
+    background: rgba(0,0,0,0.05);
 }
 
 .message-input-wrapper {

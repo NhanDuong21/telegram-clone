@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
+import { 
+    CornerUpLeft, 
+    Pencil, 
+    Pin, 
+    Copy, 
+    Forward, 
+    Trash2 
+} from 'lucide-react';
 import './ContextMenu.css';
 
 interface ContextMenuProps {
@@ -8,6 +16,7 @@ interface ContextMenuProps {
     y: number;
     isMe: boolean;
     text?: string;
+    isPinned?: boolean;
     onClose: () => void;
     onReply?: () => void;
     onEdit?: () => void;
@@ -21,7 +30,7 @@ interface ContextMenuProps {
 const emojis = ['👍', '❤️', '🔥', '😂', '😮', '😢', '🙏', '👏'];
 
 const ContextMenu = ({ 
-    x, y, isMe, text, onClose, 
+    x, y, isMe, text, isPinned, onClose, 
     onReply, onEdit, onPin, onCopy, onForward, onDelete, onReact 
 }: ContextMenuProps) => {
     const menuRef = useRef<HTMLDivElement>(null);
@@ -29,8 +38,8 @@ const ContextMenu = ({
 
     useEffect(() => {
         if (menuRef.current) {
-            const menuWidth = 200;
-            const menuHeight = 350; // Dynamic approx
+            const menuWidth = 220;
+            const menuHeight = 350;
             const screenWidth = window.innerWidth;
             const screenHeight = window.innerHeight;
 
@@ -78,33 +87,33 @@ const ContextMenu = ({
 
             <div className="menu-items">
                 <button className="menu-item" onClick={() => { onReply?.(); onClose(); }}>
-                    <span className="menu-icon">↩️</span> Trả lời
+                    <span className="menu-icon"><CornerUpLeft size={16} strokeWidth={2} /></span> Trả lời
                 </button>
                 
                 {isMe && (
                     <button className="menu-item" onClick={() => { onEdit?.(); onClose(); }}>
-                        <span className="menu-icon">✏️</span> Sửa
+                        <span className="menu-icon"><Pencil size={16} strokeWidth={2} /></span> Sửa
                     </button>
                 )}
 
                 <button className="menu-item" onClick={() => { onPin?.(); onClose(); }}>
-                    <span className="menu-icon">📌</span> Ghim
+                    <span className="menu-icon"><Pin size={16} strokeWidth={2} className={isPinned ? "pinned-icon" : ""} /></span> {isPinned ? "Bỏ ghim" : "Ghim"}
                 </button>
 
                 {text && (
                     <button className="menu-item" onClick={handleCopy}>
-                        <span className="menu-icon">📑</span> Sao chép văn bản
+                        <span className="menu-icon"><Copy size={16} strokeWidth={2} /></span> Sao chép văn bản
                     </button>
                 )}
 
                 <button className="menu-item" onClick={() => { onForward?.(); onClose(); }}>
-                    <span className="menu-icon">➡️</span> Chuyển tiếp
+                    <span className="menu-icon"><Forward size={16} strokeWidth={2} /></span> Chuyển tiếp
                 </button>
 
                 <div className="menu-divider" />
 
                 <button className="menu-item menu-item--danger" onClick={() => { onDelete?.(); onClose(); }}>
-                    <span className="menu-icon">🗑️</span> Xóa
+                    <span className="menu-icon"><Trash2 size={16} strokeWidth={2} /></span> Xóa
                 </button>
             </div>
         </motion.div>,

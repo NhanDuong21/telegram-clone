@@ -242,6 +242,21 @@ export const useChatSocket = ({
       }
     });
 
+    socket.on(SOCKET_EVENTS.MESSAGE_UPDATED, (updatedMsg: Message) => {
+      if (selectedIdRef.current === updatedMsg.conversationId) {
+        setMessages((prev) =>
+          prev.map((m) => (m._id === updatedMsg._id ? updatedMsg : m))
+        );
+      }
+      
+      // Update sidebar if it's the last message
+      setConversations(prev => prev.map(c => 
+        c._id === updatedMsg.conversationId && c.lastMessage?._id === updatedMsg._id
+          ? { ...c, lastMessage: { ...c.lastMessage, text: updatedMsg.text || "" } }
+          : c
+      ));
+    });
+
     return () => {
       socket.off(SOCKET_EVENTS.CONNECT);
       socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE);
@@ -256,6 +271,7 @@ export const useChatSocket = ({
       socket.off(SOCKET_EVENTS.MESSAGES_READ);
       socket.off(SOCKET_EVENTS.MESSAGE_DELETED);
       socket.off(SOCKET_EVENTS.REACTION_UPDATED);
+      socket.off(SOCKET_EVENTS.MESSAGE_UPDATED);
     };
   }, [user, selectedConversationId]);
 };

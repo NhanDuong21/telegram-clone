@@ -1,22 +1,36 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import imageCompression from "browser-image-compression";
-import { sendMessageApi } from "../../../api/chatApi";
+import { sendMessageApi, updateMessageApi } from "../../../api/chatApi";
 import { getSocket } from "../../../socket";
 import type { Message } from "../../../types";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
+import { X, CornerUpLeft, Pencil, Paperclip, SendHorizontal } from "lucide-react";
 import './MessageInput.css';
 
 interface MessageInputProps {
     conversationId: string;
     onMessageSent: (message: Message) => void;
+    replyTarget?: Message | null;
+    editTarget?: Message | null;
+    onCancelMode?: () => void;
 }
 
-const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
+const MessageInput = ({ conversationId, onMessageSent, replyTarget, editTarget, onCancelMode }: MessageInputProps) => {
     const [text, setText] = useState("");
     const [sending, setSending] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        if (editTarget) {
+            setText(editTarget.text || "");
+            textareaRef.current?.focus();
+        } else if (!replyTarget) {
+            setText("");
+        }
+    }, [editTarget, replyTarget]);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -29,7 +43,6 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
 
         setIsUploading(true);
         try {
-            // 1. Nén ảnh (Giảm xuống dưới 500KB)
             const options = {
                 maxSizeMB: 0.5,
                 maxWidthOrHeight: 1280,
@@ -37,7 +50,6 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
             };
             const compressedFile = await imageCompression(file, options);
 
-            // 2. Upload trực tiếp lên Cloudinary (Bypass Server)
             const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dqc4hufot";
             const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "ml_default";
 
@@ -54,19 +66,22 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
 
             if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));
-                console.error("Cloudinary Error:", errData);
                 throw new Error(errData?.error?.message || "Cloudinary upload failed");
             }
 
             const data = await response.json();
             const uploadedImageUrl = data.secure_url;
 
-            // 3. Gửi tin nhắn kèm URL ảnh đã upload
-            const sendRes = await sendMessageApi(conversationId, { text: "", imageUrl: uploadedImageUrl });
+            const sendRes = await sendMessageApi(conversationId, { 
+                text: "", 
+                imageUrl: uploadedImageUrl,
+                replyTo: replyTarget?._id
+            });
             onMessageSent(sendRes.data.message);
+            if (replyTarget) onCancelMode?.();
         } catch (error: any) {
             console.error("Upload and send failed:", error);
-            alert(`Lỗi: ${error?.message || "Không thể upload ảnh"}. Vui lòng kiểm tra lại 'Unsigned Upload Preset' trên Cloudinary.`);
+            alert(`Lỗi: ${error?.message || "Không thể upload ảnh"}`);
         } finally {
             setIsUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
@@ -91,11 +106,22 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
 
         setSending(true);
         try {
-            const res = await sendMessageApi(conversationId, { text: trimmedText, imageUrl: "" });
-            onMessageSent(res.data.message); 
+            if (editTarget) {
+                const res = await updateMessageApi(editTarget._id, { text: trimmedText });
+                onMessageSent(res.data.updatedMessage);
+                onCancelMode?.();
+            } else {
+                const res = await sendMessageApi(conversationId, { 
+                    text: trimmedText, 
+                    imageUrl: "",
+                    replyTo: replyTarget?._id
+                });
+                onMessageSent(res.data.message); 
+                if (replyTarget) onCancelMode?.();
+            }
             setText("");
         } catch (error) {
-            console.error("Send message failed:", error);
+            console.error("Send/Edit message failed:", error);
         } finally {
             setSending(false);
         }
@@ -118,6 +144,8 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSend();
+        } else if (e.key === "Escape") {
+            onCancelMode?.();
         }
     };
 
@@ -125,6 +153,24 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
 
     return (
         <div className="message-input-container">
+            {(replyTarget || editTarget) && (
+                <div className="message-input-mode-preview">
+                    <div className="mode-preview-icon">
+                        {replyTarget ? <CornerUpLeft size={18} /> : <Pencil size={18} />}
+                    </div>
+                    <div className="mode-preview-content">
+                        <div className="mode-preview-title">
+                            {replyTarget ? `Đang trả lời ${replyTarget.sender.username}` : "Sửa tin nhắn"}
+                        </div>
+                        <div className="mode-preview-text">
+                            {replyTarget ? (replyTarget.text || "Hình ảnh") : editTarget?.text}
+                        </div>
+                    </div>
+                    <button className="mode-preview-close" onClick={onCancelMode}>
+                        <X size={18} />
+                    </button>
+                </div>
+            )}
             <div className="message-input-wrapper">
                 <input
                     type="file"
@@ -142,13 +188,12 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
                     {isUploading ? (
                         <div className="upload-spinner" />
                     ) : (
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: "20px", height: "20px" }}>
-                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
-                        </svg>
+                        <Paperclip size={20} />
                     )}
                 </button>
                 <div className="text-input-container">
                     <textarea
+                        ref={textareaRef}
                         rows={1}
                         value={text}
                         onChange={handleChange}
@@ -166,7 +211,7 @@ const MessageInput = ({ conversationId, onMessageSent }: MessageInputProps) => {
                     disabled={!canSend}
                     className={`send-btn ${canSend ? "send-btn--active" : ""}`}
                 >
-                    {sending ? "..." : "Gửi"}
+                    {sending ? "..." : <SendHorizontal size={20} />}
                 </button>
             </div>
         </div>

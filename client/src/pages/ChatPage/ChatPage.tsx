@@ -12,6 +12,8 @@ import EditProfileModal from "../../components/profile/EditProfileModal/EditProf
 import UserProfileModal from "../../components/profile/UserProfileModal/UserProfileModal";
 import ImagePreviewModal from "../../components/chat/ImagePreviewModal/ImagePreviewModal";
 import DeleteMessageModal from "../../components/chat/DeleteMessageModal/DeleteMessageModal";
+import ForwardModal from "../../components/chat/ForwardModal/ForwardModal";
+import { sendMessageApi } from "../../api/chatApi";
 
 import { disconnectSocket, getSocket } from "../../socket";
 import { useChatSocket } from "../../hooks/useChatSocket";
@@ -48,6 +50,7 @@ const ChatPage = () => {
     clearChat,
     deleteConversation,
     deleteMessage,
+    updateMessage,
   } = useChatActions(user);
 
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
@@ -60,6 +63,9 @@ const ChatPage = () => {
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [messageToDelete, setMessageToDelete] = useState<Message | null>(null);
+  const [replyTarget, setReplyTarget] = useState<Message | null>(null);
+  const [editTarget, setEditTarget] = useState<Message | null>(null);
+  const [messageToForward, setMessageToForward] = useState<Message | null>(null);
 
   useChatSocket({
     user,
@@ -301,6 +307,10 @@ const ChatPage = () => {
                 onImagePreview={setPreviewImageUrl}
                 onDeleteMessage={setMessageToDelete}
                 onReactMessage={handleReactMessage}
+                onReplyMessage={(msg) => { setEditTarget(null); setReplyTarget(msg); }}
+                onEditMessage={(msg) => { setReplyTarget(null); setEditTarget(msg); }}
+                onPinMessage={(msg) => updateMessage(msg._id, { isPinned: !msg.isPinned })}
+                onForwardMessage={setMessageToForward}
               />
 
               {typingUsers.size > 0 && (
@@ -314,7 +324,13 @@ const ChatPage = () => {
                 </div>
               )}
 
-              <MessageInput conversationId={selectedConversation._id} onMessageSent={handleMessageSent} />
+              <MessageInput 
+                conversationId={selectedConversation._id} 
+                onMessageSent={handleMessageSent} 
+                replyTarget={replyTarget}
+                editTarget={editTarget}
+                onCancelMode={() => { setReplyTarget(null); setEditTarget(null); }}
+              />
 
               <AnimatePresence>
                 {showGroupSettings && selectedConversation.isGroup && (
@@ -351,6 +367,24 @@ const ChatPage = () => {
               }
             }}
             isSender={(messageToDelete.sender as unknown as User)?._id === user?._id}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {messageToForward && (
+          <ForwardModal 
+            message={messageToForward} 
+            conversations={conversations}
+            onClose={() => setMessageToForward(null)}
+            onForward={async (convId, msg) => {
+              try {
+                await sendMessageApi(convId, { text: msg.text, imageUrl: msg.imageUrl });
+                setMessageToForward(null);
+                // Optionally switch to that conversation
+              } catch (e) {
+                console.error("Forward failed", e);
+              }
+            }}
           />
         )}
       </AnimatePresence>

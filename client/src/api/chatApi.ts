@@ -71,9 +71,15 @@ export const getMessagesApi = (
 
 export const sendMessageApi = (
     conversationId: string,
-    data: { text?: string; imageUrl?: string }
+    data: { text?: string; imageUrl?: string; replyTo?: string }
 ): Promise<AxiosResponse<{ message: Message }>> =>
     axiosClient.post(`/messages`, { conversationId, ...data }, getAuthHeader());
+
+export const updateMessageApi = (
+    messageId: string,
+    data: { text?: string; isPinned?: boolean }
+): Promise<AxiosResponse<{ updatedMessage: Message }>> =>
+    axiosClient.patch(`/messages/${messageId}`, data, getAuthHeader());
 
 export const uploadImageApi = (file: File) => {
     const formData = new FormData();

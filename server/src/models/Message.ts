@@ -50,6 +50,18 @@ const messageSchema = new Schema<IMessage>(
                 emoji: String,
             },
         ],
+        replyTo: {
+            type: Schema.Types.ObjectId,
+            ref: "Message",
+        },
+        isEdited: {
+            type: Boolean,
+            default: false,
+        },
+        isPinned: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,

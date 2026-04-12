@@ -4,7 +4,7 @@ import * as messageService from "../services/messageService";
 
 export const sendMessage = async (req: AuthRequest, res: Response) => {
     try {
-        const { conversationId, text, imageUrl } = req.body;
+        const { conversationId, text, imageUrl, replyTo } = req.body;
         const senderId = req.user!._id;
 
         if (!conversationId) {
@@ -15,7 +15,7 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: "Cần ít nhất text hoặc hình ảnh" });
         }
 
-        const message = await messageService.sendMessageService(conversationId, senderId.toString(), text, imageUrl);
+        const message = await messageService.sendMessageService(conversationId, senderId.toString(), text, imageUrl, replyTo);
         return res.status(201).json({ message });
     } catch (error: unknown) {
         console.error("Send message error:", error);
@@ -59,6 +59,21 @@ export const deleteMessage = async (req: AuthRequest, res: Response) => {
         return res.status(200).json({ message: "Xóa thành công", deletedMessage: message });
     } catch (error: unknown) {
         console.error("Delete message error:", error);
+        const err = error as Error;
+        const status = err.message.includes("không tồn tại") ? 404 : err.message.includes("không có quyền") ? 403 : 500;
+        return res.status(status).json({ message: err.message || "Server error" });
+    }
+};
+export const updateMessage = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { text, isPinned } = req.body;
+        const userId = req.user!._id;
+
+        const message = await messageService.updateMessageService(id, userId.toString(), { text, isPinned });
+        return res.status(200).json({ message: "Cập nhật thành công", updatedMessage: message });
+    } catch (error: unknown) {
+        console.error("Update message error:", error);
         const err = error as Error;
         const status = err.message.includes("không tồn tại") ? 404 : err.message.includes("không có quyền") ? 403 : 500;
         return res.status(status).json({ message: err.message || "Server error" });

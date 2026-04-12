@@ -6,6 +6,7 @@ import {
   clearChatApi,
   deleteConversationApi,
   deleteMessageApi,
+  updateMessageApi,
 } from "../api/chatApi";
 import { getSocket } from "../socket";
 import { SOCKET_EVENTS } from "../constants/socketEvents";
@@ -81,6 +82,27 @@ export const useChatActions = (user: User | null) => {
     }
   };
 
+  const updateMessageAction = async (messageId: string, data: { text?: string, isPinned?: boolean }) => {
+    try {
+      // Optimistic Update
+      setMessages(prev => prev.map(m => m._id === messageId ? { ...m, ...data, isEdited: data.text !== undefined ? true : m.isEdited } : m));
+      
+      // Update sidebar if last message and text changed
+      if (data.text) {
+        setConversations(prev => prev.map(c => 
+          c.lastMessage?._id === messageId 
+            ? { ...c, lastMessage: { ...c.lastMessage, text: data.text! } } 
+            : c
+        ));
+      }
+
+      await updateMessageApi(messageId, data);
+    } catch (error) {
+      console.error("Failed to update message:", error);
+      // Revert could be implemented by fetching messages again or storing previous state
+    }
+  };
+
   const deleteMessageAction = async (msg: Message, type: 'one-way' | 'two-way') => {
     try {
       // Optimistic Update
@@ -124,5 +146,6 @@ export const useChatActions = (user: User | null) => {
     clearChat,
     deleteConversation,
     deleteMessage: deleteMessageAction,
+    updateMessage: updateMessageAction,
   };
 };

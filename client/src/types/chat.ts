@@ -36,5 +36,8 @@ export interface Message {
     deletedFor?: string[];
     isDeleted?: boolean;
     reactions?: { user: string; emoji: string }[];
+    replyTo?: Message;
+    isEdited?: boolean;
+    isPinned?: boolean;
     createdAt: string;
 }

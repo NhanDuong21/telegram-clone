@@ -179,3 +179,13 @@ body {
 .auth-link:hover {
   text-decoration: underline;
 }
+
+/* User Status Colors */
+.status-online {
+  color: #3390ec;
+  font-weight: 500;
+}
+
+.status-offline {
+  color: var(--text-secondary);
+}

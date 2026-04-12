@@ -25,6 +25,7 @@ import { useChatSocket } from "../../hooks/useChatSocket";
 import { useChatActions } from "../../hooks/useChatActions";
 import type { Conversation, Message, User } from "../../types";
 import { SOCKET_EVENTS } from "../../constants/socketEvents";
+import { formatUserStatus } from "../../utils/formatters";
 import './ChatPage.css';
 
 const ChatPage = () => {
@@ -227,12 +228,12 @@ const ChatPage = () => {
                       <Avatar user={otherParticipant} size={36} />
                     </div>
                   )}
-                  <div className={`chat-header__text ${!selectedConversation.isGroup ? "chat-header__text-clickable" : ""}`} 
+                    <div className={`chat-header__text ${!selectedConversation.isGroup ? "chat-header__text-clickable" : ""}`} 
                        onClick={() => !selectedConversation.isGroup && otherParticipant && setViewingProfileId(otherParticipant._id)}>
                     <span className="chat-header__name">{selectedConversation.isGroup ? selectedConversation.name : (otherParticipant?.username ?? "Chat")}</span>
                     {!selectedConversation.isGroup && otherParticipant && (
-                      <span className="chat-header__status">
-                        {onlineUsers.includes(otherParticipant._id) ? "Online" : "Offline"}
+                      <span className={`chat-header__status ${onlineUsers.includes(otherParticipant._id) ? 'status-online' : 'status-offline'}`}>
+                        {formatUserStatus(onlineUsers.includes(otherParticipant._id), otherParticipant.lastSeen)}
                       </span>
                     )}
                     {selectedConversation.isGroup && (

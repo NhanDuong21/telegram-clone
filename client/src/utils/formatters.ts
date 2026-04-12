@@ -4,31 +4,25 @@ export const formatUserStatus = (isOnline: boolean, lastSeen: Date | string | un
     }
 
     if (!lastSeen) {
-        return "Offline";
+        return "Truy cập gần đây";
     }
 
     const lastSeenDate = new Date(lastSeen);
     const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - lastSeenDate.getTime()) / 1000);
-
-    if (diffInSeconds < 60) {
-        return "Vừa mới truy cập";
+    const diffInMs = now.getTime() - lastSeenDate.getTime();
+    
+    // Within 60 minutes
+    if (diffInMs < 3600000) {
+        const minutes = Math.floor(diffInMs / 60000);
+        return minutes <= 1 ? "Vừa mới truy cập" : `Truy cập ${minutes} phút trước`;
     }
 
-    const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) {
-        return `Truy cập ${diffInMinutes} phút trước`;
+    // Within 24 hours
+    if (diffInMs < 86400000) {
+        const hours = Math.floor(diffInMs / 3600000);
+        return `Truy cập ${hours} giờ trước`;
     }
 
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) {
-        return `Truy cập ${diffInHours} giờ trước`;
-    }
-
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) {
-        return `Truy cập ${diffInDays} ngày trước`;
-    }
-
-    return `Truy cập ngày ${lastSeenDate.toLocaleDateString()}`;
+    // More than 24 hours
+    return "Truy cập gần đây";
 };

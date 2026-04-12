@@ -4,7 +4,7 @@
     flex-direction: column;
     position: relative;
     overflow: hidden;
-    background: #f7f9fb;
+    background: var(--bg-color);
 }
 
 .pinned-messages-bar {
@@ -13,13 +13,13 @@
     left: 0;
     right: 0;
     z-index: 5;
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--header-bg);
     backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 8px 16px;
-    border-bottom: 1px solid #efefef;
+    border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
@@ -33,7 +33,7 @@
 }
 
 .pinned-bar-icon {
-    color: #0088cc;
+    color: var(--accent-color);
 }
 
 .pinned-bar-content {
@@ -56,19 +56,20 @@
 }
 
 .pinned-bar-unpin:hover {
-    background: #f0f0f0;
+    background: var(--sidebar-hover);
     color: #e53935;
 }
 
 .pinned-bar-title {
     font-size: 13px;
     font-weight: 600;
-    color: #0088cc;
+    color: var(--accent-color);
 }
 
 .pinned-bar-text {
     font-size: 13px;
-    color: #666;
+    color: var(--text-color);
+    opacity: 0.8;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -86,10 +87,10 @@
 }
 
 .message-reply-snippet {
-    border-left: 2px solid #0088cc;
+    border-left: 2px solid var(--accent-color);
     padding-left: 8px;
     margin-bottom: 6px;
-    background: rgba(0, 136, 204, 0.05);
+    background: rgba(51, 144, 236, 0.1);
     border-radius: 4px;
     padding: 4px 8px;
     cursor: pointer;
@@ -103,7 +104,7 @@
 .reply-sender {
     font-size: 12px;
     font-weight: 600;
-    color: #0088cc;
+    color: var(--accent-color);
 }
 
 .message-bubble--me .reply-sender {
@@ -112,20 +113,21 @@
 
 .reply-text {
     font-size: 12px;
-    color: #666;
+    color: var(--text-color);
+    opacity: 0.8;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .message-bubble--me .reply-text {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.82);
 }
 
 .message-forwarded-info {
     font-size: 11px;
     font-style: italic;
-    color: #0088cc;
+    color: var(--accent-color);
     display: flex;
     align-items: center;
     gap: 4px;
@@ -143,7 +145,7 @@
 }
 
 .message-bubble--pinned {
-    border: 1px solid rgba(0, 136, 204, 0.2);
+    border: 1px solid rgba(51, 144, 236, 0.3);
 }
 
 .footer-left {
@@ -168,10 +170,10 @@
 }
 
 @keyframes message-highlight {
-    0% { transform: scale(1); background-color: initial; }
-    25% { transform: scale(1.02); background-color: rgba(0, 136, 204, 0.2); }
-    50% { transform: scale(1.02); background-color: rgba(0, 136, 204, 0.2); }
-    100% { transform: scale(1); background-color: initial; }
+    0% { transform: scale(1); background-color: transparent; }
+    25% { transform: scale(1.02); background-color: rgba(51, 144, 236, 0.2); }
+    50% { transform: scale(1.02); background-color: rgba(51, 144, 236, 0.2); }
+    100% { transform: scale(1); background-color: transparent; }
 }
 
 .chat-box--empty {
@@ -183,7 +185,7 @@
     color: #b0b8c1;
     font-size: 15px;
     gap: 6px;
-    background: #f7f9fb;
+    background: var(--bg-color);
 }
 
 .chat-box__empty-icon {
@@ -199,8 +201,8 @@
     padding: 6px 16px;
     border-radius: 16px;
     border: none;
-    background: #e4eef7;
-    color: #0088cc;
+    background: var(--input-bg);
+    color: var(--accent-color);
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -241,17 +243,15 @@
     border-radius: 50%;
 }
 
-
-
 .message-avatar-fallback {
     width: 100%;
     height: 100%;
-    background-color: #eee;
+    background-color: var(--sidebar-hover);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 12px;
-    color: #666;
+    color: var(--text-color);
     font-weight: bold;
 }
 
@@ -265,26 +265,27 @@
 
 .message-bubble--me {
     border-radius: 18px 18px 4px 18px;
-    background: linear-gradient(135deg, #0088cc, #0077b5);
+    background: var(--msg-out);
     color: #fff;
-    box-shadow: 0 1px 4px rgba(0, 136, 204, 0.25);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .message-bubble--other {
     border-radius: 18px 18px 18px 4px;
-    background: #ffffff;
-    color: #1a1a2e;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    background: var(--msg-in);
+    color: var(--text-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .message-sender {
     font-size: 11px;
     font-weight: 700;
-    color: #0088cc;
+    color: var(--accent-color);
     margin-bottom: 3px;
     letter-spacing: 0.2px;
     cursor: pointer;
 }
+
 
 .message-image {
     max-width: 100%;

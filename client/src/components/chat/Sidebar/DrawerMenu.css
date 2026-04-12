@@ -15,60 +15,30 @@
     left: 0;
     width: 300px;
     height: 100vh;
-    background: #ffffff;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+    background: var(--sidebar-bg);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
     z-index: 2001;
     display: flex;
     flex-direction: column;
 }
 
 .drawer-header {
-    background: #ffffff;
+    background: var(--sidebar-bg);
     padding: 24px 28px 16px;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.drawer-user-info {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.user-details-wrapper {
-    display: flex;
-    flex-direction: column;
-}
-
-.user-name-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .drawer-user-name {
     font-size: 16px;
     font-weight: 600;
-    color: #1a1a1a;
-}
-
-.chevron-icon {
-    color: #999;
-}
-
-.drawer-user-status {
-    font-size: 13px;
-    color: #707579;
-    margin-top: 4px;
+    color: var(--text-color);
 }
 
 .drawer-content {
     flex: 1;
     padding-top: 8px;
     overflow-y: auto;
-}
-
-.menu-item-group {
-    padding: 8px 0;
+    background: var(--sidebar-bg);
 }
 
 .menu-item {
@@ -82,12 +52,12 @@
     cursor: pointer;
     font-size: 15px;
     font-weight: 500;
-    color: #1a1a1a;
+    color: var(--text-color);
     transition: background 0.2s;
 }
 
 .menu-item:hover {
-    background: #f4f4f5;
+    background: var(--sidebar-hover);
 }
 
 .menu-icon {
@@ -96,33 +66,22 @@
 
 .menu-divider {
     height: 8px;
-    background: #f4f4f5;
+    background: var(--input-bg);
     margin: 4px 0;
 }
 
-.menu-item--toggle {
-    justify-content: space-between;
-    cursor: default;
-}
-
-.item-left {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
 .menu-item--logout {
-    color: #e53935;
+    color: #ff5252;
     margin-top: auto;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--border-color);
 }
 
 .menu-item--logout .menu-icon {
-    color: #e53935;
+    color: #ff5252;
 }
 
 .menu-item--logout:hover {
-    background: #ffebee;
+    background: rgba(255, 82, 82, 0.1);
 }
 
 /* Theme Toggle Switch */
@@ -146,7 +105,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: #555;
     transition: .4s;
     border-radius: 34px;
 }
@@ -161,11 +120,11 @@
     background-color: white;
     transition: .4s;
     border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
 input:checked + .toggle-slider {
-    background-color: #3390ec;
+    background-color: var(--accent-color);
 }
 
 input:checked + .toggle-slider:before {

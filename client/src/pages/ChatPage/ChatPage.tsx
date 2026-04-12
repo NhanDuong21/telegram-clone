@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 import Sidebar from "../../components/chat/Sidebar/Sidebar";
@@ -24,8 +23,7 @@ import { SOCKET_EVENTS } from "../../constants/socketEvents";
 import './ChatPage.css';
 
 const ChatPage = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(() => {
     if (user?._id) {
@@ -117,9 +115,10 @@ const ChatPage = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    sessionStorage.clear();
     disconnectSocket();
     if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
-    navigate("/login");
+    window.location.href = "/login";
   };
 
   const handleSelectConversation = (conv: Conversation) => {

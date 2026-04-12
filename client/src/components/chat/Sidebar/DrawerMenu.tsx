@@ -1,10 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { 
     User, Users, Megaphone, Contact, Phone, 
-    Bookmark, Settings, Moon, LogOut, ChevronDown 
+    Bookmark, Settings, Moon, LogOut
 } from "lucide-react";
 import type { User as UserType } from "../../../types/chat";
 import Avatar from "../../common/Avatar";
+import { useTheme } from "../../../context/ThemeContext";
 import "./DrawerMenu.css";
 
 interface DrawerMenuProps {
@@ -15,6 +16,8 @@ interface DrawerMenuProps {
 }
 
 const DrawerMenu = ({ isOpen, onClose, user, onLogout }: DrawerMenuProps) => {
+    const { isDarkMode, toggleTheme } = useTheme();
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -85,7 +88,7 @@ const DrawerMenu = ({ isOpen, onClose, user, onLogout }: DrawerMenuProps) => {
                                         <span>Chế độ ban đêm</span>
                                     </div>
                                     <label className="theme-toggle">
-                                        <input type="checkbox" />
+                                        <input type="checkbox" checked={isDarkMode} onChange={toggleTheme} />
                                         <span className="toggle-slider" />
                                     </label>
                                 </div>

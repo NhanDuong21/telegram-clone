@@ -1,14 +1,41 @@
+:root {
+  --bg-color: #ffffff;
+  --sidebar-bg: #ffffff;
+  --text-color: #000000;
+  --msg-in: #ffffff;
+  --msg-out: #effdde;
+  --header-bg: #ffffff;
+  --border-color: #dfe1e5;
+  --input-bg: #f4f4f5;
+  --sidebar-hover: #f4f4f5;
+  --accent-color: #3390ec;
+}
+
+[data-theme='dark'] {
+  --bg-color: #1c242f;
+  --sidebar-bg: #17212b;
+  --text-color: #ffffff;
+  --msg-in: #24303f;
+  --msg-out: #2b5278;
+  --header-bg: #24303f;
+  --border-color: #101921;
+  --input-bg: #24303f;
+  --sidebar-hover: #24303f;
+  --accent-color: #3390ec;
+}
+
 body {
   margin: 0;
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #fff;
-  color: #333;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   height: 100dvh;
   overflow: hidden; /* App view is static */
   width: 100vw;
   position: fixed; /* Prevents scroll-bounce on rubber-banding body */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {

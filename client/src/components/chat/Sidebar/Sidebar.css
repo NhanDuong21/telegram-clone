@@ -2,8 +2,8 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: #ffffff;
-    border-right: 1px solid #dfe1e5;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
     width: 100%;
     max-width: 420px;
     position: relative;
@@ -16,7 +16,7 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    background: #ffffff;
+    background: var(--sidebar-bg);
 }
 
 .hamburger-btn {
@@ -33,7 +33,7 @@
 }
 
 .hamburger-btn:hover {
-    background: #f4f4f5;
+    background: var(--sidebar-hover);
 }
 
 .sidebar__search-wrapper {
@@ -53,18 +53,19 @@
 .sidebar__search-input {
     width: 100%;
     height: 40px;
-    background: #f4f4f5;
+    background: var(--input-bg);
     border: 1px solid transparent;
     border-radius: 20px;
     padding: 0 16px 0 44px;
     font-size: 15px;
     outline: none;
     transition: background 0.2s, border-color 0.2s;
+    color: var(--text-color);
 }
 
 .sidebar__search-input:focus {
-    background: #ffffff;
-    border-color: #3390ec;
+    background: var(--sidebar-bg);
+    border-color: var(--accent-color);
 }
 
 .conversation-list {
@@ -84,11 +85,11 @@
 }
 
 .conversation-item:hover {
-    background: #f4f4f5;
+    background: var(--sidebar-hover);
 }
 
 .conversation-item--selected {
-    background: #3390ec !important;
+    background: var(--accent-color) !important;
 }
 
 .item-avatar-wrapper {
@@ -103,12 +104,12 @@
     width: 12px;
     height: 12px;
     background: #4cc460;
-    border: 2px solid #ffffff;
+    border: 2px solid var(--sidebar-bg);
     border-radius: 50%;
 }
 
 .conversation-item--selected .online-indicator {
-    border-color: #3390ec;
+    border-color: var(--accent-color);
 }
 
 .conversation-item__info {
@@ -129,7 +130,7 @@
 .item-name {
     font-size: 16px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: var(--text-color);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -162,7 +163,7 @@
 }
 
 .item-unread-badge {
-    background: #3390ec;
+    background: var(--accent-color);
     color: #ffffff;
     font-size: 12px;
     font-weight: 600;
@@ -177,14 +178,14 @@
 
 .conversation-item--selected .item-unread-badge {
     background: #ffffff;
-    color: #3390ec;
+    color: var(--accent-color);
 }
 
 .group-avatar-fallback {
     width: 54px;
     height: 54px;
     border-radius: 50%;
-    background: #3390ec;
+    background: var(--accent-color);
     color: #ffffff;
     display: flex;
     align-items: center;
@@ -195,7 +196,7 @@
 
 .conversation-item--selected .group-avatar-fallback {
     background: #ffffff;
-    color: #3390ec;
+    color: var(--accent-color);
 }
 
 .sidebar__search-results {
@@ -203,7 +204,7 @@
     top: 56px;
     left: 0;
     right: 0;
-    background: #ffffff;
+    background: var(--sidebar-bg);
     z-index: 10;
     box-shadow: 0 8px 16px rgba(0,0,0,0.1);
     max-height: 70vh;
@@ -220,12 +221,13 @@
 }
 
 .search-item:hover {
-    background: #f4f4f5;
+    background: var(--sidebar-hover);
 }
 
 .search-item__name {
     font-weight: 600;
     font-size: 15px;
+    color: var(--text-color);
 }
 
 .search-item__status {

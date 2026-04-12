@@ -22,7 +22,29 @@ interface ChatBoxProps {
     onPinMessage?: (msg: Message) => void;
     onForwardMessage?: (msg: Message) => void;
     onUnpinMessage?: (msg: Message) => void;
+    searchQuery?: string;
 }
+
+const HighlightText = ({ text, highlight }: { text: string; highlight: string }) => {
+    if (!highlight || !highlight.trim()) return <>{text}</>;
+    
+    // Escape special characters for regex
+    const escapedHighlight = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedHighlight})`, 'gi');
+    const parts = text.split(regex);
+    
+    return (
+        <>
+            {parts.map((part, i) => 
+                part.toLowerCase() === highlight.toLowerCase() ? (
+                    <mark key={i} className="highlight-text">{part}</mark>
+                ) : (
+                    part
+                )
+            )}
+        </>
+    );
+};
 
 const formatTime = (iso: string) => {
     const d = new Date(iso);
@@ -38,7 +60,8 @@ const messageVariants = {
 const ChatBox = ({ 
     messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, 
     onProfileClick, onImagePreview, onDeleteMessage, onReactMessage,
-    onReplyMessage, onEditMessage, onPinMessage, onForwardMessage, onUnpinMessage
+    onReplyMessage, onEditMessage, onPinMessage, onForwardMessage, onUnpinMessage,
+    searchQuery = ""
 }: ChatBoxProps) => {
     const bottomRef = useRef<HTMLDivElement>(null);
     const lastMessageId = useRef<string | null>(null);
@@ -120,15 +143,6 @@ const ChatBox = ({
         );
     };
 
-    if (messages.length === 0) {
-        return (
-            <div className="chat-box--empty">
-                <span className="chat-box__empty-icon">👋</span>
-                Chưa có tin nhắn nào. Hãy nói lời chào!
-            </div>
-        );
-    }
-
     return (
         <div className="chat-box-area">
             <AnimatePresence>
@@ -161,7 +175,13 @@ const ChatBox = ({
             </AnimatePresence>
 
             <div className="chat-box">
-                {hasMore && (
+                {messages.length === 0 && (
+                    <div className="chat-box--empty">
+                        <span className="chat-box__empty-icon">👋</span>
+                        Chưa có tin nhắn nào. Hãy nói lời chào!
+                    </div>
+                )}
+                {hasMore && messages.length > 0 && (
                     <div className="chat-box__load-more">
                         <button
                             onClick={onLoadMore}
@@ -262,7 +282,11 @@ const ChatBox = ({
                                     
                                     {msg.text && (
                                         <div className={msg.isDeleted ? "message-text--deleted" : ""}>
-                                            {msg.isDeleted ? "Tin nhắn đã bị xóa" : msg.text}
+                                            {msg.isDeleted ? (
+                                                "Tin nhắn đã bị xóa"
+                                            ) : (
+                                                <HighlightText text={msg.text} highlight={searchQuery} />
+                                            )}
                                         </div>
                                     )}
 

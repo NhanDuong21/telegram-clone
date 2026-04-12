@@ -16,6 +16,8 @@ import ImagePreviewModal from "../../components/chat/ImagePreviewModal/ImagePrev
 import DeleteMessageModal from "../../components/chat/DeleteMessageModal/DeleteMessageModal";
 import ForwardModal from "../../components/chat/ForwardModal/ForwardModal";
 import PinModal from "../../components/chat/PinModal/PinModal";
+import ChatSearch from "../../components/chat/ChatBox/ChatSearch";
+import CallModal from "../../components/chat/CallModal/CallModal";
 import { sendMessageApi } from "../../api/chatApi";
 
 import { disconnectSocket, getSocket } from "../../socket";
@@ -58,180 +60,105 @@ const ChatPage = () => {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+  const [replyTarget, setReplyTarget] = useState<Message | null>(null);
+  const [editTarget, setEditTarget] = useState<Message | null>(null);
+  const [messageToDelete, setMessageToDelete] = useState<Message | null>(null);
+  const [messageToPin, setMessageToPin] = useState<Message | null>(null);
+  const [messageToForward, setMessageToForward] = useState<Message | null>(null);
 
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [showRightSidebar, setShowRightSidebar] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showCallModal, setShowCallModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
-  const [messageToDelete, setMessageToDelete] = useState<Message | null>(null);
-  const [replyTarget, setReplyTarget] = useState<Message | null>(null);
-  const [editTarget, setEditTarget] = useState<Message | null>(null);
-  const [messageToForward, setMessageToForward] = useState<Message | null>(null);
-  const [messageToPin, setMessageToPin] = useState<Message | null>(null);
+
+  const selectedConversation = useMemo(() => 
+    conversations.find(c => c._id === selectedConversationId), 
+    [conversations, selectedConversationId]
+  );
+
+  const otherParticipant = useMemo(() => {
+    if (!selectedConversation || selectedConversation.isGroup) return null;
+    return selectedConversation.participants.find((p: User) => p._id !== user?._id);
+  }, [selectedConversation, user?._id]);
+
+  useEffect(() => {
+    fetchConversations();
+    const socket = getSocket();
+    socket.emit(SOCKET_EVENTS.JOIN_USER_ROOM, user?._id);
+    
+    return () => {
+      disconnectSocket();
+    };
+  }, [user?._id]);
+
+  useEffect(() => {
+    if (selectedConversationId) {
+      fetchMessages(selectedConversationId);
+      try {
+        localStorage.setItem(`tg_sel_conv_${user?._id}`, selectedConversationId);
+      } catch {}
+    } else {
+      try {
+        localStorage.removeItem(`tg_sel_conv_${user?._id}`);
+      } catch {}
+    }
+  }, [selectedConversationId, user?._id]);
 
   useChatSocket({
     user,
     selectedConversationId,
-    setConversations,
     setMessages,
+    setConversations,
     setUnreadCounts,
     setOnlineUsers,
     setTypingUsers,
-    setSelectedConversationId,
   });
 
-  const selectedConversation = useMemo(
-    () => conversations.find((c) => c._id === selectedConversationId) ?? null,
-    [conversations, selectedConversationId]
-  );
-
-  useEffect(() => {
-    fetchConversations().then(() => {
-        // We need the data from conversations which were just fetched
-    });
-  }, [fetchConversations]);
-
-  // Sync unread counts from conversations list
-  useEffect(() => {
-    const counts: Record<string, number> = {};
-    conversations.forEach(c => {
-        if (c.unreadCount) counts[c._id] = c.unreadCount;
-    });
-    setUnreadCounts(counts);
-  }, [conversations]);
-
-  useEffect(() => {
-    if (selectedConversationId) {
-      const socket = getSocket();
-      if (socket) socket.emit(SOCKET_EVENTS.JOIN_ROOM, selectedConversationId);
-      
-      fetchMessages(selectedConversationId).catch(() => {
-        setSelectedConversationId(null);
-        if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
-      });
-    } else {
-      setMessages([]);
-    }
-  }, [selectedConversationId, user?._id, fetchMessages]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.clear();
-    disconnectSocket();
-    if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
-    window.location.href = "/login";
-  };
-
-  const handleSelectConversation = (conv: Conversation) => {
-    setSelectedConversationId(conv._id);
-    
-    // Optimistic Update: Clear unread count immediately
-    setUnreadCounts((prev) => ({
-        ...prev,
-        [conv._id]: 0
-    }));
-
-    setConversations((prev) => 
-        prev.map((c) => 
-            c._id === conv._id 
-                ? { ...c, unreadCount: 0, lastMessage: c.lastMessage ? { ...c.lastMessage, isRead: true } : null } 
-                : c
-        )
-    );
-
-    if (user?._id) localStorage.setItem(`tg_sel_conv_${user._id}`, conv._id);
-    
-    // Explicitly mark as read when user clicks
-    const socket = getSocket();
-    if (socket) {
-    }
+  const handleSelectConversation = (id: string) => {
+    setSelectedConversationId(id);
+    setUnreadCounts(prev => ({ ...prev, [id]: 0 }));
   };
 
   const handleMessageSent = (message: Message) => {
-    // Optimistic Logic: Replace temp message with real one
     setMessages((prev) => {
-      // 1. If the message with this real ID already exists (e.g. from socket),
-      // we just want to remove the temp message and update/keep the real one.
       const alreadyHasReal = prev.some(m => m._id === message._id);
       
       if (message.tempId) {
         if (alreadyHasReal) {
-          // Remove the temp message, since the real one is already there
           return prev.filter(m => m._id !== message.tempId);
         }
-        // Replace temp with real
         return prev.map(m => m._id === message.tempId ? message : m);
       }
 
-      // If no tempId, regular check
       if (alreadyHasReal) {
         return prev.map(m => m._id === message._id ? message : m);
       }
-      // 3. Otherwise add as new
       return [...prev, message];
     });
 
-    if (selectedConversationId) {
-      setConversations((prev) => {
-        const index = prev.findIndex((c) => c._id === selectedConversationId);
-        if (index === -1) return prev;
-        
-        const updatedConv = {
-          ...prev[index],
-          lastMessage: { 
-            _id: message._id, 
-            text: message.text || (message.imageUrl ? "📷 Ảnh" : ""),
-            createdAt: message.createdAt
-          },
-          updatedAt: message.createdAt
-        };
-        
-        const next = [...prev];
-        next.splice(index, 1);
-        return [updatedConv, ...next];
-      });
-    }
+    setConversations(prev => {
+      const index = prev.findIndex(c => c._id === message.conversationId);
+      if (index === -1) return prev;
+      const updatedConv = { ...prev[index], lastMessage: message, updatedAt: message.createdAt };
+      const next = [...prev];
+      next.splice(index, 1);
+      return [updatedConv, ...next];
+    });
   };
-
-  const otherParticipant = selectedConversation?.participants.find((p) => p._id !== user?._id);
-
-  useEffect(() => {
-    if (selectedConversation) {
-      const name = selectedConversation.isGroup 
-        ? selectedConversation.name 
-        : (otherParticipant?.username ?? "Chat");
-      document.title = `Telegram Web | ${name}`;
-    } else {
-      document.title = "Telegram Web";
-    }
-  }, [selectedConversation, otherParticipant]);
 
   const handleReactMessage = (msg: Message, emoji: string) => {
     const socket = getSocket();
-    if (socket && user?._id) {
-       // Optimistic UI Update
-       setMessages(prev => prev.map(m => {
-          if (m._id === msg._id) {
-            const currentReactions = m.reactions || [];
-            const existing = currentReactions.findIndex(r => r.user === user._id && r.emoji === emoji);
-            let nextReactions;
-            if (existing !== -1) {
-              nextReactions = currentReactions.filter((_, i) => i !== existing);
-            } else {
-              // Telegram style: allow only 1 reaction
-              nextReactions = currentReactions.filter(r => r.user !== user._id);
-              nextReactions.push({ user: user._id, emoji });
-            }
-            return { ...m, reactions: nextReactions };
-          }
-          return m;
-       }));
+    socket.emit(SOCKET_EVENTS.ADD_REACTION, { messageId: msg._id, emoji });
+  };
 
-       socket.emit(SOCKET_EVENTS.SEND_REACTION, { messageId: msg._id, emoji });
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("tg_token");
+    window.location.href = "/login";
   };
 
   return (
@@ -258,7 +185,7 @@ const ChatPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
+          transition={{ type: "tween", duration: 0.2 }}
           className={`chat-wrapper ${selectedConversation ? "is-active" : ""}`}
         >
           {!selectedConversation ? (
@@ -298,8 +225,15 @@ const ChatPage = () => {
                 </div>
 
                 <div className="chat-header__actions">
-                  <button className="header-action-btn"><Search size={22} /></button>
-                  <button className="header-action-btn"><Phone size={22} /></button>
+                  <button 
+                    className={`header-action-btn ${isSearching ? "active" : ""}`}
+                    onClick={() => setIsSearching(!isSearching)}
+                  >
+                    <Search size={22} />
+                  </button>
+                  <button className="header-action-btn" onClick={() => setShowCallModal(true)}>
+                    <Phone size={22} />
+                  </button>
                   <button 
                     className={`header-action-btn ${showRightSidebar ? "active" : ""}`}
                     onClick={() => setShowRightSidebar(!showRightSidebar)}
@@ -323,23 +257,39 @@ const ChatPage = () => {
                 </div>
               </div>
 
-              <ChatBox
-                messages={messages}
-                currentUserId={user?._id ?? ""}
-                onLoadMore={() => loadOlderMessages(selectedConversationId!, messages[0].createdAt)}
-                hasMore={hasMore}
-                loadingMore={loadingMore}
-                isGroup={selectedConversation.isGroup}
-                onProfileClick={setViewingProfileId}
-                onImagePreview={setPreviewImageUrl}
-                onDeleteMessage={setMessageToDelete}
-                onReactMessage={handleReactMessage}
-                onReplyMessage={(msg) => { setEditTarget(null); setReplyTarget(msg); }}
-                onEditMessage={(msg) => { setReplyTarget(null); setEditTarget(msg); }}
-                onPinMessage={setMessageToPin}
-                onUnpinMessage={(msg) => updateMessage(msg._id, { isPinned: false })}
-                onForwardMessage={setMessageToForward}
-              />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+                <AnimatePresence>
+                  {isSearching && (
+                    <ChatSearch 
+                      query={searchQuery}
+                      onQueryChange={setSearchQuery}
+                      onClose={() => {
+                        setIsSearching(false);
+                        setSearchQuery("");
+                      }}
+                    />
+                  )}
+                </AnimatePresence>
+
+                <ChatBox
+                  messages={messages}
+                  currentUserId={user?._id ?? ""}
+                  searchQuery={searchQuery}
+                  onLoadMore={() => loadOlderMessages(selectedConversationId!, messages[0].createdAt)}
+                  hasMore={hasMore}
+                  loadingMore={loadingMore}
+                  isGroup={selectedConversation.isGroup}
+                  onProfileClick={setViewingProfileId}
+                  onImagePreview={setPreviewImageUrl}
+                  onDeleteMessage={setMessageToDelete}
+                  onReactMessage={handleReactMessage}
+                  onReplyMessage={(msg) => { setEditTarget(null); setReplyTarget(msg); }}
+                  onEditMessage={(msg) => { setReplyTarget(null); setEditTarget(msg); }}
+                  onPinMessage={setMessageToPin}
+                  onUnpinMessage={(msg) => updateMessage(msg._id, { isPinned: false })}
+                  onForwardMessage={setMessageToForward}
+                />
+              </div>
 
               {typingUsers.size > 0 && (
                 <div className="typing-indicator">
@@ -377,14 +327,8 @@ const ChatPage = () => {
 
       <AnimatePresence>
         {showEditProfile && <EditProfileModal onClose={() => setShowEditProfile(false)} />}
-      </AnimatePresence>
-      <AnimatePresence>
         {viewingProfileId && <UserProfileModal userId={viewingProfileId} onClose={() => setViewingProfileId(null)} />}
-      </AnimatePresence>
-      <AnimatePresence>
         {previewImageUrl && <ImagePreviewModal imageUrl={previewImageUrl} onClose={() => setPreviewImageUrl(null)} />}
-      </AnimatePresence>
-      <AnimatePresence>
         {messageToDelete && (
           <DeleteMessageModal 
             onClose={() => setMessageToDelete(null)}
@@ -398,8 +342,6 @@ const ChatPage = () => {
             targetName={selectedConversation?.isGroup ? "mọi người" : (selectedConversation?.name || selectedConversation?.participants[0]?.username)}
           />
         )}
-      </AnimatePresence>
-      <AnimatePresence>
         {messageToForward && (
           <ForwardModal 
             message={messageToForward} 
@@ -407,7 +349,6 @@ const ChatPage = () => {
             onClose={() => setMessageToForward(null)}
             onForward={async (convId, msg) => {
               try {
-                // Determine original sender: if it was already forwarded, keep that source.
                 const originalSourceId = msg.forwardFrom?._id || msg.sender._id;
                 await sendMessageApi(convId, { 
                     text: msg.text, 
@@ -421,9 +362,6 @@ const ChatPage = () => {
             }}
           />
         )}
-      </AnimatePresence>
-
-      <AnimatePresence>
         {messageToPin && (
           <PinModal 
             onClose={() => setMessageToPin(null)}
@@ -436,8 +374,6 @@ const ChatPage = () => {
             targetName={selectedConversation?.isGroup ? "mọi người" : (selectedConversation?.name || selectedConversation?.participants[0]?.username)}
           />
         )}
-      </AnimatePresence>
-      <AnimatePresence>
         {showRightSidebar && selectedConversation && (
           <RightSidebar 
             onClose={() => setShowRightSidebar(false)}
@@ -446,6 +382,7 @@ const ChatPage = () => {
             isOnline={otherParticipant ? onlineUsers.includes(otherParticipant._id) : false}
           />
         )}
+        {showCallModal && <CallModal onClose={() => setShowCallModal(false)} />}
       </AnimatePresence>
     </div>
   );

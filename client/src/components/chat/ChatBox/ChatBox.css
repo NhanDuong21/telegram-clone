@@ -469,3 +469,15 @@
     right: auto;
     left: 10px;
 }
+
+.highlight-text {
+    background-color: #ffd54f; /* Yellow highlight */
+    color: #000;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+[data-theme='dark'] .highlight-text {
+    background-color: #ffca28;
+    color: #000;
+}

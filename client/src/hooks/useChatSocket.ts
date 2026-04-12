@@ -73,7 +73,12 @@ export const useChatSocket = ({
         if (index !== -1) {
           const updatedConv = {
             ...prev[index],
-            lastMessage: { _id: message._id, text: message.text ?? "", isRead: selectedIdRef.current === convId },
+            lastMessage: { 
+              _id: message._id, 
+              text: message.text ?? "", 
+              isRead: selectedIdRef.current === convId,
+              createdAt: message.createdAt
+            },
             unreadCount: selectedIdRef.current === convId ? 0 : (prev[index].unreadCount || 0) + 1,
             updatedAt: message.createdAt
           };

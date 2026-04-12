@@ -115,9 +115,10 @@ const ChatPage = () => {
   }, [selectedConversationId, user?._id, fetchMessages]);
 
   const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     disconnectSocket();
     if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
-    logout();
     navigate("/login");
   };
 
@@ -143,7 +144,6 @@ const ChatPage = () => {
     // Explicitly mark as read when user clicks
     const socket = getSocket();
     if (socket) {
-      socket.emit(SOCKET_EVENTS.MARK_AS_READ, { conversationId: conv._id });
     }
   };
 
@@ -161,7 +161,11 @@ const ChatPage = () => {
         
         const updatedConv = {
           ...prev[index],
-          lastMessage: { _id: message._id, text: message.text || (message.imageUrl ? "📷 Ảnh" : "") },
+          lastMessage: { 
+            _id: message._id, 
+            text: message.text || (message.imageUrl ? "📷 Ảnh" : ""),
+            createdAt: message.createdAt
+          },
           updatedAt: message.createdAt
         };
         
@@ -213,23 +217,17 @@ const ChatPage = () => {
   return (
     <div className="app-container">
       <div className="sidebar-wrapper">
-        <div className="sidebar-header">
-          <div className="profile-section" onClick={() => setShowEditProfile(true)}>
-            <Avatar user={user} size={32} />
-            <span className="profile-username">{user?.username}</span>
-          </div>
-          <button onClick={handleLogout} className="logout-btn">Logout</button>
-        </div>
-
         <Sidebar
           conversations={conversations}
           selectedId={selectedConversationId}
           currentUserId={user?._id ?? ""}
+          currentUser={user}
           onlineUsers={onlineUsers}
           unreadCounts={unreadCounts}
           onSelectConversation={handleSelectConversation}
           onConversationCreated={(conv) => setConversations(prev => [conv, ...prev.filter(c => c._id !== conv._id)])}
           onViewProfile={setViewingProfileId}
+          onLogout={handleLogout}
         />
       </div>
 

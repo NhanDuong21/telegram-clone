@@ -16,6 +16,7 @@ export interface Conversation {
         _id: string;
         text: string;
         isRead?: boolean;
+        createdAt: string;
     } | null;
     updatedAt: string;
     unreadCount?: number;

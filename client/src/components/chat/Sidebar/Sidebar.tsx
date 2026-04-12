@@ -1,9 +1,10 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef } from "react";
+import { Menu, Search as SearchIcon } from "lucide-react";
 import { searchUsersApi } from "../../../api/userApi";
 import { createOrGetConversationApi } from "../../../api/chatApi";
 import Avatar from "../../common/Avatar";
-import CreateGroupModal from "../CreateGroupModal/CreateGroupModal";
+import DrawerMenu from "./DrawerMenu";
 import type { User, Conversation } from "../../../types/chat";
 import './Sidebar.css';
 
@@ -11,28 +12,32 @@ interface SidebarProps {
     conversations: Conversation[];
     selectedId: string | null;
     currentUserId: string;
+    currentUser: User | null;
     onlineUsers: string[];
     unreadCounts: Record<string, number>;
     onSelectConversation: (conv: Conversation) => void;
     onConversationCreated: (conv: Conversation) => void;
     onViewProfile: (userId: string) => void;
+    onLogout: () => void;
 }
 
 const Sidebar = ({
     conversations,
     selectedId,
     currentUserId,
+    currentUser,
     onlineUsers,
     unreadCounts,
     onSelectConversation,
     onConversationCreated,
     onViewProfile,
+    onLogout,
 }: SidebarProps) => {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<User[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
     const [startingChat, setStartingChat] = useState<string | null>(null);
-    const [showGroupModal, setShowGroupModal] = useState(false);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const handleSearch = async (searchTerm: string) => {
@@ -81,128 +86,129 @@ const Sidebar = ({
     const getOtherUser = (conv: Conversation): User | undefined =>
         conv.participants.find((p) => p._id !== currentUserId);
 
+    const formatTimestamp = (dateStr: string) => {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diff = now.getTime() - date.getTime();
+        
+        if (diff < 86400000) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    };
+
     return (
         <div className="sidebar">
             <div className="sidebar__header">
-                <div className="sidebar__search-container">
+                <button 
+                    className="hamburger-btn"
+                    onClick={() => setIsDrawerOpen(true)}
+                >
+                    <Menu size={24} />
+                </button>
+                <div className="sidebar__search-wrapper">
+                    <SearchIcon size={20} className="search-icon" />
                     <input
                         type="text"
-                        placeholder="Tìm user..."
+                        placeholder="Tìm kiếm"
                         value={query}
                         onChange={handleQueryChange}
                         className="sidebar__search-input"
                     />
                 </div>
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowGroupModal(true)}
-                    className="sidebar__create-group-btn"
-                    title="Tạo nhóm chat"
-                >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="8.5" cy="7" r="4"></circle>
-                        <line x1="20" y1="8" x2="20" y2="14"></line>
-                        <line x1="23" y1="11" x2="17" y2="11"></line>
-                    </svg>
-                </motion.button>
             </div>
+
+            <DrawerMenu 
+                isOpen={isDrawerOpen}
+                onClose={() => setIsDrawerOpen(false)}
+                user={currentUser}
+                onLogout={onLogout}
+            />
 
             <AnimatePresence>
                 {(results.length > 0 || searchLoading || (query.trim() && !searchLoading)) && (
                     <motion.div 
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
                         className="sidebar__search-results"
                     >
-                        {searchLoading && (
-                            <p className="sidebar__status-msg">Đang tìm...</p>
-                        )}
+                        {searchLoading && <p className="sidebar__status-msg">Đang tìm...</p>}
                         {!searchLoading && results.length === 0 && query.trim() && (
-                            <p className="sidebar__status-msg">Không tìm thấy user</p>
+                            <p className="sidebar__status-msg">Không tìm thấy kết quả</p>
                         )}
                         {results.map((user) => (
-                            <motion.div
+                            <div
                                 key={user._id}
-                                layout
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
                                 className={`search-item ${startingChat === user._id ? "search-item--loading" : ""}`}
                                 onClick={() => handleStartChat(user)}
                             >
-                                <div className="avatar-container">
-                                    <div onClick={(e) => { e.stopPropagation(); onViewProfile(user._id); }}>
-                                      <Avatar user={user} size={38} />
-                                    </div>
-                                    {onlineUsers.includes(user._id) && <div className="online-badge" />}
-                                </div>
+                                <Avatar user={user} size={48} />
                                 <div className="search-item__info">
                                     <div className="search-item__name">{user.username}</div>
                                     <div className="search-item__status">
-                                        {startingChat === user._id ? "Đang mở chat..." : "Nhấn để nhắn tin"}
+                                        {onlineUsers.includes(user._id) ? "Đang trực tuyến" : "Ngoại tuyến"}
                                     </div>
                                 </div>
-                            </motion.div>
+                            </div>
                         ))}
                     </motion.div>
                 )}
             </AnimatePresence>
 
             <div className="conversation-list">
-                {conversations.length === 0 && (
-                    <p className="conversation-list--empty">
-                        Chưa có cuộc trò chuyện nào.<br />Tìm kiếm user để bắt đầu!
-                    </p>
+                {conversations.length === 0 && !query.trim() && (
+                    <div className="conversation-list--empty">
+                        <p>Chưa có cuộc trò chuyện nào.</p>
+                        <p>Tìm kiếm để bắt đầu!</p>
+                    </div>
                 )}
-                <AnimatePresence>
+                <AnimatePresence mode="popLayout">
                     {conversations.map((conv) => {
                         const other = getOtherUser(conv);
                         const isSelected = conv._id === selectedId;
                         const unreadCount = unreadCounts[conv._id] !== undefined ? unreadCounts[conv._id] : (conv.unreadCount || 0);
+                        const displayTitle = conv.isGroup ? conv.name : (other?.username ?? "Unknown");
+                        const lastMsg = conv.lastMessage?.text || "Gửi tin nhắn đầu tiên";
+                        const time = conv.lastMessage?.createdAt ? formatTimestamp(conv.lastMessage.createdAt) : "";
 
                         return (
                             <motion.div
                                 key={conv._id}
                                 layout
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
                                 className={`conversation-item ${isSelected ? "conversation-item--selected" : ""}`}
                                 onClick={() => onSelectConversation(conv)}
                             >
-                                <div className="avatar-container">
-                                    <div onClick={(e) => { 
-                                        if (!conv.isGroup && other) {
-                                            e.stopPropagation();
-                                            onViewProfile(other._id);
-                                        }
-                                    }}>
-                                        {conv.isGroup ? (
-                                            conv.imageUrl ? (
-                                                <img src={conv.imageUrl} alt={conv.name} style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover" }} />
-                                            ) : (
-                                                <div className="group-avatar-fallback">
-                                                    {conv.name ? conv.name.substring(0, 1).toUpperCase() : "G"}
-                                                </div>
-                                            )
-                                        ) : (
-                                            other && <Avatar user={other} size={44} />
-                                        )}
-                                    </div>
+                                <div className="item-avatar-wrapper" onClick={(e) => {
+                                    if (!conv.isGroup && other) {
+                                        e.stopPropagation();
+                                        onViewProfile(other._id);
+                                    }
+                                }}>
+                                    {conv.isGroup ? (
+                                        <div className="group-avatar-fallback">
+                                            {conv.name?.substring(0, 1).toUpperCase()}
+                                        </div>
+                                    ) : (
+                                        <Avatar user={other} size={54} />
+                                    )}
                                     {other && !conv.isGroup && onlineUsers.includes(other._id) && (
-                                        <div className="conversation-item__online-badge" />
+                                        <div className="online-indicator" />
                                     )}
                                 </div>
-                                <div className="conversation-item__content">
-                                    <div className={`conversation-item__header ${unreadCount > 0 ? "conversation-item__header--unread" : ""}`}>
-                                        <span>{conv.isGroup ? conv.name : (other?.username ?? "Unknown")}</span>
-                                        {unreadCount > 0 && <div className="unread-badge">{unreadCount}</div>}
+                                <div className="conversation-item__info">
+                                    <div className="item-row">
+                                        <span className="item-name">{displayTitle}</span>
+                                        <span className="item-time">{time}</span>
                                     </div>
-                                    <div className={`conversation-item__last-msg ${unreadCount > 0 ? "conversation-item__last-msg--unread" : ""}`}>
-                                        {conv.lastMessage?.text ?? "Bắt đầu cuộc trò chuyện"}
+                                    <div className="item-row">
+                                        <span className="item-preview">{lastMsg}</span>
+                                        {unreadCount > 0 && (
+                                            <div className="item-unread-badge">{unreadCount}</div>
+                                        )}
                                     </div>
                                 </div>
                             </motion.div>
@@ -211,18 +217,7 @@ const Sidebar = ({
                 </AnimatePresence>
             </div>
 
-            <AnimatePresence>
-                {showGroupModal && (
-                    <CreateGroupModal
-                        onClose={() => setShowGroupModal(false)}
-                        onGroupCreated={(conv) => {
-                            onConversationCreated(conv);
-                            onSelectConversation(conv);
-                            setShowGroupModal(false);
-                        }}
-                    />
-                )}
-            </AnimatePresence>
+            {/* Create Group FAB can be added here or in the drawer */}
         </div>
     );
 };

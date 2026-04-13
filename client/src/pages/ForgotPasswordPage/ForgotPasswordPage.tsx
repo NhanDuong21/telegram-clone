@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { sendOtpApi, verifyOtpApi, resetPasswordApi } from "../../api/authApi";
 import "./ForgotPasswordPage.css";
+import "../LoginPage/Auth.css"; // Reuse auth styles
 
 const ForgotPasswordPage = () => {
   const [step, setStep] = useState(1);
@@ -26,8 +27,8 @@ const ForgotPasswordPage = () => {
     return () => clearInterval(timer);
   }, [countdown]);
 
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!email || isSubmitting) return;
 
     setError("");
@@ -37,14 +38,14 @@ const ForgotPasswordPage = () => {
       setStep(2);
       setCountdown(60);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Không thể gửi mã OTP");
+      setError(err.response?.data?.message || "Email không tồn tại trong hệ thống");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerifyOtp = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!otp || isSubmitting) return;
 
     setError("");
@@ -60,8 +61,8 @@ const ForgotPasswordPage = () => {
     }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleResetPassword = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!newPassword || newPassword.length < 6 || isSubmitting || !verificationToken) return;
 
     setError("");
@@ -72,7 +73,7 @@ const ForgotPasswordPage = () => {
         newPassword, 
         verificationToken 
       });
-      alert("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+      alert("Đổi mật khẩu thành công!");
       navigate("/login");
     } catch (err: any) {
       setError(err.response?.data?.message || "Đổi mật khẩu thất bại");
@@ -95,107 +96,114 @@ const ForgotPasswordPage = () => {
   const isPasswordValid = newPassword.length >= 6;
 
   return (
-    <div className="forgot-password-page">
-      <div className="forgot-password-card">
-        <div className="forgot-password-header">
-          <h1>Quên mật khẩu</h1>
-          <div className="step-indicator">
-            <div className={`step-dot ${step >= 1 ? 'active' : ''}`}></div>
-            <div className={`step-dot ${step >= 2 ? 'active' : ''}`}></div>
-            <div className={`step-dot ${step >= 3 ? 'active' : ''}`}></div>
-          </div>
-          <p>
-            {step === 1 && "Nhập email của bạn để nhận mã khôi phục."}
-            {step === 2 && `Chúng tôi đã gửi mã xác thực đến ${email}`}
-            {step === 3 && "Thiết lập mật khẩu mới cho tài khoản của bạn."}
-          </p>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-logo">
+            <svg viewBox="0 0 24 24" className="auth-logo-svg">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+            </svg>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        <h2 className="auth-title">Quên mật khẩu</h2>
+        <p className="auth-subtitle">
+            {step === 1 && "Nhập email của bạn để nhận mã khôi phục."}
+            {step === 2 && `Chúng tôi đã gửi mã xác thực đến\n${email}`}
+            {step === 3 && "Thiết lập mật khẩu mới (ít nhất 6 ký tự)."}
+        </p>
 
-        {step === 1 && (
-          <form className="forgot-password-form" onSubmit={handleSendOtp}>
-            <div className="form-group">
-              <label>Địa chỉ Email</label>
-              <input
-                type="email"
-                placeholder="example@gmail.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <button 
-              type="submit" 
-              className="forgot-password-btn" 
-              disabled={isSubmitting || !email}
-            >
-              {isSubmitting ? "Đang xử lý..." : "Tiếp tục"}
-            </button>
-          </form>
-        )}
+        {error && <div className="auth-msg-error">{error}</div>}
 
-        {step === 2 && (
-          <form className="forgot-password-form" onSubmit={handleVerifyOtp}>
-            <div className="form-group">
-              <label>Mã xác thực (6 chữ số)</label>
-              <input
-                type="text"
-                placeholder="123456"
-                maxLength={6}
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                required
-              />
-            </div>
-            <div className="otp-timer">
-              {countdown > 0 ? (
-                `Gửi lại mã sau ${countdown}s`
-              ) : (
-                <>
-                  Không nhận được mã? 
-                  <button type="button" className="resend-btn" onClick={handleResendOtp}>Gửi lại</button>
-                </>
-              )}
-            </div>
-            <button 
-              type="submit" 
-              className="forgot-password-btn" 
-              disabled={isSubmitting || otp.length !== 6}
-            >
-              {isSubmitting ? "Đang xác thực..." : "Xác thực"}
-            </button>
-          </form>
-        )}
-
-        {step === 3 && (
-          <form className="forgot-password-form" onSubmit={handleResetPassword}>
-            <div className="form-group">
-              <label>Mật khẩu mới</label>
-              <input
-                type="password"
-                placeholder="Nhập mật khẩu mới"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-              />
-              <div className={`validation-hint ${isPasswordValid ? 'valid' : 'invalid'}`}>
-                {isPasswordValid ? '✔' : '✖'} Mật khẩu phải có ít nhất 6 ký tự
+        <div className="auth-form">
+          {step === 1 && (
+            <>
+              <div className="auth-input-group">
+                <input
+                  type="email"
+                  className="auth-input"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendOtp()}
+                  required
+                />
               </div>
-            </div>
-            <button 
-              type="submit" 
-              className="forgot-password-btn" 
-              disabled={isSubmitting || !isPasswordValid}
-            >
-              {isSubmitting ? "Đang lưu..." : "Đổi mật khẩu"}
-            </button>
-          </form>
-        )}
+              <button 
+                className="auth-button" 
+                onClick={() => handleSendOtp()}
+                disabled={isSubmitting || !email}
+              >
+                {isSubmitting ? "ĐANG XỬ LÝ..." : "TIẾP TỤC"}
+              </button>
+            </>
+          )}
 
-        <Link to="/login" className="back-to-login">
-          Quay lại Đăng nhập
-        </Link>
+          {step === 2 && (
+            <>
+              <div className="auth-input-group">
+                <input
+                  type="text"
+                  className="auth-input"
+                  placeholder="Mã xác thực"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleVerifyOtp()}
+                  required
+                />
+              </div>
+              {countdown > 0 ? (
+                <p className="auth-subtitle" style={{ marginBottom: '10px', fontSize: '13px' }}>
+                  Gửi lại mã sau {countdown}s
+                </p>
+              ) : (
+                <button className="auth-link" style={{ marginBottom: '10px' }} onClick={handleResendOtp}>
+                  Gửi lại mã
+                </button>
+              )}
+              <button 
+                className="auth-button" 
+                onClick={() => handleVerifyOtp()}
+                disabled={isSubmitting || otp.length !== 6}
+              >
+                {isSubmitting ? "ĐANG XÁC THỰC..." : "XÁC THỰC"}
+              </button>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <div className="auth-input-group">
+                <input
+                  type="password"
+                  className="auth-input"
+                  placeholder="Mật khẩu mới"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleResetPassword()}
+                  required
+                />
+              </div>
+              {!isPasswordValid && newPassword.length > 0 && (
+                <p className="auth-msg-error" style={{ fontSize: '12px', padding: '5px' }}>
+                  Mật khẩu phải có ít nhất 6 ký tự
+                </p>
+              )}
+              <button 
+                className="auth-button" 
+                onClick={() => handleResetPassword()}
+                disabled={isSubmitting || !isPasswordValid}
+              >
+                {isSubmitting ? "ĐANG LƯU..." : "TIẾP TỤC"}
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="auth-footer-links">
+          <Link to="/login" className="auth-link">
+            Quay lại Đăng nhập
+          </Link>
+        </div>
       </div>
     </div>
   );

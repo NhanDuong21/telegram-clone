@@ -60,46 +60,50 @@ const DrawerMenu = ({
             </div>
 
             <div className="drawer-content">
-              <div className="menu-item-group">
-                <button
-                  className="menu-item"
-                  onClick={() => {
-                    onOpenMyProfile();
-                    onClose();
-                  }}
-                >
-                  <User size={22} className="menu-icon" />
-                  <span>Trang cá nhân</span>
-                </button>
-                <button className="menu-item">
-                  <Users size={22} className="menu-icon" />
-                  <span>Nhóm mới</span>
-                </button>
-                <button className="menu-item">
-                  <Settings size={22} className="menu-icon" />
-                  <span>Cài đặt</span>
-                </button>
-              </div>
+              <div className="drawer-main-items">
+                <div className="menu-item-group">
+                  <button
+                    className="menu-item"
+                    onClick={() => {
+                      onOpenMyProfile();
+                      onClose();
+                    }}
+                  >
+                    <User size={22} className="menu-icon" />
+                    <span>Trang cá nhân</span>
+                  </button>
+                  <button className="menu-item">
+                    <Users size={22} className="menu-icon" />
+                    <span>Nhóm mới</span>
+                  </button>
+                  <button className="menu-item">
+                    <Settings size={22} className="menu-icon" />
+                    <span>Cài đặt</span>
+                  </button>
+                </div>
 
-              <div className="menu-divider" />
+                <div className="menu-divider" />
 
-              <div className="menu-item-group">
-                <div className="menu-item menu-item--toggle">
-                  <div className="item-left">
-                    <Moon size={22} className="menu-icon" />
-                    <span>Chế độ ban đêm</span>
+                <div className="menu-item-group">
+                  <div className="menu-item menu-item--toggle">
+                    <div className="item-left">
+                      <Moon size={22} className="menu-icon" />
+                      <span>Chế độ ban đêm</span>
+                    </div>
+                    <label className="theme-toggle">
+                      <input
+                        type="checkbox"
+                        checked={isDarkMode}
+                        onChange={toggleTheme}
+                      />
+                      <span className="toggle-slider" />
+                    </label>
                   </div>
-                  <label className="theme-toggle">
-                    <input
-                      type="checkbox"
-                      checked={isDarkMode}
-                      onChange={toggleTheme}
-                    />
-                    <span className="toggle-slider" />
-                  </label>
                 </div>
               </div>
+            </div>
 
+            <div className="drawer-footer">
               <button
                 className="menu-item menu-item--logout"
                 onClick={() => setShowLogoutConfirm(true)}

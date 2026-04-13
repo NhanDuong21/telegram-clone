@@ -414,15 +414,14 @@
 }
 
 .message-bubble--deleted {
-    background: #f1f3f5 !important;
-    color: #adb5bd !important;
+    background: var(--bg-deleted-msg) !important;
+    color: var(--text-deleted-msg) !important;
+    border: 1px solid var(--border-deleted-msg) !important;
     border-radius: 12px !important;
     font-style: italic;
     box-shadow: none !important;
-}
-
-.message-text--deleted {
     font-size: 13px;
+    padding: 8px 12px;
 }
 
 .message-bubble {

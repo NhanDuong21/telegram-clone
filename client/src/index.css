@@ -24,6 +24,9 @@
   --bg-modal-bar: #ffffff;
   --text-modal-bar: #707579;
   --modal-bar-accent: #3390ec;
+  --bg-deleted-msg: #f1f1f1;
+  --text-deleted-msg: #707579;
+  --border-deleted-msg: #e1e1e1;
 }
 
 [data-theme='dark'] {
@@ -52,6 +55,9 @@
   --bg-modal-bar: #17212b;
   --text-modal-bar: #ffffff;
   --modal-bar-accent: #3390ec;
+  --bg-deleted-msg: #182533;
+  --text-deleted-msg: #8aa1b5;
+  --border-deleted-msg: #2b3b4d;
 }
 
 body {

@@ -147,6 +147,22 @@
     white-space: nowrap;
 }
 
+.item-time-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.item-pin-icon {
+    color: var(--text-secondary);
+    transform: rotate(45deg);
+}
+
+.conversation-item--selected .item-pin-icon {
+    color: rgba(255, 255, 255, 0.9);
+}
+
 .conversation-item--selected .item-time {
     color: rgba(255, 255, 255, 0.9);
 }

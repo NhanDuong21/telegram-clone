@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useMemo } from "react";
-import { Menu, Search as SearchIcon, ArrowLeft, BellOff } from "lucide-react";
+import { Menu, Search as SearchIcon, ArrowLeft, BellOff, Pin } from "lucide-react";
 import { searchUsersApi } from "../../../api/userApi";
 import Avatar from "../../common/Avatar";
 import DrawerMenu from "./DrawerMenu";
@@ -360,7 +360,10 @@ const Sidebar = ({
                                                     <span className="item-name">{displayTitle}</span>
                                                     {conv.isMuted && <BellOff size={12} className="mute-icon" />}
                                                 </div>
-                                                <span className="item-time">{time}</span>
+                                                <div className="item-time-wrapper">
+                                                    {conv.isPinned && <Pin size={12} className="item-pin-icon" />}
+                                                    <span className="item-time">{time}</span>
+                                                </div>
                                             </div>
                                             <div className="item-row">
                                                 <span className="item-preview">{lastMsg}</span>

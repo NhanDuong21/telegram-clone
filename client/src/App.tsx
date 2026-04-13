@@ -5,6 +5,7 @@ import ErrorBoundary from "./components/common/ErrorBoundary";
 
 const LoginPage = lazy(() => import("./pages/LoginPage/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage/RegisterPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage/ForgotPasswordPage"));
 const ChatPage = lazy(() => import("./pages/ChatPage/ChatPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage/NotFoundPage"));
 
@@ -27,6 +28,10 @@ function App() {
             <Route
               path="/register"
               element={user ? <Navigate to="/" /> : <RegisterPage />}
+            />
+            <Route
+              path="/forgot-password"
+              element={user ? <Navigate to="/" /> : <ForgotPasswordPage />}
             />
             <Route
               path="/"

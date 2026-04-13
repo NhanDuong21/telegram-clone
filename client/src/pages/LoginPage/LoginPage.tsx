@@ -85,9 +85,14 @@ const LoginPage = () => {
             </button>
         </div>
         
-        <button onClick={() => navigate("/register")} className="auth-link">
-            Tạo tài khoản mới
-        </button>
+        <div className="auth-footer-links">
+            <button onClick={() => navigate("/register")} className="auth-link">
+                Tạo tài khoản mới
+            </button>
+            <button onClick={() => navigate("/forgot-password")} className="auth-link">
+                Quên mật khẩu?
+            </button>
+        </div>
       </div>
     </div>
   );

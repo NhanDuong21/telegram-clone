@@ -1,12 +1,14 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Menu, Search as SearchIcon, ArrowLeft, BellOff } from "lucide-react";
 import { searchUsersApi } from "../../../api/userApi";
 import Avatar from "../../common/Avatar";
 import DrawerMenu from "./DrawerMenu";
 import SearchDefaultView from "./SearchDefaultView";
+import SidebarContextMenu from "./SidebarContextMenu";
 import type { User, Conversation } from "../../../types/chat";
 import './Sidebar.css';
+import './SidebarContextMenu.css';
 
 interface SidebarProps {
     conversations: Conversation[];
@@ -16,9 +18,15 @@ interface SidebarProps {
     onlineUsers: string[];
     unreadCounts: Record<string, number>;
     onSelectConversation: (conv: Conversation) => void;
+    onConversationCreated: (conv: Conversation) => void;
     onTempConversationCreated: (conv: Conversation) => void;
     onLogout: () => void;
     onOpenMyProfile: () => void;
+    onPinToggle: (conv: Conversation, isPinned: boolean) => void;
+    onMuteToggle: (conv: Conversation, isMuted: boolean) => void;
+    onBlockUser: (user: User) => void;
+    onClearHistory: (conv: Conversation) => void;
+    onDeleteChat: (conv: Conversation) => void;
 }
 
 const Sidebar = ({
@@ -29,9 +37,15 @@ const Sidebar = ({
     onlineUsers,
     unreadCounts,
     onSelectConversation,
+    onConversationCreated,
     onTempConversationCreated,
     onLogout,
     onOpenMyProfile,
+    onPinToggle,
+    onMuteToggle,
+    onBlockUser,
+    onClearHistory,
+    onDeleteChat,
 }: SidebarProps) => {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<User[]>([]);
@@ -39,10 +53,49 @@ const Sidebar = ({
     const [startingChat, setStartingChat] = useState<string | null>(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const [menuConfig, setMenuConfig] = useState<{
+        isOpen: boolean;
+        x: number;
+        y: number;
+        conversation: Conversation | null;
+    }>({ isOpen: false, x: 0, y: 0, conversation: null });
 
-    const displayedConversations = conversations.filter(conv => 
-        conv.isGroup || (conv.lastMessage && conv.lastMessage._id)
-    );
+    const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleContextMenu = (e: React.MouseEvent, conversation: Conversation) => {
+        e.preventDefault();
+        setMenuConfig({
+            isOpen: true,
+            x: e.clientX,
+            y: e.clientY,
+            conversation
+        });
+    };
+
+    const handleTouchStart = (conversation: Conversation) => {
+        longPressTimer.current = setTimeout(() => {
+            setMenuConfig({
+                isOpen: true,
+                x: 0,
+                y: 0,
+                conversation
+            });
+        }, 600);
+    };
+
+    const handleTouchEnd = () => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    };
+
+    const displayedConversations = useMemo(() => {
+        return conversations
+            .filter(conv => conv.isGroup || (conv.lastMessage && conv.lastMessage._id) || conv._id === selectedId)
+            .sort((a, b) => {
+                if (a.isPinned && !b.isPinned) return -1;
+                if (!a.isPinned && b.isPinned) return 1;
+                return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            });
+    }, [conversations]);
     
     // Hard Reset: Lift state to parent and initialize from localStorage ONLY
     const [recentSearches, setRecentSearches] = useState<Conversation[]>(() => {
@@ -285,6 +338,9 @@ const Sidebar = ({
                                         key={conv._id}
                                         className={`conversation-item ${isSelected ? "conversation-item--selected" : ""}`}
                                         onClick={() => onSelectConversation(conv)}
+                                        onContextMenu={(e) => handleContextMenu(e, conv)}
+                                        onTouchStart={() => handleTouchStart(conv)}
+                                        onTouchEnd={handleTouchEnd}
                                     >
                                         <div className="item-avatar-wrapper">
                                             {conv.isGroup ? (
@@ -322,6 +378,25 @@ const Sidebar = ({
                     )}
                 </AnimatePresence>
             </div>
+
+            <AnimatePresence>
+                {menuConfig.isOpen && menuConfig.conversation && (
+                    <SidebarContextMenu 
+                        x={menuConfig.x}
+                        y={menuConfig.y}
+                        conversation={menuConfig.conversation}
+                        onClose={() => setMenuConfig({ ...menuConfig, isOpen: false })}
+                        onPin={(isPinned) => onPinToggle(menuConfig.conversation!, isPinned)}
+                        onMute={(isMuted) => onMuteToggle(menuConfig.conversation!, isMuted)}
+                        onBlock={() => {
+                            const other = getOtherUser(menuConfig.conversation!);
+                            if (other) onBlockUser(other);
+                        }}
+                        onClear={() => onClearHistory(menuConfig.conversation!)}
+                        onDelete={() => onDeleteChat(menuConfig.conversation!)}
+                    />
+                )}
+            </AnimatePresence>
 
             {/* Create Group FAB can be added here or in the drawer */}
         </div>

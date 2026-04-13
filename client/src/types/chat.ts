@@ -25,6 +25,7 @@ export interface Conversation {
     unreadCount?: number;
     isMuted?: boolean;
     isTemporary?: boolean;
+    isPinned?: boolean;
 }
 
 export interface Message {

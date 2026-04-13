@@ -223,6 +223,47 @@ const ChatPage = () => {
           }}
           onLogout={() => { disconnectSocket(); logout(); }}
           onOpenMyProfile={handleOpenMyProfile}
+          onPinToggle={(conv, isPinned) => {
+            setConversations(prev => prev.map(c => c._id === conv._id ? { ...c, isPinned } : c));
+            // API call would go here
+          }}
+          onMuteToggle={(conv) => toggleMuteConversation(conv._id)}
+          onBlockUser={(targetUser) => {
+            setConfirmModalConfig({
+              title: `Chặn ${targetUser.username}`,
+              description: `Bạn có chắc chắn muốn chặn ${targetUser.username}? Người này sẽ không thể nhắn tin cho bạn.`,
+              onConfirm: () => {
+                console.log("Blocked user:", targetUser._id);
+                setConfirmModalConfig(null);
+              },
+              isDanger: true
+            });
+          }}
+          onClearHistory={(conv) => {
+            const other = conv.participants.find(p => p._id !== user?._id);
+            setDeleteModalConfig({
+              title: "Xóa lịch sử",
+              description: "Bạn có chắc chắn muốn xóa toàn bộ lịch sử tin nhắn? Hành động này không thể hoàn tác.",
+              targetName: conv.isGroup ? conv.name : other?.username,
+              onConfirm: (deleteForBoth) => {
+                clearChat(conv._id, deleteForBoth);
+                setDeleteModalConfig(null);
+              }
+            });
+          }}
+          onDeleteChat={(conv) => {
+            const other = conv.participants.find(p => p._id !== user?._id);
+            setDeleteModalConfig({
+              title: "Xóa cuộc trò chuyện",
+              description: "Bạn có chắc chắn muốn xóa cuộc trò chuyện này?",
+              targetName: conv.isGroup ? conv.name : other?.username,
+              onConfirm: (deleteForBoth) => {
+                deleteConversation(conv._id, deleteForBoth);
+                if (selectedConversationId === conv._id) setSelectedConversationId(null);
+                setDeleteModalConfig(null);
+              }
+            });
+          }}
         />
       </div>
 

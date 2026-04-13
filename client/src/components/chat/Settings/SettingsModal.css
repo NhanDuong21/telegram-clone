@@ -303,6 +303,60 @@
     cursor: not-allowed;
 }
 
+/* Restart Confirmation Modal */
+.restart-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.restart-modal-card {
+    background-color: var(--bg-paper);
+    padding: 24px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 320px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.restart-modal-text {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--text-main);
+    margin-bottom: 24px;
+}
+
+.restart-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+}
+
+.restart-btn {
+    background: transparent;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2ab5a3; /* Teal accent */
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.2s;
+}
+
+.restart-btn:hover {
+    background: rgba(42, 181, 163, 0.1);
+}
+
+.restart-btn--skip {
+    color: var(--text-secondary);
+}
+
 @media (max-width: 480px) {
     .modal-root-overlay {
         align-items: flex-start;

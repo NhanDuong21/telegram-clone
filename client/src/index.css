@@ -30,6 +30,7 @@
   /* Replied message theme variables (Light Mode - High Contrast) */
   --replied-message-name-color: #333333;
   --replied-message-text-color: #555555;
+  --ui-zoom: 1;
 }
 
 [data-theme='dark'] {
@@ -84,6 +85,7 @@ body {
   width: 100vw;
   position: fixed; /* Prevents scroll-bounce on rubber-banding body */
   transition: background-color 0.3s ease, color 0.3s ease;
+  zoom: var(--ui-zoom);
 }
 
 #root {

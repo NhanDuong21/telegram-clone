@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import ErrorBoundary from "./components/common/ErrorBoundary";
@@ -11,6 +11,14 @@ const NotFoundPage = lazy(() => import("./pages/NotFoundPage/NotFoundPage"));
 
 function App() {
   const { user, loading } = useAuth();
+
+  useEffect(() => {
+    const savedScale = localStorage.getItem('ui-scale');
+    if (savedScale) {
+      const zoom = parseInt(savedScale) / 100;
+      document.documentElement.style.setProperty('--ui-zoom', zoom.toString());
+    }
+  }, []);
 
   if (loading) {
     return <div>Loading...</div>;

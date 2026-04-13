@@ -26,7 +26,12 @@ import ReactDOM from 'react-dom';
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, onEditProfile }) => {
     const [currentView, setCurrentView] = useState<'main' | 'change-password'>('main');
-    const [uiScale, setUiScale] = useState(100);
+    const [uiScale, setUiScale] = useState(() => {
+        const saved = localStorage.getItem('ui-scale');
+        return saved ? parseInt(saved) : 100;
+    });
+    const [showRestartModal, setShowRestartModal] = useState(false);
+    const [originalScale] = useState(uiScale);
 
     const handleBack = () => {
         setCurrentView('main');
@@ -35,6 +40,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
     const handleModalClose = () => {
         handleBack();
         onClose();
+    };
+
+    const handleRestart = () => {
+        localStorage.setItem('ui-scale', uiScale.toString());
+        window.location.reload();
+    };
+
+    const handleSkipRestart = () => {
+        setShowRestartModal(false);
     };
 
     if (!isOpen) return null;
@@ -49,6 +63,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
                     exit={{ opacity: 0 }}
                     onClick={handleModalClose}
                 />
+                
                 <motion.div 
                     className="settings-modal"
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -71,7 +86,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
                                 </div>
                                 <div className="settings-user-info">
                                     <div className="settings-user-name">{user?.fullName || user?.username}</div>
-                                    <div className="settings-user-status">+{user?.email || "Chưa cập nhật số điện thoại"}</div>
+                                    <div className="settings-user-status">{user?.email || "Chưa cập nhật email"}</div>
                                     <div className="settings-user-username">@{user?.username}</div>
                                 </div>
                             </div>
@@ -108,10 +123,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
                                     </div>
                                     <input 
                                         type="range" 
-                                        min="80" 
+                                        min="70" 
                                         max="150" 
+                                        step="5"
                                         value={uiScale} 
                                         onChange={(e) => setUiScale(parseInt(e.target.value))}
+                                        onMouseUp={() => uiScale !== originalScale && setShowRestartModal(true)}
+                                        onTouchEnd={() => uiScale !== originalScale && setShowRestartModal(true)}
                                         className="scale-slider"
                                     />
                                 </div>
@@ -136,6 +154,32 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
                         </div>
                     )}
                 </motion.div>
+
+                {/* Restart Confirmation Modal */}
+                <AnimatePresence>
+                    {showRestartModal && (
+                        <div className="restart-modal-overlay">
+                            <motion.div 
+                                className="restart-modal-card"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                            >
+                                <p className="restart-modal-text">
+                                    Bạn cần khởi động lại để áp dụng một số cài đặt mới. Khởi động lại ngay bây giờ?
+                                </p>
+                                <div className="restart-modal-actions">
+                                    <button className="restart-btn restart-btn--skip" onClick={handleSkipRestart}>
+                                        Bỏ qua
+                                    </button>
+                                    <button className="restart-btn restart-btn--confirm" onClick={handleRestart}>
+                                        Khởi động lại
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
             </div>
         </AnimatePresence>,
         document.body

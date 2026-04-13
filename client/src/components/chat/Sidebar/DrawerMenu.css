@@ -27,34 +27,44 @@
 
 .drawer-header {
     background-color: var(--bg-sidebar);
-    padding-bottom: 20px;
+    padding: 30px 20px;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 10px;
-}
-
-.drawer-user-info {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
-.user-details-wrapper {
+.drawer-avatar-wrapper {
+    margin-bottom: 16px;
+    background: var(--bg-paper);
+    border-radius: 50%;
+    padding: 3px;
+    border: 2px solid var(--accent-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.drawer-user-info-centered {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
-.drawer-user-name {
-    font-size: 18px;
-    font-weight: 600;
+.drawer-name {
+    font-size: 1.1rem;
+    font-weight: bold;
     color: var(--text-main);
-    line-height: 1.2;
+    margin: 0;
 }
 
-.drawer-user-status {
-    font-size: 14px;
+.drawer-username {
+    font-size: 0.9rem;
     color: var(--text-secondary);
+    margin: 0;
 }
 
 .drawer-content {

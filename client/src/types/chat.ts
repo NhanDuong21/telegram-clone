@@ -7,6 +7,7 @@ export interface User {
     bio?: string;
     phone?: string;
     blockedUsers?: string[];
+    displayName?: string;
 }
 
 export interface Conversation {

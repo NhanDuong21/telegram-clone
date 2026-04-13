@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginApi } from "../../api/authApi";
 import { useAuth } from "../../context/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
 import './Auth.css';
 
 const LoginPage = () => {
@@ -10,6 +11,7 @@ const LoginPage = () => {
   }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   
@@ -66,14 +68,24 @@ const LoginPage = () => {
             </div>
 
             <div className="auth-input-group">
-                <input
-                className="auth-input"
-                placeholder="Password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                />
+                <div className="password-input-wrapper">
+                    <input
+                    className="auth-input"
+                    placeholder="Password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                    style={{ paddingRight: '45px' }}
+                    />
+                    <button 
+                        type="button" 
+                        className="password-toggle-icon"
+                        onClick={() => setShowPassword(!showPassword)}
+                    >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                </div>
             </div>
 
             <button 

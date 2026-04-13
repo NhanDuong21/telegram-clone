@@ -35,3 +35,27 @@
 .auth-input-group {
     width: 100%;
 }
+
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-toggle-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.password-toggle-icon:hover {
+    color: var(--accent-color);
+}

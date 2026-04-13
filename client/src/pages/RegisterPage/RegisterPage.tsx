@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { sendOtpApi, verifyOtpApi, registerApi } from "../../api/authApi";
 import { useAuth } from "../../context/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
 import '../LoginPage/Auth.css';
 
 const RegisterPage = () => {
@@ -10,6 +11,7 @@ const RegisterPage = () => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -177,13 +179,23 @@ const RegisterPage = () => {
           {step === 3 && (
             <>
               <div className="auth-input-group">
-                <input
-                  className="auth-input"
-                  placeholder="Mật khẩu (ít nhất 6 ký tự)"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <div className="password-input-wrapper">
+                  <input
+                    className="auth-input"
+                    placeholder="Mật khẩu (ít nhất 6 ký tự)"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={{ paddingRight: '45px' }}
+                  />
+                  <button 
+                      type="button" 
+                      className="password-toggle-icon"
+                      onClick={() => setShowPassword(!showPassword)}
+                  >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
                 <div style={{ 
                   marginTop: '8px', 
                   fontSize: '12px', 

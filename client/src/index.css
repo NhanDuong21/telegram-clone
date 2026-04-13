@@ -95,12 +95,22 @@ body {
 
 /* Telegram Auth Redesign Classes */
 .auth-page {
+  width: 100%;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-chat);
+  background: linear-gradient(-45deg, var(--bg-chat), #0f1a24, #1c2c3b, #0a111a);
+  background-size: 400% 400%;
+  animation: breathing-bg 15s ease infinite;
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+@keyframes breathing-bg {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .auth-card {

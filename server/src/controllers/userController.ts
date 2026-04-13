@@ -115,3 +115,56 @@ export const getUserProfile = async (req: AuthRequest, res: Response) => {
         return res.status(500).json({ message: "Server error" });
     }
 };
+export const toggleBlockUser = async (req: AuthRequest, res: Response) => {
+    try {
+        const { targetId } = req.body;
+        const userId = req.user!._id;
+
+        if (String(userId) === String(targetId)) {
+            return res.status(400).json({ message: "Bạn không thể chặn chính mình" });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User không tồn tại" });
+
+        const targetUser = await User.findById(targetId);
+        if (!targetUser) return res.status(404).json({ message: "Đối tượng chặn không tồn tại" });
+
+        const isBlocked = user.blockedUsers.some(id => String(id) === String(targetId));
+
+        if (isBlocked) {
+            // Unblock
+            user.blockedUsers = user.blockedUsers.filter(id => String(id) !== String(targetId));
+        } else {
+            // Block
+            user.blockedUsers.push(targetId);
+        }
+
+        await user.save();
+
+        const { getIO } = await import("../socket");
+        const { SOCKET_EVENTS } = await import("../utils/socketEvents");
+        const io = getIO();
+        
+        // Notify blocker
+        io.to(`user_${userId}`).emit(SOCKET_EVENTS.USER_BLOCK_UPDATED, {
+            targetId,
+            isBlocked: !isBlocked,
+            blockedUsers: user.blockedUsers
+        });
+
+        // Notify blocked user
+        io.to(`user_${targetId}`).emit(SOCKET_EVENTS.USER_BLOCK_UPDATED, {
+            updaterId: userId,
+            isBlockingMe: !isBlocked
+        });
+
+        return res.status(200).json({ 
+            message: isBlocked ? "Đã bỏ chặn" : "Đã chặn người dùng",
+            blockedUsers: user.blockedUsers 
+        });
+    } catch (error: unknown) {
+        console.error("Toggle block error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};

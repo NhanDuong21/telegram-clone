@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { protect } from "../middlewares/authMiddleware";
-import { searchUsers, updateProfile, getUserProfile } from "../controllers/userController";
+import { searchUsers, updateProfile, getUserProfile, toggleBlockUser } from "../controllers/userController";
 import { upload } from "../middlewares/uploadMiddleware";
 
 const router = Router();
@@ -14,5 +14,6 @@ router.get("/:id/profile", protect, getUserProfile);
 // PUT /api/users/me — cập nhật profile current user
 // Hỗ trợ upload file avatar mới
 router.put("/me", protect, upload.single("avatar"), updateProfile);
+router.post("/toggle-block", protect, toggleBlockUser);
 
 export default router;

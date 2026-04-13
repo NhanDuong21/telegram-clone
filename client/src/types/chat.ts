@@ -6,6 +6,7 @@ export interface User {
     lastSeen?: string;
     bio?: string;
     phone?: string;
+    blockedUsers?: string[];
 }
 
 export interface Conversation {

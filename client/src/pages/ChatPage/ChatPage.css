@@ -291,3 +291,24 @@
         background: var(--sidebar-hover);
     }
 }
+
+.blocked-banner {
+    padding: 16px;
+    background-color: var(--bg-paper);
+    color: var(--text-main);
+    text-align: center;
+    cursor: pointer;
+    font-weight: 500;
+    border-top: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+
+.blocked-banner:not(.disabled):hover {
+    background-color: var(--sidebar-hover);
+}
+
+.blocked-banner.disabled {
+    cursor: default;
+    color: var(--text-secondary);
+    background-color: var(--bg-chat);
+}

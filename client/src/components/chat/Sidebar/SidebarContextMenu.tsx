@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { Pin, PinOff, BellOff, Bell, UserMinus, Trash2, Eraser } from 'lucide-react';
-import type { Conversation } from '../../../types/chat';
+import type { Conversation, User } from '../../../types/chat';
 import './SidebarContextMenu.css';
 
 interface SidebarContextMenuProps {
@@ -14,6 +14,8 @@ interface SidebarContextMenuProps {
     onBlock: () => void;
     onClear: () => void;
     onDelete: () => void;
+    currentUserId?: string;
+    currentUser?: User | null;
 }
 
 const SidebarContextMenu = ({
@@ -26,6 +28,8 @@ const SidebarContextMenu = ({
     onBlock,
     onClear,
     onDelete,
+    currentUserId,
+    currentUser,
 }: SidebarContextMenuProps) => {
     const isMobile = window.innerWidth < 768;
 
@@ -41,7 +45,13 @@ const SidebarContextMenu = ({
             onClick: () => onMute(!conversation.isMuted),
         },
         {
-            label: "Chặn người dùng",
+            label: (() => {
+                if (conversation.isGroup) return "Chặn người dùng";
+                const other = conversation.participants.find(p => p._id !== currentUserId);
+                if (!other || !currentUser) return "Chặn người dùng";
+                const isBlocked = (currentUser.blockedUsers || []).includes(other._id);
+                return isBlocked ? "Bỏ chặn" : "Chặn người dùng";
+            })(),
             icon: <UserMinus size={20} />,
             onClick: onBlock,
             disabled: conversation.isGroup

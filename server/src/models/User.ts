@@ -8,6 +8,7 @@ export interface IUser extends mongoose.Document {
     bio?: string;
     displayName?: string;
     lastSeen?: Date;
+    blockedUsers: mongoose.Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -50,6 +51,10 @@ const userSchema = new Schema<IUser>(
             type: Date,
             default: Date.now,
         },
+        blockedUsers: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        }],
     },
     {
         timestamps: true,

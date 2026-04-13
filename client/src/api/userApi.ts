@@ -21,3 +21,7 @@ export const updateProfileApi = (data: FormData): Promise<AxiosResponse<{ user: 
 export const getUserProfileApi = (id: string) => {
     return axiosClient.get(`${API}/${id}/profile`, getAuthHeader());
 };
+
+export const toggleBlockUserApi = (targetId: string): Promise<AxiosResponse<{ blockedUsers: string[] }>> => {
+    return axiosClient.post(`${API}/toggle-block`, { targetId }, getAuthHeader());
+};

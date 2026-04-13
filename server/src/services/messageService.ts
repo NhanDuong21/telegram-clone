@@ -13,6 +13,28 @@ export const sendMessageService = async (conversationId: string, senderId: strin
         throw new Error("Conversation không tồn tại");
     }
 
+    // Kiểm tra chặn nếu là chat 1-1
+    if (!conversation.isGroup && type !== 'system') {
+        const User = (await import("../models/User")).default;
+        const recipientId = conversation.participants.find(p => p.toString() !== senderId);
+        
+        if (recipientId) {
+            const users = await User.find({
+                _id: { $in: [senderId, recipientId] }
+            });
+
+            const sender = users.find(u => u._id.toString() === senderId);
+            const recipient = users.find(u => u._id.toString() === recipientId.toString());
+
+            if (sender?.blockedUsers.some(id => id.toString() === recipientId.toString())) {
+                throw new Error("Bạn đã chặn người dùng này");
+            }
+            if (recipient?.blockedUsers.some(id => id.toString() === senderId)) {
+                throw new Error("Bạn đã bị chặn bởi người dùng này");
+            }
+        }
+    }
+
     const newMessage = await Message.create({
         conversationId,
         sender: senderId,

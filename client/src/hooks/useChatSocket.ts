@@ -13,6 +13,7 @@ interface UseChatSocketProps {
   setOnlineUsers: React.Dispatch<React.SetStateAction<string[]>>;
   setTypingUsers: React.Dispatch<React.SetStateAction<Set<string>>>;
   setSelectedConversationId: React.Dispatch<React.SetStateAction<string | null>>;
+  updateUser?: (user: User) => void;
 }
 
 export const useChatSocket = ({
@@ -24,6 +25,7 @@ export const useChatSocket = ({
   setOnlineUsers,
   setTypingUsers,
   setSelectedConversationId,
+  updateUser,
 }: UseChatSocketProps) => {
   const selectedIdRef = useRef<string | null>(selectedConversationId);
 
@@ -292,6 +294,36 @@ export const useChatSocket = ({
           : c
       ));
     });
+    
+    socket.on(SOCKET_EVENTS.USER_BLOCK_UPDATED, (data: any) => {
+        // If I'm the blocker, update my blockedUsers list
+        if (data.targetId && updateUser && user) {
+            updateUser({ ...user, blockedUsers: data.blockedUsers });
+        }
+        
+        // If someone blocked me or unblocked me, I need to refresh the UI
+        // We can update the other user's object in the conversation participants
+        if (data.updaterId) {
+            setConversations(prev => prev.map(c => {
+                if (c.isGroup) return c;
+                const otherIndex = c.participants.findIndex(p => p._id === data.updaterId);
+                if (otherIndex !== -1) {
+                    const nextParticipants = [...c.participants];
+                    const otherUser = { ...nextParticipants[otherIndex] };
+                    
+                    if (data.isBlockingMe) {
+                        otherUser.blockedUsers = [...(otherUser.blockedUsers || []), user?._id ?? ""];
+                    } else {
+                        otherUser.blockedUsers = (otherUser.blockedUsers || []).filter(id => id !== user?._id);
+                    }
+                    
+                    nextParticipants[otherIndex] = otherUser;
+                    return { ...c, participants: nextParticipants };
+                }
+                return c;
+            }));
+        }
+    });
 
     return () => {
       socket.off(SOCKET_EVENTS.CONNECT);
@@ -308,6 +340,7 @@ export const useChatSocket = ({
       socket.off(SOCKET_EVENTS.MESSAGE_DELETED);
       socket.off(SOCKET_EVENTS.REACTION_UPDATED);
       socket.off(SOCKET_EVENTS.MESSAGE_UPDATED);
+      socket.off(SOCKET_EVENTS.USER_BLOCK_UPDATED);
     };
   }, [user, selectedConversationId]);
 };

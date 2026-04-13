@@ -9,6 +9,7 @@ export interface User {
     displayName?: string;
     lastSeen?: string;
     phone?: string;
+    blockedUsers?: string[];
 }
 
 export interface AuthContextType {

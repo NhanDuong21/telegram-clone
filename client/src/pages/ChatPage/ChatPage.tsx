@@ -18,6 +18,7 @@ import DeleteMessageModal from "../../components/chat/DeleteMessageModal/DeleteM
 import ForwardModal from "../../components/chat/ForwardModal/ForwardModal";
 import PinModal from "../../components/chat/PinModal/PinModal";
 import SearchSidebar from "../../components/chat/RightSidebar/SearchSidebar";
+import { toggleBlockUserApi } from "../../api/userApi";
 import CallModal from "../../components/chat/CallModal/CallModal";
 import ConfirmModal from "../../components/chat/Modals/ConfirmModal";
 import { sendMessageApi } from "../../api/chatApi";
@@ -31,7 +32,7 @@ import { formatUserStatus } from "../../utils/formatters";
 import './ChatPage.css';
 
 const ChatPage = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
 
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(() => {
     if (user?._id) {
@@ -97,6 +98,17 @@ const ChatPage = () => {
 
   const [tempConversation, setTempConversation] = useState<Conversation | null>(null);
 
+  const handleToggleBlock = async (targetId: string) => {
+    try {
+      const res = await toggleBlockUserApi(targetId);
+      if (user) {
+        updateUser({ ...user, blockedUsers: res.data.blockedUsers });
+      }
+    } catch (err) {
+      console.error("Toggle block error:", err);
+    }
+  };
+
   const activeConversation = useMemo(() => {
     if (tempConversation && tempConversation._id === selectedConversationId) return tempConversation;
     return conversations.find(c => c._id === selectedConversationId) || null;
@@ -106,6 +118,16 @@ const ChatPage = () => {
     if (!activeConversation || activeConversation.isGroup) return null;
     return activeConversation.participants.find((p: User) => p._id !== user?._id);
   }, [activeConversation, user?._id]);
+
+  const isBlockedByMe = useMemo(() => {
+    if (!user || !otherParticipant) return false;
+    return (user.blockedUsers || []).includes(otherParticipant._id);
+  }, [user, otherParticipant]);
+
+  const amIBlocked = useMemo(() => {
+    if (!user || !otherParticipant) return false;
+    return (otherParticipant.blockedUsers || []).includes(user._id);
+  }, [user, otherParticipant]);
 
   useEffect(() => {
     fetchConversations();
@@ -146,6 +168,7 @@ const ChatPage = () => {
     setOnlineUsers,
     setTypingUsers,
     setSelectedConversationId,
+    updateUser,
   });
 
   const handleSelectConversation = (conv: Conversation) => {
@@ -229,14 +252,17 @@ const ChatPage = () => {
           }}
           onMuteToggle={(conv) => toggleMuteConversation(conv._id)}
           onBlockUser={(targetUser) => {
+            const blocked = (user?.blockedUsers || []).includes(targetUser._id);
             setConfirmModalConfig({
-              title: `Chặn ${targetUser.username}`,
-              description: `Bạn có chắc chắn muốn chặn ${targetUser.username}? Người này sẽ không thể nhắn tin cho bạn.`,
+              title: blocked ? "Bỏ chặn người dùng" : `Chặn ${targetUser.username}`,
+              description: blocked 
+                ? `Bạn có chắc chắn muốn bỏ chặn ${targetUser.username}?`
+                : `Bạn có chắc chắn muốn chặn ${targetUser.username}? Người này sẽ không thể nhắn tin cho bạn.`,
               onConfirm: () => {
-                console.log("Blocked user:", targetUser._id);
+                handleToggleBlock(targetUser._id);
                 setConfirmModalConfig(null);
               },
-              isDanger: true
+              isDanger: !blocked
             });
           }}
           onClearHistory={(conv) => {
@@ -401,20 +427,30 @@ const ChatPage = () => {
               </div>
 
 
-              <MessageInput 
-                conversationId={activeConversation._id} 
-                onMessageSent={handleMessageSent} 
-                replyTarget={replyTarget}
-                editTarget={editTarget}
-                onCancelMode={() => { setReplyTarget(null); setEditTarget(null); }}
-                isTemporary={activeConversation.isTemporary}
-                otherUserId={otherParticipant?._id}
-                onConversationCreated={(conv) => {
-                  setConversations(prev => [conv, ...prev]);
-                  setSelectedConversationId(conv._id);
-                  setTempConversation(null);
-                }}
-              />
+              {isBlockedByMe ? (
+                <div className="blocked-banner" onClick={() => handleToggleBlock(otherParticipant!._id)}>
+                  Bỏ chặn người dùng này
+                </div>
+              ) : amIBlocked ? (
+                <div className="blocked-banner disabled">
+                  Bạn không thể gửi tin nhắn cho người dùng này.
+                </div>
+              ) : (
+                <MessageInput 
+                  conversationId={activeConversation._id} 
+                  onMessageSent={handleMessageSent} 
+                  replyTarget={replyTarget}
+                  editTarget={editTarget}
+                  onCancelMode={() => { setReplyTarget(null); setEditTarget(null); }}
+                  isTemporary={activeConversation.isTemporary}
+                  otherUserId={otherParticipant?._id}
+                  onConversationCreated={(conv) => {
+                    setConversations(prev => [conv, ...prev]);
+                    setSelectedConversationId(conv._id);
+                    setTempConversation(null);
+                  }}
+                />
+              )}
 
               <AnimatePresence>
                 {showGroupSettings && activeConversation.isGroup && (

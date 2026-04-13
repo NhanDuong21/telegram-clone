@@ -394,6 +394,8 @@ const Sidebar = ({
                         }}
                         onClear={() => onClearHistory(menuConfig.conversation!)}
                         onDelete={() => onDeleteChat(menuConfig.conversation!)}
+                        currentUserId={currentUserId}
+                        currentUser={currentUser}
                     />
                 )}
             </AnimatePresence>

@@ -95,7 +95,7 @@ const UserProfileModal = ({ userId, onClose }: UserProfileModalProps) => {
                         </div>
                     </div>
                     <h2 className="profile-name">
-                        {user?.displayName || user?.username || "Unknown"}
+                        {user?.fullName || user?.username || "Unknown"}
                     </h2>
                     <span className="profile-status">
                         {formatLastSeen(user?.lastSeen)}

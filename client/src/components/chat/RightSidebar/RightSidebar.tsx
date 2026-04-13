@@ -33,7 +33,9 @@ const RightSidebar = ({
 
   const isGroup = conversation?.isGroup || false;
   const isMuted = conversation?.isMuted || false;
-  const displayName = mode === 'my-profile' ? user?.username : (isGroup ? conversation?.name : user?.username);
+  const displayName = mode === 'my-profile' 
+    ? (user?.fullName || user?.username) 
+    : (isGroup ? conversation?.name : (user?.fullName || user?.username));
   const displayStatus = mode === 'my-profile' 
     ? "Online" 
     : (isGroup
@@ -129,8 +131,8 @@ const RightSidebar = ({
                       <UserPlus size={20} />
                     </div>
                     <div className="info-details">
-                      <div className="info-value">{user?.phone || "Chưa cập nhật"}</div>
-                      <div className="info-label">Số điện thoại</div>
+                      <div className="info-value">{user?.email || "Chưa cập nhật"}</div>
+                      <div className="info-label">Email</div>
                     </div>
                   </div>
               )}

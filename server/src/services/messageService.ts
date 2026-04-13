@@ -49,13 +49,13 @@ export const sendMessageService = async (conversationId: string, senderId: strin
 
     // 1. Emit ngay lập tức sau khi tạo xong Message (Không đợi update Conversation)
     const populated = await newMessage.populate([
-        { path: "sender", select: "username avatar email" },
+        { path: "sender", select: "username avatar email fullName" },
         { 
             path: "replyTo", 
-            populate: { path: "sender", select: "username" },
+            populate: { path: "sender", select: "username fullName" },
             select: "text imageUrl sender"
         },
-        { path: "forwardFrom", select: "username avatar" }
+        { path: "forwardFrom", select: "username avatar fullName" }
     ]);
     const io = getIO();
     
@@ -92,13 +92,13 @@ export const getMessagesService = async (conversationId: string, userId: string,
     }
 
     const messages = await Message.find(query)
-        .populate("sender", "username avatar")
+        .populate("sender", "username avatar fullName")
         .populate({
             path: "replyTo",
-            populate: { path: "sender", select: "username" },
+            populate: { path: "sender", select: "username fullName" },
             select: "text imageUrl sender"
         })
-        .populate("forwardFrom", "username avatar")
+        .populate("forwardFrom", "username avatar fullName")
         .sort({ createdAt: -1 })
         .limit(limit + 1)
         .lean();
@@ -231,13 +231,13 @@ export const updateMessageService = async (messageId: string, userId: string, da
     await message.save();
 
     const populated = await Message.findById(messageId)
-        .populate("sender", "username avatar")
+        .populate("sender", "username avatar fullName")
         .populate({
             path: "replyTo",
-            populate: { path: "sender", select: "username" },
+            populate: { path: "sender", select: "username fullName" },
             select: "text imageUrl sender"
         })
-        .populate("forwardFrom", "username avatar")
+        .populate("forwardFrom", "username avatar fullName")
         .lean();
 
     const io = getIO();

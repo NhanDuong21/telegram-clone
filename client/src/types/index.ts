@@ -6,9 +6,9 @@ export interface User {
     email: string;
     avatar?: string;
     bio?: string;
-    displayName?: string;
+    fullName?: string;
+    birthday?: string;
     lastSeen?: string;
-    phone?: string;
     blockedUsers?: string[];
 }
 

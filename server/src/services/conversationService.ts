@@ -130,7 +130,7 @@ export const createOrGetConversationService = async (senderId: string, receiverI
 
     const existingConversation = await Conversation.findOne({
         participants: { $all: [senderId, receiverId], $size: 2 },
-    }).populate("participants", "username email avatar").lean();
+    }).populate("participants", "username email avatar fullName").lean();
 
     if (existingConversation) return existingConversation;
 
@@ -145,7 +145,7 @@ export const getMyConversationsService = async (userId: string) => {
     const conversations = await Conversation.find({
         participants: userId,
     })
-    .populate("participants", "username email avatar")
+    .populate("participants", "username email avatar fullName")
     .populate("lastMessage", "text imageUrl createdAt isRead")
     .sort({ updatedAt: -1 })
     .lean();

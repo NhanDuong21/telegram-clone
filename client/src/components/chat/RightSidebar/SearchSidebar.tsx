@@ -113,7 +113,7 @@ const SearchSidebar = ({ messages, onClose, onScrollToMessage, searchQuery, onSe
                                 </div>
                                 <div className="result-content">
                                     <div className="result-top">
-                                        <span className="result-name">{sender?.username || "Người dùng"}</span>
+                                        <span className="result-name">{sender?.fullName || sender?.username || "Người dùng"}</span>
                                         <span className="result-date">{formatDateShort(msg.createdAt)}</span>
                                     </div>
                                     <div className="result-snippet">

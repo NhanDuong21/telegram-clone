@@ -17,7 +17,10 @@ const ForwardModal = ({ message, conversations, onClose, onForward }: ForwardMod
 
     const filteredConversations = conversations.filter(c => {
         if (c.name?.toLowerCase().includes(searchTerm.toLowerCase())) return true;
-        return c.participants.some(p => p.username.toLowerCase().includes(searchTerm.toLowerCase()));
+        return c.participants.some(p => 
+            p.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            (p.fullName && p.fullName.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
     });
 
     return (
@@ -50,7 +53,7 @@ const ForwardModal = ({ message, conversations, onClose, onForward }: ForwardMod
                     <div className="preview-indicator" />
                     <div className="preview-details">
                         <div className="preview-author">
-                            {message.sender.username}
+                            {message.sender.fullName || message.sender.username}
                         </div>
                         <div className="preview-text">
                             {message.text || (message.imageUrl ? "📷 Hình ảnh" : "Tin nhắn")}
@@ -74,7 +77,7 @@ const ForwardModal = ({ message, conversations, onClose, onForward }: ForwardMod
                     {filteredConversations.length > 0 ? (
                         filteredConversations.map(conv => {
                             const otherUser = conv.participants.find(p => p._id !== message.sender._id) || conv.participants[0];
-                            const displayTitle = conv.isGroup ? conv.name : (otherUser?.username || "Người dùng");
+                            const displayTitle = conv.isGroup ? conv.name : (otherUser?.fullName || otherUser?.username || "Người dùng");
 
                             return (
                                 <div 

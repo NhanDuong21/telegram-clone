@@ -334,7 +334,7 @@ const ChatPage = () => {
                     </div>
                   )}
                     <div className="chat-header__text">
-                      <span className="chat-header__name">{activeConversation.isGroup ? activeConversation.name : (otherParticipant?.username ?? "Chat")}</span>
+                      <span className="chat-header__name">{activeConversation.isGroup ? activeConversation.name : (otherParticipant?.fullName || otherParticipant?.username || "Chat")}</span>
                       {!activeConversation.isGroup && otherParticipant && (
                         <span className={`chat-header__status ${typingUsers.has(otherParticipant._id) ? 'status-typing' : (onlineUsers.includes(otherParticipant._id) ? 'status-online' : 'status-offline')}`}>
                           {typingUsers.has(otherParticipant._id) 
@@ -346,7 +346,10 @@ const ChatPage = () => {
                         <span className="chat-header__status">
                           {typingUsers.size > 0 
                             ? `${Array.from(typingUsers)
-                                .map(id => activeConversation.participants.find((p: User) => p._id === id)?.username)
+                                .map(id => {
+                                  const p = activeConversation.participants.find((p: User) => p._id === id);
+                                  return p?.fullName || p?.username;
+                                })
                                 .filter(Boolean).join(", ")} đang soạn tin...`
                             : `${activeConversation.participants.length} thành viên`
                           }

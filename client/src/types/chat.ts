@@ -38,6 +38,7 @@ export interface Message {
     sender: {
         _id: string;
         username: string;
+        fullName?: string;
         avatar?: string;
     };
     readBy?: string[];
@@ -50,7 +51,7 @@ export interface Message {
     isPinned?: boolean;
     pinnedFor?: string[];
     type?: 'text' | 'image' | 'voice' | 'system';
-    forwardFrom?: { _id: string; username: string; avatar?: string };
+    forwardFrom?: { _id: string; username: string; fullName?: string; avatar?: string };
     isSending?: boolean;
     tempId?: string;
     createdAt: string;

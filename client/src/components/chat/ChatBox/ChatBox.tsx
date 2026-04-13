@@ -155,7 +155,7 @@ const ChatBox = ({
                 className="message-reply-snippet"
                 onClick={() => scrollToMessage(msg.replyTo!._id)}
             >
-                <div className="reply-sender">{msg.replyTo.sender.username}</div>
+                <div className="reply-sender">{msg.replyTo.sender.fullName || msg.replyTo.sender.username}</div>
                 <div className="reply-text">
                     {msg.replyTo.text || (msg.replyTo.imageUrl ? "📷 Ảnh" : "Tin nhắn")}
                 </div>
@@ -263,14 +263,15 @@ const ChatBox = ({
                                                     if (parent) {
                                                         const fallback = document.createElement('div');
                                                         fallback.className = 'message-avatar-fallback';
-                                                        fallback.innerText = (msg.sender?.username || (msg as any).senderId?.username || "?").substring(0, 1).toUpperCase();
+                                                        const name = senderObj?.fullName || senderObj?.username || "?";
+                                                        fallback.innerText = name.substring(0, 1).toUpperCase();
                                                         parent.appendChild(fallback);
                                                     }
                                                 }}
                                             />
                                         ) : (
                                             <div className="message-avatar-fallback">
-                                                {(msg.sender?.username || (msg as any).senderId?.username || "?").substring(0, 1).toUpperCase()}
+                                                {(senderObj?.fullName || senderObj?.username || "?").substring(0, 1).toUpperCase()}
                                             </div>
                                         )}
                                     </div>
@@ -285,13 +286,13 @@ const ChatBox = ({
                                     {msg.forwardFrom && (
                                         <div className="message-forwarded-info">
                                             <CornerUpRight size={12} className="forward-info-icon" />
-                                            <span>Chuyển tiếp từ <b>{msg.forwardFrom.username}</b></span>
+                                            <span>Chuyển tiếp từ <b>{msg.forwardFrom.fullName || msg.forwardFrom.username}</b></span>
                                         </div>
                                     )}
 
                                     {!isMe && isGroup && (
                                         <div className="message-sender">
-                                            {senderObj?.username}
+                                            {senderObj?.fullName || senderObj?.username}
                                         </div>
                                     )}
 

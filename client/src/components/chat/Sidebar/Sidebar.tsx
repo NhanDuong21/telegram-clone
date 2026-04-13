@@ -304,7 +304,7 @@ const Sidebar = ({
                                 >
                                     <Avatar user={user} size={48} />
                                     <div className="search-item__info">
-                                        <div className="search-item__name">{user.username}</div>
+                                        <div className="search-item__name">{user.fullName || user.username}</div>
                                         <div className="search-item__status">
                                             {getSubtitle(user)}
                                         </div>
@@ -330,7 +330,7 @@ const Sidebar = ({
                                 const other = getOtherUser(conv);
                                 const isSelected = conv._id === selectedId;
                                 const unreadCount = unreadCounts[conv._id] !== undefined ? unreadCounts[conv._id] : (conv.unreadCount || 0);
-                                const displayTitle = conv.isGroup ? conv.name : (other?.username ?? "Unknown");
+                                const displayTitle = conv.isGroup ? conv.name : (other?.fullName || other?.username || "Unknown");
                                 const lastMsg = conv.lastMessage?.text || "Gửi tin nhắn đầu tiên";
                                 const time = conv.lastMessage?.createdAt ? formatTimestamp(conv.lastMessage.createdAt) : "";
 

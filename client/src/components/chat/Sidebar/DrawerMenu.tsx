@@ -56,7 +56,7 @@ const DrawerMenu = ({
                 <Avatar user={user} size={80} />
               </div>
               <div className="drawer-user-info-centered">
-                <h3 className="drawer-name">{user?.displayName || user?.username || "Người dùng"}</h3>
+                <h3 className="drawer-name">{user?.fullName || user?.username || "Người dùng"}</h3>
                 <p className="drawer-username">@{user?.username || "username"}</p>
               </div>
             </div>

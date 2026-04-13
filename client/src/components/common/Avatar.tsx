@@ -4,6 +4,7 @@ interface AvatarProps {
   user: {
     _id: string;
     username: string;
+    fullName?: string;
     avatar?: string;
   } | null | undefined;
   size?: number;
@@ -78,7 +79,7 @@ const Avatar = ({ user, size = 44 }: AvatarProps) => {
         textTransform: "uppercase",
       }}
     >
-      {user.username.charAt(0)}
+      {(user.fullName || user.username).charAt(0)}
     </div>
   );
 };

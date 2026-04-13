@@ -10,15 +10,18 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isDarkMode, setIsDarkMode] = useState(() => {
         const saved = localStorage.getItem('theme');
-        return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (saved) return saved === 'dark';
+        return true; // Default to dark mode for first-time visitors
     });
 
     useEffect(() => {
         localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
         if (isDarkMode) {
             document.documentElement.setAttribute('data-theme', 'dark');
+            document.body.classList.add('dark-mode'); // Added for broader support
         } else {
-            document.documentElement.removeAttribute('data-theme');
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.body.classList.remove('dark-mode');
         }
     }, [isDarkMode]);
 

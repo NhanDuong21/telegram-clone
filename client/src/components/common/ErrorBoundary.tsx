@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import "./ErrorBoundary.css";
+import ErrorPage from "../../pages/ErrorPage/ErrorPage";
 
 interface Props {
   children: ReactNode;
@@ -24,19 +24,7 @@ class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
-      return (
-        <div className="error-boundary-content">
-          <div className="error-icon">⚠️</div>
-          <h2 className="error-title">Đã xảy ra lỗi giao diện</h2>
-          <p className="error-text">Chúng tôi không thể hiển thị nội dung này ngay bây giờ. Vui lòng tải lại trang.</p>
-          <button 
-            className="error-reload-btn" 
-            onClick={() => window.location.reload()}
-          >
-            Tải lại trang
-          </button>
-        </div>
-      );
+      return <ErrorPage errorCode={500} />;
     }
 
     return this.props.children;

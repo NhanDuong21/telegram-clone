@@ -1,0 +1,116 @@
+.error-page {
+    min-height: 100vh;
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0 1.5rem;
+    color: var(--text-main);
+    transition: background-color 0.3s ease;
+    text-align: center;
+}
+
+.error-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 500px;
+    width: 100%;
+}
+
+.error-sticker-container {
+    margin-bottom: 2rem;
+    animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+.error-sticker {
+    width: 200px;
+    height: 200px;
+}
+
+.error-badge {
+    background-color: rgba(51, 144, 236, 0.1);
+    color: var(--accent-color);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.error-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.error-desc {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+}
+
+.error-btn {
+    padding: 12px 36px;
+    background-color: var(--accent-color);
+    color: white;
+    font-weight: 600;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(51, 144, 236, 0.3);
+    font-size: 1rem;
+}
+
+.error-btn:hover {
+    background-color: #2b7bc9;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(51, 144, 236, 0.4);
+}
+
+.error-btn:active {
+    transform: translateY(0);
+}
+
+/* Dark theme specific adjustments */
+[data-theme='dark'] .error-badge {
+    background-color: rgba(51, 144, 236, 0.2);
+}
+
+/* Sticker path logic for dark mode */
+[data-theme='dark'] .sticker-path-fill {
+    fill: #2b3b4d;
+}
+
+[data-theme='dark'] .sticker-path-stroke {
+    stroke: #8aa1b5;
+}
+
+@media (max-width: 640px) {
+    .error-title {
+        font-size: 1.6rem;
+    }
+    .error-sticker {
+        width: 160px;
+        height: 160px;
+    }
+    .error-btn {
+        width: 100%;
+    }
+}

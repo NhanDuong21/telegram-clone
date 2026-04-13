@@ -1,0 +1,231 @@
+.edit-email-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000; /* Higher than Sidebar and Drawers */
+}
+
+.edit-email-container {
+    background-color: var(--bg-paper);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 90%; /* Mobile width */
+    max-width: 440px; /* Match ProfileModal width for consistency */
+    min-height: 480px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    animation: modal-appear 0.3s ease-out;
+}
+
+@keyframes modal-appear {
+    from { opacity: 0; transform: scale(0.95) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.edit-email-header {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.edit-email-header .back-btn,
+.edit-email-header .close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-email-header .back-btn:hover,
+.edit-email-header .close-btn:hover {
+    background: var(--bg-secondary);
+}
+
+.edit-email-header .header-title {
+    flex: 1;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.edit-email-content {
+    flex: 1;
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.mailbox-illustration {
+    margin-bottom: 32px;
+}
+
+.blue-circle {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #2ab5a3, #1e8e81);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 16px rgba(42, 181, 163, 0.2);
+}
+
+.step-container {
+    width: 100%;
+    text-align: center;
+}
+
+.step-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.step-subtext {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+}
+
+.email-form {
+    width: 100%;
+}
+
+.input-group {
+    position: relative;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.input-group input {
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid var(--border-color);
+    background: transparent;
+    padding: 8px 0;
+    font-size: 16px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-group label {
+    position: absolute;
+    top: 8px;
+    left: 0;
+    color: var(--text-secondary);
+    font-size: 16px;
+    pointer-events: none;
+    transition: all 0.2s;
+}
+
+.input-group input:focus ~ label,
+.input-group input:not(:placeholder-shown) ~ label {
+    top: -18px;
+    font-size: 13px;
+    color: #2ab5a3;
+}
+
+.input-group input:focus ~ .underline {
+    width: 100%;
+}
+
+.input-group .underline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #2ab5a3;
+    transition: width 0.3s;
+}
+
+.confirm-btn {
+    width: 100%;
+    height: 48px;
+    background: #2ab5a3;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 32px;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+}
+
+.confirm-btn:hover {
+    background: #24a191;
+}
+
+.confirm-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: #ff4d4d;
+    font-size: 13px;
+    margin-top: 8px;
+    text-align: left;
+}
+
+/* OTP Styles */
+.otp-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.otp-inputs input {
+    width: 44px;
+    height: 52px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.otp-inputs input:focus {
+    border-color: #2ab5a3;
+}
+
+.resend-btn {
+    background: none;
+    border: none;
+    color: #2ab5a3;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 16px;
+    cursor: pointer;
+}
+
+.resend-btn:hover {
+    text-decoration: underline;
+}

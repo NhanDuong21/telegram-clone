@@ -25,3 +25,10 @@ export const getUserProfileApi = (id: string) => {
 export const toggleBlockUserApi = (targetId: string): Promise<AxiosResponse<{ blockedUsers: string[] }>> => {
     return axiosClient.post(`${API}/toggle-block`, { targetId }, getAuthHeader());
 };
+export const requestEmailChangeApi = (newEmail: string): Promise<AxiosResponse<{ message: string }>> => {
+    return axiosClient.post(`${API}/request-email-change`, { newEmail }, getAuthHeader());
+};
+
+export const verifyEmailChangeApi = (newEmail: string, otp: string): Promise<AxiosResponse<{ user: User, message: string }>> => {
+    return axiosClient.post(`${API}/verify-email-change`, { newEmail, otp }, getAuthHeader());
+};

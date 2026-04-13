@@ -6,7 +6,6 @@ import {
     Pencil, 
     ArrowLeft, 
     Camera, 
-    Settings as SettingsIcon,
     Mail,
     User as UserIcon,
     Info,
@@ -15,9 +14,10 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { updateProfileApi } from '../../api/userApi';
 import Avatar from '../common/Avatar';
+import EditEmailView from './EditEmailView';
 import './ProfileModal.css';
 
-export type ProfileMode = 'VIEW' | 'EDIT';
+export type ProfileMode = 'VIEW' | 'EDIT' | 'EMAIL_EDIT';
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -135,196 +135,217 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
 
     return ReactDOM.createPortal(
         <AnimatePresence mode="wait">
-            <div className="modal-root-overlay">
-                <motion.div 
-                    className="profile-modal-backdrop"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={onClose}
-                />
-                <motion.div 
-                    className="profile-modal"
-                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                >
-                    {mode === 'VIEW' ? (
-                        <div className="profile-view-container">
-                            <div className="profile-header">
-                                <button className="profile-icon-btn" onClick={() => setMode('EDIT')}>
-                                    <Pencil size={20} />
-                                </button>
-                                <button className="profile-icon-btn" onClick={onClose}>
-                                    <X size={22} />
-                                </button>
-                            </div>
-
-                            {error && <div className="profile-error-banner">{error}</div>}
-
-                            <div className="profile-hero">
-                                <div className="profile-hero-avatar">
-                                    <Avatar user={user} size={120} />
-                                </div>
-                                <div className="profile-hero-info">
-                                    <h2 className="profile-display-name">{user?.fullName || user?.username}</h2>
-                                    <span className="profile-online-status">online</span>
-                                </div>
-                            </div>
-
-                            <div className="profile-info-section">
-                                <div className="profile-info-item">
-                                    <div className="info-icon">
-                                        <Mail size={22} />
-                                    </div>
-                                    <div className="info-details">
-                                        <div className="info-value">{user?.email || "Chưa cập nhật"}</div>
-                                        <div className="info-label">Email</div>
-                                    </div>
-                                </div>
-
-                                <div className="profile-info-item">
-                                    <div className="info-icon">
-                                        <Info size={22} />
-                                    </div>
-                                    <div className="info-details">
-                                        <div className="info-value">{user?.bio || "Chưa có tiểu sử"}</div>
-                                        <div className="info-label">Tiểu sử</div>
-                                    </div>
-                                </div>
-
-                                <div className="profile-info-item">
-                                    <div className="info-icon">
-                                        <UserIcon size={22} />
-                                    </div>
-                                    <div className="info-details">
-                                        <div className="info-value">@{user?.username}</div>
-                                        <div className="info-label">Tên người dùng</div>
-                                    </div>
-                                </div>
-
-                                <div className="profile-info-item">
-                                    <div className="info-icon">
-                                        <Cake size={22} />
-                                    </div>
-                                    <div className="info-details">
-                                        <div className="info-value">
-                                            {user?.birthday ? (
-                                                `${formatDate(user.birthday)} (${calculateAge(user.birthday)} tuổi)`
-                                            ) : "Chưa cập nhật"}
-                                        </div>
-                                        <div className="info-label">Ngày sinh</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="profile-settings-hint" onClick={() => setMode('EDIT')}>
-                                <SettingsIcon size={18} />
-                                <span>Chỉnh sửa thông tin cá nhân</span>
-                            </div>
-                        </div>
+            {isOpen && (
+                <div className="modal-root-overlay">
+                    <motion.div 
+                        className="profile-modal-backdrop"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                    />
+                    {mode === 'EMAIL_EDIT' ? (
+                        <EditEmailView 
+                            onBack={() => setMode('EDIT')}
+                            onClose={onClose}
+                            onSuccess={(updatedUser) => {
+                                updateUser(updatedUser);
+                                setMode('EDIT');
+                            }}
+                        />
                     ) : (
-                        <div className="profile-edit-container">
-                            <div className="profile-header">
-                                <div className="header-left">
-                                    <button className="profile-icon-btn" onClick={() => setMode('VIEW')}>
-                                        <ArrowLeft size={22} />
-                                    </button>
-                                    <span className="header-title">Thông tin</span>
-                                </div>
-                                <button className="profile-icon-btn" onClick={onClose}>
-                                    <X size={22} />
-                                </button>
-                            </div>
-
-                            <div className="profile-edit-scrollable">
-                                {error && <div className="profile-error-banner">{error}</div>}
-                                <div className="avatar-edit-box">
-                                    <div className="avatar-preview-container" onClick={() => fileInputRef.current?.click()}>
-                                        <Avatar user={{ ...user, avatar: localPreview } as any} size={100} />
-                                        <div className="avatar-overlay">
-                                            <Camera size={28} />
+                        <motion.div 
+                            className="profile-modal"
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        >
+                            <AnimatePresence mode="wait">
+                                {mode === 'VIEW' && (
+                                    <motion.div 
+                                        key="view"
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                        className="profile-view-container"
+                                    >
+                                        <div className="profile-header">
+                                            <button className="profile-icon-btn" onClick={() => setMode('EDIT')}>
+                                                <Pencil size={20} />
+                                            </button>
+                                            <button className="profile-icon-btn" onClick={onClose}>
+                                                <X size={22} />
+                                            </button>
                                         </div>
-                                    </div>
-                                    <input 
-                                        type="file" 
-                                        ref={fileInputRef} 
-                                        style={{ display: 'none' }} 
-                                        onChange={handleFileChange}
-                                        accept="image/*"
-                                    />
-                                </div>
 
-                                <div className="edit-form">
-                                    <div className="edit-input-group">
-                                        <label>Họ tên</label>
-                                        <input 
-                                            type="text" 
-                                            value={fullName} 
-                                            onChange={(e) => setFullName(e.target.value)} 
-                                            placeholder="Họ tên của bạn"
-                                        />
-                                    </div>
+                                        {error && <div className="profile-error-banner">{error}</div>}
 
-                                    <div className="edit-input-group">
-                                        <div className="input-wrapper">
-                                            <label>Tiểu sử</label>
-                                            <input 
-                                                type="text" 
-                                                value={bio} 
-                                                onChange={(e) => setBio(e.target.value.slice(0, 70))}
-                                                placeholder="Tiểu sử"
-                                            />
-                                            <span className="char-count">{bio.length}/70</span>
+                                        <div className="profile-hero">
+                                            <div className="profile-hero-avatar">
+                                                <Avatar user={user} size={120} />
+                                            </div>
+                                            <div className="profile-hero-info">
+                                                <h2 className="profile-display-name">{user?.fullName || user?.username}</h2>
+                                                <span className="profile-online-status">online</span>
+                                            </div>
                                         </div>
-                                        <p className="input-help">Bất kỳ ai cũng có thể thấy thông tin này trong hồ sơ của bạn.</p>
-                                    </div>
 
-                                    <div className="edit-input-group">
-                                        <label>Tên người dùng</label>
-                                        <input 
-                                            type="text" 
-                                            value={username} 
-                                            onChange={(e) => setUsername(e.target.value)} 
-                                            placeholder="@username"
-                                        />
-                                    </div>
+                                        <div className="profile-info-section">
+                                            <div className="profile-info-item">
+                                                <div className="info-icon"><Mail size={22} /></div>
+                                                <div className="info-details">
+                                                    <div className="info-value">{user?.email || "Chưa cập nhật"}</div>
+                                                    <div className="info-label">Email</div>
+                                                </div>
+                                            </div>
 
-                                    <div className="edit-input-group">
-                                        <label>Ngày sinh</label>
-                                        <input 
-                                            type="date" 
-                                            value={birthday} 
-                                            onChange={(e) => setBirthday(e.target.value)}
-                                        />
-                                    </div>
+                                            <div className="profile-info-item">
+                                                <div className="info-icon"><Info size={22} /></div>
+                                                <div className="info-details">
+                                                    <div className="info-value">{user?.bio || "Chưa có tiểu sử"}</div>
+                                                    <div className="info-label">Tiểu sử</div>
+                                                </div>
+                                            </div>
 
-                                    <div className="edit-input-group">
-                                        <label>Email (Chỉ xem)</label>
-                                        <input 
-                                            type="text" 
-                                            value={email} 
-                                            readOnly 
-                                            className="input--readonly"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                                            <div className="profile-info-item">
+                                                <div className="info-icon"><UserIcon size={22} /></div>
+                                                <div className="info-details">
+                                                    <div className="info-value">@{user?.username}</div>
+                                                    <div className="info-label">Tên người dùng</div>
+                                                </div>
+                                            </div>
 
-                            <div className="profile-edit-footer">
-                                <button 
-                                    className="profile-save-btn" 
-                                    onClick={handleSave}
-                                    disabled={isSubmitting}
-                                >
-                                    {isSubmitting ? "Đang lưu..." : "Lưu hồ sơ"}
-                                </button>
-                            </div>
-                        </div>
+                                            <div className="profile-info-item">
+                                                <div className="info-icon"><Cake size={22} /></div>
+                                                <div className="info-details">
+                                                    <div className="info-value">
+                                                        {user?.birthday ? (
+                                                            `${formatDate(user.birthday)} (${calculateAge(user.birthday)} tuổi)`
+                                                        ) : "Chưa cập nhật"}
+                                                    </div>
+                                                    <div className="info-label">Ngày sinh</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="profile-settings-hint" onClick={() => setMode('EDIT')}>
+                                            <span>Click để chỉnh sửa thông tin cá nhân</span>
+                                        </div>
+                                    </motion.div>
+                                )}
+
+                                {mode === 'EDIT' && (
+                                    <motion.div 
+                                        key="edit"
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 20 }}
+                                        className="profile-edit-container"
+                                    >
+                                        <div className="profile-header">
+                                            <div className="header-left">
+                                                <button className="profile-icon-btn" onClick={() => setMode('VIEW')}>
+                                                    <ArrowLeft size={22} />
+                                                </button>
+                                                <span className="header-title">Thông tin</span>
+                                            </div>
+                                            <button className="profile-icon-btn" onClick={onClose}>
+                                                <X size={22} />
+                                            </button>
+                                        </div>
+
+                                        <div className="profile-edit-scrollable">
+                                            {error && <div className="profile-error-banner">{error}</div>}
+                                            <div className="avatar-edit-box">
+                                                <div className="avatar-preview-container" onClick={() => fileInputRef.current?.click()}>
+                                                    <Avatar user={{ ...user, avatar: localPreview } as any} size={100} />
+                                                    <div className="avatar-overlay"><Camera size={28} /></div>
+                                                </div>
+                                                <input 
+                                                    type="file" 
+                                                    ref={fileInputRef} 
+                                                    style={{ display: 'none' }} 
+                                                    onChange={handleFileChange}
+                                                    accept="image/*"
+                                                />
+                                            </div>
+
+                                            <div className="edit-form">
+                                                <div className="edit-input-group">
+                                                    <label>Họ tên</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={fullName} 
+                                                        onChange={(e) => setFullName(e.target.value)} 
+                                                        placeholder="Họ tên của bạn"
+                                                    />
+                                                </div>
+
+                                                <div className="edit-input-group">
+                                                    <div className="input-wrapper">
+                                                        <label>Tiểu sử</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={bio} 
+                                                            onChange={(e) => setBio(e.target.value.slice(0, 70))}
+                                                            placeholder="Tiểu sử"
+                                                        />
+                                                        <span className="char-count">{bio.length}/70</span>
+                                                    </div>
+                                                    <p className="input-help">Bất kỳ ai cũng có thể thấy thông tin này trong hồ sơ của bạn.</p>
+                                                </div>
+
+                                                <div className="edit-input-group">
+                                                    <label>Tên người dùng</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={username} 
+                                                        onChange={(e) => setUsername(e.target.value)} 
+                                                        placeholder="@username"
+                                                    />
+                                                </div>
+
+                                                <div className="edit-input-group">
+                                                    <label>Ngày sinh</label>
+                                                    <input 
+                                                        type="date" 
+                                                        value={birthday} 
+                                                        onChange={(e) => setBirthday(e.target.value)}
+                                                    />
+                                                </div>
+
+                                                <div className="edit-input-group clickable" onClick={() => setMode('EMAIL_EDIT')}>
+                                                    <label>Email</label>
+                                                    <div className="input-group-row">
+                                                        <input 
+                                                            type="text" 
+                                                            value={email} 
+                                                            readOnly 
+                                                            className="input--readonly"
+                                                        />
+                                                        <div className="edit-chevron">➔</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="profile-edit-footer">
+                                            <button 
+                                                className="profile-save-btn" 
+                                                onClick={handleSave}
+                                                disabled={isSubmitting}
+                                            >
+                                                {isSubmitting ? "Đang lưu..." : "Lưu hồ sơ"}
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </motion.div>
                     )}
-                </motion.div>
-            </div>
+                </div>
+            )}
         </AnimatePresence>,
         document.body
     );

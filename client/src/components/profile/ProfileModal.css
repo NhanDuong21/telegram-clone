@@ -249,6 +249,37 @@
     margin: 4px 0 0;
 }
 
+.edit-input-group.clickable {
+    cursor: pointer;
+    transition: background 0.2s;
+    border-radius: 8px;
+    padding: 4px 0;
+}
+
+.edit-input-group.clickable:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.input-group-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 2px solid var(--border-color);
+    padding-right: 12px;
+}
+
+.input-group-row input {
+    border-bottom: none !important;
+    background: transparent !important;
+    flex: 1;
+}
+
+.edit-chevron {
+    color: var(--text-secondary);
+    font-size: 14px;
+    opacity: 0.6;
+}
+
 .profile-edit-footer {
     padding: 16px 24px;
     background-color: var(--bg-sidebar);
@@ -284,6 +315,21 @@
     font-size: 0.9rem;
     text-align: center;
     border-bottom: 1px solid rgba(255, 69, 58, 0.2);
+}
+
+.profile-settings-hint {
+    padding: 20px;
+    text-align: center;
+    color: var(--accent-color);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+}
+
+.profile-settings-hint:hover {
+    background: rgba(var(--accent-rgb), 0.1);
 }
 
 @media (max-width: 480px) {

@@ -1,6 +1,8 @@
 import { Response } from "express";
 import User from "../models/User";
 import { AuthRequest } from "../types";
+import Otp from "../models/Otp";
+import { sendOtpEmail } from "../utils/mailer";
 
 // GET /api/users/search?q=keyword
 // Tìm user theo username (không trả về chính mình)
@@ -168,6 +170,79 @@ export const toggleBlockUser = async (req: AuthRequest, res: Response) => {
         });
     } catch (error: unknown) {
         console.error("Toggle block error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+// POST /api/users/request-email-change
+export const requestEmailChange = async (req: AuthRequest, res: Response) => {
+    try {
+        const { newEmail } = req.body;
+        const userId = req.user!._id;
+
+        if (!newEmail || !newEmail.includes('@')) {
+            return res.status(400).json({ message: "Email không hợp lệ" });
+        }
+
+        // Check if email is already taken
+        const existingUser = await User.findOne({ email: newEmail.toLowerCase() });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email này đã được sử dụng bởi một tài khoản khác" });
+        }
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Store OTP in database (associated with the user)
+        // We use the newEmail as the key in the Otp collection
+        await Otp.findOneAndUpdate(
+            { email: newEmail.toLowerCase() },
+            { otp, createdAt: new Date() },
+            { upsert: true, new: true }
+        );
+
+        // Send Email
+        await sendOtpEmail(newEmail, otp);
+
+        return res.status(200).json({ message: "Mã OTP đã được gửi đến email mới của bạn" });
+    } catch (error) {
+        console.error("Request email change error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+// POST /api/users/verify-email-change
+export const verifyEmailChange = async (req: AuthRequest, res: Response) => {
+    try {
+        const { newEmail, otp } = req.body;
+        const userId = req.user!._id;
+
+        if (!newEmail || !otp) {
+            return res.status(400).json({ message: "Thiếu thông tin email hoặc OTP" });
+        }
+
+        const otpRecord = await Otp.findOne({ email: newEmail.toLowerCase(), otp });
+
+        if (!otpRecord) {
+            return res.status(400).json({ message: "Mã OTP không chính xác hoặc đã hết hạn" });
+        }
+
+        // Update user email
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { email: newEmail.toLowerCase() },
+            { new: true }
+        ).select("-password");
+
+        // Clear OTP
+        await Otp.deleteOne({ _id: otpRecord._id });
+
+        return res.status(200).json({ 
+            message: "Cập nhật email thành công",
+            user: updatedUser
+        });
+    } catch (error) {
+        console.error("Verify email change error:", error);
         return res.status(500).json({ message: "Server error" });
     }
 };

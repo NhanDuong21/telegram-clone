@@ -18,7 +18,6 @@ interface SidebarProps {
     onlineUsers: string[];
     unreadCounts: Record<string, number>;
     onSelectConversation: (conv: Conversation) => void;
-    onConversationCreated: (conv: Conversation) => void;
     onTempConversationCreated: (conv: Conversation) => void;
     onLogout: () => void;
     onOpenMyProfile: () => void;
@@ -37,7 +36,6 @@ const Sidebar = ({
     onlineUsers,
     unreadCounts,
     onSelectConversation,
-    onConversationCreated,
     onTempConversationCreated,
     onLogout,
     onOpenMyProfile,

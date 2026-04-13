@@ -3,7 +3,7 @@ import imageCompression from "browser-image-compression";
 import { useAuth } from "../../../context/AuthContext";
 import { sendMessageApi, updateMessageApi } from "../../../api/chatApi";
 import { getSocket } from "../../../socket";
-import type { Message, Conversation, User } from "../../../types";
+import type { Message, Conversation } from "../../../types";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
 import { X, CornerUpLeft, Pencil, Paperclip, SendHorizontal } from "lucide-react";
 import './MessageInput.css';

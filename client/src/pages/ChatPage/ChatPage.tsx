@@ -235,11 +235,6 @@ const ChatPage = () => {
           onlineUsers={onlineUsers}
           unreadCounts={unreadCounts}
           onSelectConversation={handleSelectConversation}
-          onConversationCreated={(conv) => {
-            setConversations(prev => [conv, ...prev]);
-            setSelectedConversationId(conv._id);
-            setTempConversation(null);
-          }}
           onTempConversationCreated={(conv) => {
             setTempConversation(conv);
             setSelectedConversationId(conv._id);

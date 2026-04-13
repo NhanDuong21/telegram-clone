@@ -2,10 +2,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
   Users,
-  Megaphone,
-  Contact,
-  Phone,
-  Bookmark,
   Settings,
   Moon,
   LogOut,

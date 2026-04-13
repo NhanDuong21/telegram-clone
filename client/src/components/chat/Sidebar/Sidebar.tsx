@@ -2,7 +2,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef } from "react";
 import { Menu, Search as SearchIcon, ArrowLeft, BellOff } from "lucide-react";
 import { searchUsersApi } from "../../../api/userApi";
-import { createOrGetConversationApi } from "../../../api/chatApi";
 import Avatar from "../../common/Avatar";
 import DrawerMenu from "./DrawerMenu";
 import SearchDefaultView from "./SearchDefaultView";
@@ -17,7 +16,6 @@ interface SidebarProps {
     onlineUsers: string[];
     unreadCounts: Record<string, number>;
     onSelectConversation: (conv: Conversation) => void;
-    onConversationCreated: (conv: Conversation) => void;
     onTempConversationCreated: (conv: Conversation) => void;
     onLogout: () => void;
     onOpenMyProfile: () => void;
@@ -31,7 +29,6 @@ const Sidebar = ({
     onlineUsers,
     unreadCounts,
     onSelectConversation,
-    onConversationCreated,
     onTempConversationCreated,
     onLogout,
     onOpenMyProfile,
@@ -62,7 +59,7 @@ const Sidebar = ({
 
     const handleSearch = async (searchTerm: string) => {
         const trimmed = searchTerm.trim();
-        if (!trimmed) {
+        if (trimmed.length < 3) {
             setResults([]);
             return;
         }
@@ -242,8 +239,8 @@ const Sidebar = ({
                             className="sidebar__search-results-persistent"
                         >
                             {searchLoading && <p className="sidebar__status-msg">Đang tìm...</p>}
-                            {!searchLoading && results.length === 0 && (
-                                <p className="sidebar__status-msg">Không tìm thấy kết quả</p>
+                            {!searchLoading && query.trim().length >= 3 && results.length === 0 && (
+                                <p className="sidebar__status-msg">Không tìm thấy người dùng nào với username này</p>
                             )}
                             {results.map((user) => (
                                 <div

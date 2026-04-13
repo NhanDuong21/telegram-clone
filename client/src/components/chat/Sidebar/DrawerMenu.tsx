@@ -13,6 +13,8 @@ import {
 import type { User as UserType } from "../../../types/chat";
 import Avatar from "../../common/Avatar";
 import { useTheme } from "../../../context/ThemeContext";
+import ConfirmModal from "../Modals/ConfirmModal";
+import { useState } from "react";
 import "./DrawerMenu.css";
 
 interface DrawerMenuProps {
@@ -31,6 +33,7 @@ const DrawerMenu = ({
   onOpenMyProfile,
 }: DrawerMenuProps) => {
   const { isDarkMode, toggleTheme } = useTheme();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   return (
     <AnimatePresence>
@@ -103,13 +106,24 @@ const DrawerMenu = ({
 
               <button
                 className="menu-item menu-item--logout"
-                onClick={onLogout}
+                onClick={() => setShowLogoutConfirm(true)}
               >
                 <LogOut size={22} className="menu-icon" />
                 <span>Đăng xuất</span>
               </button>
             </div>
           </motion.div>
+
+          <ConfirmModal 
+            isOpen={showLogoutConfirm}
+            onClose={() => setShowLogoutConfirm(false)}
+            onConfirm={onLogout}
+            title="Đăng xuất"
+            description="Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này?"
+            confirmText="Đăng xuất"
+            cancelText="Hủy"
+            isDanger={true}
+          />
         </>
       )}
     </AnimatePresence>

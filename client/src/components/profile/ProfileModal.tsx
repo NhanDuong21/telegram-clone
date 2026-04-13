@@ -7,12 +7,10 @@ import {
     ArrowLeft, 
     Camera, 
     Settings as SettingsIcon,
-    Phone,
+    Mail,
     User as UserIcon,
     Info,
-    Calendar,
-    ChevronRight,
-    Palette
+    Cake,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { updateProfileApi } from '../../api/userApi';
@@ -36,10 +34,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     const [mode, setMode] = useState<ProfileMode>(initialMode);
     
     // Form states
-    const [name, setName] = useState(user?.displayName || user?.username || "");
+    const [fullName, setFullName] = useState(user?.fullName || user?.username || "");
     const [bio, setBio] = useState(user?.bio || "");
     const [username, setUsername] = useState(user?.username || "");
-    const [phone, setPhone] = useState(user?.phone || "");
+    const [birthday, setBirthday] = useState(user?.birthday ? user.birthday.split('T')[0] : "");
+    const [email, setEmail] = useState(user?.email || "");
     
     const [localPreview, setLocalPreview] = useState<string>(user?.avatar || "");
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -52,13 +51,37 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     useEffect(() => {
         if (isOpen) {
             setMode(initialMode);
-            setName(user?.displayName || user?.username || "");
+            setFullName(user?.fullName || user?.username || "");
             setBio(user?.bio || "");
             setUsername(user?.username || "");
-            setPhone(user?.phone || "");
+            setBirthday(user?.birthday ? user.birthday.split('T')[0] : "");
+            setEmail(user?.email || "");
             setLocalPreview(user?.avatar || "");
+            setError("");
         }
     }, [isOpen, initialMode, user]);
+
+    const calculateAge = (birthDateStr: string) => {
+        if (!birthDateStr) return null;
+        const birthDate = new Date(birthDateStr);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    const formatDate = (dateStr: string) => {
+        if (!dateStr) return "Chưa cập nhật";
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('vi-VN', { 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+        });
+    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -91,9 +114,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
         try {
             const formData = new FormData();
             formData.append("username", username.trim());
-            formData.append("displayName", name.trim());
+            formData.append("fullName", fullName.trim());
             formData.append("bio", bio.trim());
-            // phone update could be here if backend supports it
+            formData.append("birthday", birthday);
             if (avatarFile) {
                 formData.append("avatar", avatarFile);
             }
@@ -145,7 +168,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                     <Avatar user={user} size={120} />
                                 </div>
                                 <div className="profile-hero-info">
-                                    <h2 className="profile-display-name">{user?.displayName || user?.username}</h2>
+                                    <h2 className="profile-display-name">{user?.fullName || user?.username}</h2>
                                     <span className="profile-online-status">online</span>
                                 </div>
                             </div>
@@ -153,11 +176,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                             <div className="profile-info-section">
                                 <div className="profile-info-item">
                                     <div className="info-icon">
-                                        <Phone size={22} />
+                                        <Mail size={22} />
                                     </div>
                                     <div className="info-details">
-                                        <div className="info-value">+{user?.phone || "Chưa cập nhật"}</div>
-                                        <div className="info-label">Số điện thoại</div>
+                                        <div className="info-value">{user?.email || "Chưa cập nhật"}</div>
+                                        <div className="info-label">Email</div>
                                     </div>
                                 </div>
 
@@ -183,18 +206,22 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
 
                                 <div className="profile-info-item">
                                     <div className="info-icon">
-                                        <Calendar size={22} />
+                                        <Cake size={22} />
                                     </div>
                                     <div className="info-details">
-                                        <div className="info-value">Chưa cập nhật</div>
+                                        <div className="info-value">
+                                            {user?.birthday ? (
+                                                `${formatDate(user.birthday)} (${calculateAge(user.birthday)} tuổi)`
+                                            ) : "Chưa cập nhật"}
+                                        </div>
                                         <div className="info-label">Ngày sinh</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="profile-settings-hint">
+                            <div className="profile-settings-hint" onClick={() => setMode('EDIT')}>
                                 <SettingsIcon size={18} />
-                                <span>Cài đặt trò chuyện</span>
+                                <span>Chỉnh sửa thông tin cá nhân</span>
                             </div>
                         </div>
                     ) : (
@@ -231,35 +258,27 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
 
                                 <div className="edit-form">
                                     <div className="edit-input-group">
-                                        <div className="input-wrapper">
-                                            <input 
-                                                type="text" 
-                                                value={bio} 
-                                                onChange={(e) => setBio(e.target.value.slice(0, 60))}
-                                                placeholder="Tiểu sử"
-                                            />
-                                            <span className="char-count">{bio.length}/60</span>
-                                        </div>
-                                        <p className="input-help">Bất kỳ ai cũng có thể thấy thông tin này trong hồ sơ của bạn.</p>
-                                    </div>
-
-                                    <div className="edit-input-group">
                                         <label>Họ tên</label>
                                         <input 
                                             type="text" 
-                                            value={name} 
-                                            onChange={(e) => setName(e.target.value)} 
+                                            value={fullName} 
+                                            onChange={(e) => setFullName(e.target.value)} 
+                                            placeholder="Họ tên của bạn"
                                         />
                                     </div>
 
                                     <div className="edit-input-group">
-                                        <label>Email (Số điện thoại placeholder)</label>
-                                        <input 
-                                            type="text" 
-                                            value={phone} 
-                                            onChange={(e) => setPhone(e.target.value)}
-                                            placeholder="SĐT"
-                                        />
+                                        <div className="input-wrapper">
+                                            <label>Tiểu sử</label>
+                                            <input 
+                                                type="text" 
+                                                value={bio} 
+                                                onChange={(e) => setBio(e.target.value.slice(0, 70))}
+                                                placeholder="Tiểu sử"
+                                            />
+                                            <span className="char-count">{bio.length}/70</span>
+                                        </div>
+                                        <p className="input-help">Bất kỳ ai cũng có thể thấy thông tin này trong hồ sơ của bạn.</p>
                                     </div>
 
                                     <div className="edit-input-group">
@@ -268,34 +287,27 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                             type="text" 
                                             value={username} 
                                             onChange={(e) => setUsername(e.target.value)} 
+                                            placeholder="@username"
                                         />
                                     </div>
 
-                                    <div className="edit-divider" />
+                                    <div className="edit-input-group">
+                                        <label>Ngày sinh</label>
+                                        <input 
+                                            type="date" 
+                                            value={birthday} 
+                                            onChange={(e) => setBirthday(e.target.value)}
+                                        />
+                                    </div>
 
-                                    <div className="edit-action-list">
-                                        <div className="edit-action-item">
-                                            <div className="item-main">
-                                                <Info size={22} className="item-icon" />
-                                                <span>Kênh cá nhân</span>
-                                            </div>
-                                            <ChevronRight size={20} className="chevron" />
-                                        </div>
-                                        <div className="edit-action-item">
-                                            <div className="item-main">
-                                                <Palette size={22} className="item-icon" />
-                                                <span>Màu tên của bạn</span>
-                                            </div>
-                                            <div className="color-preview" />
-                                            <ChevronRight size={20} className="chevron" />
-                                        </div>
-                                        <div className="edit-action-item">
-                                            <div className="item-main">
-                                                <Calendar size={22} className="item-icon" />
-                                                <span>Ngày sinh</span>
-                                            </div>
-                                            <ChevronRight size={20} className="chevron" />
-                                        </div>
+                                    <div className="edit-input-group">
+                                        <label>Email (Chỉ xem)</label>
+                                        <input 
+                                            type="text" 
+                                            value={email} 
+                                            readOnly 
+                                            className="input--readonly"
+                                        />
                                     </div>
                                 </div>
                             </div>

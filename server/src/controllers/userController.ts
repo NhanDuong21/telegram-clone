@@ -32,7 +32,7 @@ export const searchUsers = async (req: AuthRequest, res: Response) => {
 // Cập nhật profile (username, avatar)
 export const updateProfile = async (req: AuthRequest, res: Response) => {
     try {
-        const { username, avatar } = req.body;
+        const { username, fullName, bio, birthday } = req.body;
         const userId = req.user!._id;
 
         if (!username || username.trim().length < 2) {
@@ -56,6 +56,9 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
             userId,
             { 
                 username: username.trim(),
+                fullName: fullName ? fullName.trim() : req.user!.fullName,
+                bio: bio ? bio.trim() : req.user!.bio,
+                birthday: birthday ? new Date(birthday) : req.user!.birthday,
                 avatar: avatarUrl !== undefined ? avatarUrl.trim() : req.user!.avatar
             },
             { new: true }

@@ -5,9 +5,9 @@ export interface User {
     avatar?: string;
     lastSeen?: string;
     bio?: string;
-    phone?: string;
+    fullName?: string;
+    birthday?: string;
     blockedUsers?: string[];
-    displayName?: string;
 }
 
 export interface Conversation {

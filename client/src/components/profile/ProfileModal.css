@@ -228,10 +228,16 @@
     flex-direction: column;
 }
 
+.input--readonly {
+    cursor: default;
+    opacity: 0.8;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
 .char-count {
     position: absolute;
     right: 12px;
-    top: 8px;
+    bottom: 8px;
     font-size: 0.8rem;
     color: var(--text-secondary);
 }
@@ -241,53 +247,6 @@
     color: var(--text-secondary);
     padding-left: 12px;
     margin: 4px 0 0;
-}
-
-.edit-divider {
-    height: 8px;
-    background-color: var(--bg-chat);
-    margin: 8px -24px;
-}
-
-.edit-action-list {
-    display: flex;
-    flex-direction: column;
-}
-
-.edit-action-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 0;
-    cursor: pointer;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.item-main {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-}
-
-.item-icon {
-    color: var(--text-secondary);
-}
-
-.edit-action-item:hover .item-icon {
-    color: var(--accent-color);
-}
-
-.chevron {
-    color: var(--text-secondary);
-}
-
-.color-preview {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background-color: var(--accent-color);
-    margin-left: auto;
-    margin-right: 12px;
 }
 
 .profile-edit-footer {

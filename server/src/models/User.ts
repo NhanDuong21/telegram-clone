@@ -6,7 +6,8 @@ export interface IUser extends mongoose.Document {
     password: string;
     avatar?: string;
     bio?: string;
-    displayName?: string;
+    fullName?: string;
+    birthday?: Date;
     lastSeen?: Date;
     blockedUsers: mongoose.Types.ObjectId[];
     createdAt: Date;
@@ -28,7 +29,6 @@ const userSchema = new Schema<IUser>(
             unique: true,
             trim: true,
             lowercase: true,
-
         },
         password: {
             type: String,
@@ -43,9 +43,13 @@ const userSchema = new Schema<IUser>(
             type: String,
             default: "",
         },
-        displayName: {
+        fullName: {
             type: String,
             default: "",
+        },
+        birthday: {
+            type: Date,
+            default: null,
         },
         lastSeen: {
             type: Date,

@@ -70,7 +70,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, on
                                     <Avatar user={user} size={70} />
                                 </div>
                                 <div className="settings-user-info">
-                                    <div className="settings-user-name">{user?.displayName || user?.username}</div>
+                                    <div className="settings-user-name">{user?.fullName || user?.username}</div>
                                     <div className="settings-user-status">+{user?.email || "Chưa cập nhật số điện thoại"}</div>
                                     <div className="settings-user-username">@{user?.username}</div>
                                 </div>

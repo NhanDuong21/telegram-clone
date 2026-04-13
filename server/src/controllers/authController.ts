@@ -42,6 +42,7 @@ export async function register(req: Request, res: Response) {
             username,
             email,
             password: hashedPassword,
+            fullName: username, // Set fullName equal to username by default
         });
 
         const token = generateToken(String(newUser._id));

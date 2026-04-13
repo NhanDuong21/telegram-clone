@@ -13,9 +13,9 @@ interface User {
   email: string;
   avatar?: string;
   bio?: string;
-  phone?: string;
+  fullName?: string;
+  birthday?: string;
   blockedUsers?: string[];
-  displayName?: string;
 }
 
 interface AuthContextType {

@@ -19,11 +19,12 @@ interface SettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
     user: User | null;
+    onEditProfile: () => void;
 }
 
 import ReactDOM from 'react-dom';
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user, onEditProfile }) => {
     const [currentView, setCurrentView] = useState<'main' | 'change-password'>('main');
     const [uiScale, setUiScale] = useState(100);
 
@@ -76,7 +77,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, user }) 
                             </div>
 
                             <div className="settings-list">
-                                <div className="settings-item">
+                                <div className="settings-item" onClick={() => { onEditProfile(); onClose(); }}>
                                     <UserIcon className="settings-item-icon" size={22} />
                                     <span className="settings-item-label">Tài khoản của tôi</span>
                                 </div>

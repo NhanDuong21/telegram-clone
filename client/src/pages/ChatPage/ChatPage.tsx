@@ -11,8 +11,7 @@ import HeaderMenu from "../../components/chat/ChatBox/HeaderMenu";
 import DeleteConfirmModal from "../../components/chat/Modals/DeleteConfirmModal";
 import RightSidebar from "../../components/chat/RightSidebar/RightSidebar";
 import GroupSettingsModal from "../../components/chat/GroupSettingsModal/GroupSettingsModal";
-import EditProfileModal from "../../components/profile/EditProfileModal/EditProfileModal";
-import MyProfileModal from "../../components/chat/Sidebar/MyProfileModal";
+import ProfileModal from "../../components/profile/ProfileModal";
 import ImagePreviewModal from "../../components/chat/ImagePreviewModal/ImagePreviewModal";
 import DeleteMessageModal from "../../components/chat/DeleteMessageModal/DeleteMessageModal";
 import ForwardModal from "../../components/chat/ForwardModal/ForwardModal";
@@ -80,8 +79,8 @@ const ChatPage = () => {
   
   const [searchQuery, setSearchQuery] = useState("");
   const [showCallModal, setShowCallModal] = useState(false);
-  const [showEditProfile, setShowEditProfile] = useState(false);
-  const [isMyProfileOpen, setIsMyProfileOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [profileModalMode, setProfileModalMode] = useState<'VIEW' | 'EDIT'>('VIEW');
   const [showSettings, setShowSettings] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [confirmModalConfig, setConfirmModalConfig] = useState<{
@@ -223,7 +222,8 @@ const ChatPage = () => {
   };
 
   const handleOpenMyProfile = () => {
-    setIsMyProfileOpen(true);
+    setProfileModalMode('VIEW');
+    setIsProfileModalOpen(true);
   };
 
   return (
@@ -466,7 +466,13 @@ const ChatPage = () => {
       </motion.div>
 
       <AnimatePresence>
-        {showEditProfile && <EditProfileModal onClose={() => setShowEditProfile(false)} />}
+        {isProfileModalOpen && (
+          <ProfileModal 
+            isOpen={isProfileModalOpen}
+            onClose={() => setIsProfileModalOpen(false)}
+            initialMode={profileModalMode}
+          />
+        )}
         {previewImageUrl && <ImagePreviewModal imageUrl={previewImageUrl} onClose={() => setPreviewImageUrl(null)} />}
         {messageToDelete && (
           <DeleteMessageModal 
@@ -522,12 +528,6 @@ const ChatPage = () => {
             onToggleMute={toggleMuteConversation}
           />
         )}
-        {isMyProfileOpen && (
-          <MyProfileModal 
-            onClose={() => setIsMyProfileOpen(false)} 
-            onEdit={() => setShowEditProfile(true)}
-          />
-        )}
         {rightPanelMode === 'search' && activeConversation && (
             <SearchSidebar 
                 messages={messages}
@@ -563,6 +563,10 @@ const ChatPage = () => {
             isOpen={showSettings}
             onClose={() => setShowSettings(false)}
             user={user}
+            onEditProfile={() => {
+              setProfileModalMode('EDIT');
+              setIsProfileModalOpen(true);
+            }}
          />
        </AnimatePresence>
      </div>

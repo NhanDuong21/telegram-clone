@@ -15,6 +15,7 @@ interface User {
   bio?: string;
   phone?: string;
   blockedUsers?: string[];
+  displayName?: string;
 }
 
 interface AuthContextType {

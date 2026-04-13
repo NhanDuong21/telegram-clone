@@ -27,6 +27,9 @@
   --bg-deleted-msg: #f1f1f1;
   --text-deleted-msg: #707579;
   --border-deleted-msg: #e1e1e1;
+  /* Replied message theme variables (Light Mode - High Contrast) */
+  --replied-message-name-color: #333333;
+  --replied-message-text-color: #555555;
 }
 
 [data-theme='dark'] {
@@ -58,6 +61,15 @@
   --bg-deleted-msg: #182533;
   --text-deleted-msg: #8aa1b5;
   --border-deleted-msg: #2b3b4d;
+  /* Replied message theme variables (Dark Mode - Bright) */
+  --replied-message-name-color: #ffffff;
+  --replied-message-text-color: #aaaaaa;
+}
+
+/* Night Mode Theme Definition - Fixed for Readability */
+.theme-night {
+  --replied-message-name-color: #FFFFFF;
+  --replied-message-text-color: #D0D0D0;
 }
 
 body {

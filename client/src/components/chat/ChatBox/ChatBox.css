@@ -152,16 +152,16 @@
 .reply-sender {
     font-size: 12px;
     font-weight: 600;
-    color: var(--accent-color);
+    color: var(--replied-message-name-color, var(--accent-color));
 }
 
 .message-bubble--me .reply-sender {
-    color: #fff;
+    color: var(--replied-message-name-color, #fff); 
 }
 
 .reply-text {
     font-size: 12px;
-    color: var(--text-color);
+    color: var(--replied-message-text-color, var(--text-secondary));
     opacity: 0.8;
     white-space: nowrap;
     overflow: hidden;
@@ -169,7 +169,7 @@
 }
 
 .message-bubble--me .reply-text {
-    color: rgba(255, 255, 255, 0.82);
+    color: var(--replied-message-text-color, rgba(255, 255, 255, 0.82));
 }
 
 .message-forwarded-info {

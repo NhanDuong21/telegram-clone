@@ -18,4 +18,5 @@ export const SOCKET_EVENTS = {
     REACTION_UPDATED: "reactionUpdated",
     MESSAGE_UPDATED: "messageUpdated",
     USER_BLOCK_UPDATED: "userBlockUpdated",
+    USER_UPDATED: "userUpdated",
 };

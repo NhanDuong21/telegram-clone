@@ -325,6 +325,46 @@ export const useChatSocket = ({
         }
     });
 
+    socket.on(SOCKET_EVENTS.USER_UPDATED, (updatedUser: User) => {
+      // 1. Update global AuthContext if I am the one who was updated
+      if (user?._id === updatedUser._id && updateUser) {
+        updateUser(updatedUser);
+      }
+
+      // 2. Update conversations list (participants)
+      setConversations((prev) =>
+        prev.map((conv) => {
+          const pIndex = conv.participants.findIndex((p) => p._id === updatedUser._id);
+          if (pIndex !== -1) {
+            const nextParticipants = [...conv.participants];
+            nextParticipants[pIndex] = { ...nextParticipants[pIndex], ...updatedUser };
+            return { ...conv, participants: nextParticipants };
+          }
+          return conv;
+        })
+      );
+
+      // 3. Update messages history (message sender)
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (msg.sender?._id === updatedUser._id) {
+            return {
+              ...msg,
+              sender: { ...msg.sender, ...updatedUser }
+            };
+          }
+          // Also check forwarded info if applicable
+          if (msg.forwardFrom?._id === updatedUser._id) {
+            return {
+              ...msg,
+              forwardFrom: { ...msg.forwardFrom, ...updatedUser }
+            };
+          }
+          return msg;
+        })
+      );
+    });
+
     return () => {
       socket.off(SOCKET_EVENTS.CONNECT);
       socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE);
@@ -341,6 +381,7 @@ export const useChatSocket = ({
       socket.off(SOCKET_EVENTS.REACTION_UPDATED);
       socket.off(SOCKET_EVENTS.MESSAGE_UPDATED);
       socket.off(SOCKET_EVENTS.USER_BLOCK_UPDATED);
+      socket.off(SOCKET_EVENTS.USER_UPDATED);
     };
   }, [user, selectedConversationId]);
 };

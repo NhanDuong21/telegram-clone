@@ -66,6 +66,11 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
             { new: true }
         ).select("-password");
 
+        const { getIO } = await import("../socket");
+        const { SOCKET_EVENTS } = await import("../utils/socketEvents");
+        const io = getIO();
+        io.emit(SOCKET_EVENTS.USER_UPDATED, updatedUser);
+
         return res.status(200).json({ user: updatedUser });
     } catch (error: unknown) {
         console.error("Update profile error:", error);
@@ -236,6 +241,11 @@ export const verifyEmailChange = async (req: AuthRequest, res: Response) => {
 
         // Clear OTP
         await Otp.deleteOne({ _id: otpRecord._id });
+
+        const { getIO } = await import("../socket");
+        const { SOCKET_EVENTS } = await import("../utils/socketEvents");
+        const io = getIO();
+        io.emit(SOCKET_EVENTS.USER_UPDATED, updatedUser);
 
         return res.status(200).json({ 
             message: "Cập nhật email thành công",

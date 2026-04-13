@@ -22,6 +22,7 @@ import { toggleBlockUserApi } from "../../api/userApi";
 import CallModal from "../../components/chat/CallModal/CallModal";
 import ConfirmModal from "../../components/chat/Modals/ConfirmModal";
 import { sendMessageApi } from "../../api/chatApi";
+import SettingsModal from "../../components/chat/Settings/SettingsModal";
 
 import { disconnectSocket, getSocket } from "../../socket";
 import { useChatSocket } from "../../hooks/useChatSocket";
@@ -81,6 +82,7 @@ const ChatPage = () => {
   const [showCallModal, setShowCallModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [isMyProfileOpen, setIsMyProfileOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [confirmModalConfig, setConfirmModalConfig] = useState<{
     title: string;
@@ -241,6 +243,7 @@ const ChatPage = () => {
           }}
           onLogout={() => { disconnectSocket(); logout(); }}
           onOpenMyProfile={handleOpenMyProfile}
+          onOpenSettings={() => setShowSettings(true)}
           onPinToggle={(conv, isPinned) => {
             setConversations(prev => prev.map(c => c._id === conv._id ? { ...c, isPinned } : c));
             // API call would go here
@@ -545,19 +548,24 @@ const ChatPage = () => {
                 isDanger={confirmModalConfig.isDanger}
             />
         )}
-        {showCallModal && <CallModal onClose={() => setShowCallModal(false)} />}
-        {deleteModalConfig && (
-            <DeleteConfirmModal 
-                isOpen={!!deleteModalConfig}
-                onClose={() => setDeleteModalConfig(null)}
-                onConfirm={deleteModalConfig.onConfirm}
-                title={deleteModalConfig.title}
-                description={deleteModalConfig.description}
-                targetName={deleteModalConfig.targetName}
-            />
-        )}
-      </AnimatePresence>
-    </div>
+         {showCallModal && <CallModal onClose={() => setShowCallModal(false)} />}
+         {deleteModalConfig && (
+             <DeleteConfirmModal 
+                 isOpen={!!deleteModalConfig}
+                 onClose={() => setDeleteModalConfig(null)}
+                 onConfirm={deleteModalConfig.onConfirm}
+                 title={deleteModalConfig.title}
+                 description={deleteModalConfig.description}
+                 targetName={deleteModalConfig.targetName}
+             />
+         )}
+         <SettingsModal 
+            isOpen={showSettings}
+            onClose={() => setShowSettings(false)}
+            user={user}
+         />
+       </AnimatePresence>
+     </div>
   );
 };
 

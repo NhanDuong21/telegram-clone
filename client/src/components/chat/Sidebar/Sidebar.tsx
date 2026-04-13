@@ -26,6 +26,7 @@ interface SidebarProps {
     onBlockUser: (user: User) => void;
     onClearHistory: (conv: Conversation) => void;
     onDeleteChat: (conv: Conversation) => void;
+    onOpenSettings: () => void;
 }
 
 const Sidebar = ({
@@ -44,6 +45,7 @@ const Sidebar = ({
     onBlockUser,
     onClearHistory,
     onDeleteChat,
+    onOpenSettings,
 }: SidebarProps) => {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<User[]>([]);
@@ -255,6 +257,7 @@ const Sidebar = ({
                 user={currentUser}
                 onLogout={onLogout}
                 onOpenMyProfile={onOpenMyProfile}
+                onOpenSettings={onOpenSettings}
             />
 
             <div className="sidebar__main-content">

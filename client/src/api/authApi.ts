@@ -34,3 +34,7 @@ export const verifyOtpApi = (email: string, otp: string) => {
 export const resetPasswordApi = (data: any) => {
     return axiosClient.post(`${API}/reset-password`, data);
 };
+
+export const changePasswordApi = (data: { currentPassword: string; newPassword: string }) => {
+    return axiosClient.post(`${API}/change-password`, data);
+};

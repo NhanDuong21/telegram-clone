@@ -19,6 +19,7 @@ interface DrawerMenuProps {
   user: UserType | null;
   onLogout: () => void;
   onOpenMyProfile: () => void;
+  onOpenSettings: () => void;
 }
 
 const DrawerMenu = ({
@@ -27,6 +28,7 @@ const DrawerMenu = ({
   user,
   onLogout,
   onOpenMyProfile,
+  onOpenSettings,
 }: DrawerMenuProps) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -64,7 +66,8 @@ const DrawerMenu = ({
                 <div className="menu-item-group">
                   <button
                     className="menu-item"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       onOpenMyProfile();
                       onClose();
                     }}
@@ -76,7 +79,14 @@ const DrawerMenu = ({
                     <Users size={22} className="menu-icon" />
                     <span>Nhóm mới</span>
                   </button>
-                  <button className="menu-item">
+                  <button 
+                    className="menu-item" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenSettings();
+                      onClose();
+                    }}
+                  >
                     <Settings size={22} className="menu-icon" />
                     <span>Cài đặt</span>
                   </button>
@@ -106,7 +116,10 @@ const DrawerMenu = ({
             <div className="drawer-footer">
               <button
                 className="menu-item menu-item--logout"
-                onClick={() => setShowLogoutConfirm(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowLogoutConfirm(true);
+                }}
               >
                 <LogOut size={22} className="menu-icon" />
                 <span>Đăng xuất</span>

@@ -36,6 +36,30 @@
     align-items: center;
     justify-content: center;
     text-align: center;
+    position: relative;
+}
+
+.drawer-back-btn {
+    position: absolute;
+    top: 20px;
+    left: 10px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background 0.2s, color 0.2s;
+}
+
+.drawer-back-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--accent-color);
+}
+
+[data-theme='dark'] .drawer-back-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .drawer-avatar-wrapper {

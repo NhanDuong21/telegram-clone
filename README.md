@@ -9,7 +9,7 @@ Created by Nyan
 
 A professional, full-featured Telegram clone focused on high-fidelity performance and real-time communication. Built with a specialized focus on media handling and synchronized state across clients.
 
-![App Screenshot](./demo.png)
+![Telegram Web Clone Demo](./demo.gif)
 
 ## Key Features
 

@@ -16,7 +16,7 @@ interface ChatBoxProps {
     hasMore?: boolean;
     loadingMore?: boolean;
     isGroup?: boolean;
-    onImagePreview?: (url: string, messageId?: string) => void;
+    onImagePreview?: (url: string, messageId?: string, senderId?: string) => void;
     onDeleteMessage?: (msg: Message, targetFileUrl?: string) => void;
     onReactMessage?: (msg: Message, emoji: string) => void;
     onReplyMessage?: (msg: Message) => void;
@@ -302,7 +302,7 @@ const ChatBox = ({
                                     {msg.imageUrls && msg.imageUrls.length > 0 && !msg.isDeleted ? (
                                         <ImageAlbum 
                                             images={msg.imageUrls} 
-                                            onImageClick={(url) => onImagePreview?.(url, msg._id)} 
+                                            onImageClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)} 
                                             onContextMenu={(e, url) => onContextMenu(e, msg, url)}
                                         />
                                     ) : msg.imageUrl && !msg.isDeleted && (
@@ -310,7 +310,7 @@ const ChatBox = ({
                                             src={msg.imageUrl}
                                             alt="Attached"
                                             className={`message-image ${isMe ? "message-image--me" : "message-image--other"} ${msg.text ? "message-image--with-text" : ""}`}
-                                            onClick={() => onImagePreview?.(msg.imageUrl!, msg._id)}
+                                            onClick={() => onImagePreview?.(msg.imageUrl!, msg._id, (msg.sender as any)._id || msg.sender)}
                                             onError={(e) => {
                                                 e.currentTarget.style.display = "none";
                                             }}

@@ -84,7 +84,7 @@ const ChatPage = () => {
   const [profileModalMode, setProfileModalMode] = useState<ProfileMode>('VIEW');
   const [profileModalUser, setProfileModalUser] = useState<User | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [previewImageData, setPreviewImageData] = useState<{ url: string, messageId: string } | null>(null);
+  const [previewImageData, setPreviewImageData] = useState<{ url: string, messageId: string, senderId: string } | null>(null);
   const [confirmModalConfig, setConfirmModalConfig] = useState<{
     title: string;
     description: string;
@@ -231,15 +231,10 @@ const ChatPage = () => {
 
   const handleDeletePreviewImage = async () => {
     if (!previewImageData) return;
-    if (window.confirm("Bạn có chắc muốn xóa ảnh này khỏi cuộc trò chuyện?")) {
-      try {
-        await removeFileApi(previewImageData.messageId, previewImageData.url);
-        setPreviewImageData(null);
-        // Socket listener will handle the message update/deletion
-      } catch (err) {
-        console.error("Delete preview image failed:", err);
-        alert("Không thể xóa ảnh.");
-      }
+    
+    const msg = messages.find(m => m._id === previewImageData.messageId);
+    if (msg) {
+        setMessageToDelete({ msg, fileUrl: previewImageData.url });
     }
   };
 
@@ -438,7 +433,7 @@ const ChatPage = () => {
                   hasMore={hasMore}
                   loadingMore={loadingMore}
                   isGroup={activeConversation.isGroup ?? false}
-                  onImagePreview={(url, msgId) => setPreviewImageData(url && msgId ? { url, messageId: msgId } : null)}
+                  onImagePreview={(url, msgId, senderId) => setPreviewImageData(url && msgId && senderId ? { url, messageId: msgId, senderId } : null)}
                   onDeleteMessage={(msg, fileUrl) => setMessageToDelete({ msg, fileUrl })}
                   onReactMessage={handleReactMessage}
                   onReplyMessage={(msg) => { setEditTarget(null); setReplyTarget(msg); }}
@@ -512,6 +507,7 @@ const ChatPage = () => {
             imageUrl={previewImageData.url} 
             onClose={() => setPreviewImageData(null)} 
             onDelete={handleDeletePreviewImage}
+            isOwner={previewImageData.senderId === user?._id}
           />
         )}
         {messageToDelete && (
@@ -521,6 +517,7 @@ const ChatPage = () => {
               if (messageToDelete) {
                 if (messageToDelete.fileUrl) {
                   await removeFileApi(messageToDelete.msg._id, messageToDelete.fileUrl, type);
+                  setPreviewImageData(null); // Close preview if it was open
                 } else {
                   deleteMessage(messageToDelete.msg, type);
                 }

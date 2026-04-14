@@ -10,18 +10,20 @@ export const searchUsers = async (req: AuthRequest, res: Response) => {
     try {
         const { q } = req.query;
 
-        // Nếu không có query thì trả mảng rỗng
-        if (!q || typeof q !== "string") {
+        // Strict search: Only allow searching by @username
+        if (!q || typeof q !== "string" || !q.startsWith('@')) {
             return res.status(200).json({ users: [] });
         }
 
-        // Tìm user có username khớp chính xác (case-insensitive)
+        const usernameQuery = q.substring(1); // Strip @
+
+        // Find user with exact username match (case-insensitive)
         const users = await User.find({
-            username: new RegExp(`^${q}$`, 'i'),
+            username: new RegExp(`^${usernameQuery}$`, 'i'),
             _id: { $ne: req.user!._id },
         })
-            .select("-password")
-            .limit(1); // Usually only one exact match possible
+            .select("username fullName avatar lastSeen")
+            .limit(10); // Still limit to prevent abuse
 
         return res.status(200).json({ users });
     } catch (error: unknown) {

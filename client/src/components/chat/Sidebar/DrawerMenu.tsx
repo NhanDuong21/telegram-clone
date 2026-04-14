@@ -11,6 +11,7 @@ import Avatar from "../../common/Avatar";
 import { useTheme } from "../../../context/ThemeContext";
 import ConfirmModal from "../Modals/ConfirmModal";
 import { useState } from "react";
+import { toast } from 'react-hot-toast';
 import "./DrawerMenu.css";
 
 interface DrawerMenuProps {
@@ -57,7 +58,12 @@ const DrawerMenu = ({
               </div>
               <div className="drawer-user-info-centered">
                 <h3 className="drawer-name">{user?.fullName || user?.username || "Người dùng"}</h3>
-                <p className="drawer-username">@{user?.username || "username"}</p>
+                <p className="drawer-username" onClick={(e) => {
+                    e.stopPropagation();
+                    const val = `@${user?.username}`;
+                    navigator.clipboard.writeText(val);
+                    toast.success(`Đã sao chép ${val}`);
+                }} style={{ cursor: 'pointer' }}>@{user?.username || "username"}</p>
               </div>
             </div>
 

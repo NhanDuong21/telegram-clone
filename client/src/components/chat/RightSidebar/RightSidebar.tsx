@@ -15,6 +15,7 @@ import {
   Link as LinkIcon,
   Info,
 } from "lucide-react";
+import { toast } from 'react-hot-toast';
 import type { User, Conversation } from "../../../types";
 import Avatar from "../../common/Avatar";
 import "./RightSidebar.css";
@@ -123,15 +124,19 @@ const RightSidebar = ({
             </div>
           )}
           {!isGroup && (
-            <div className="info-item">
-              <div className="info-icon">
-                <UserPlus size={20} />
-              </div>
-              <div className="info-details">
-                <div className="info-value">@{user?.username?.toLowerCase() || "username"}</div>
-                <div className="info-label">Tên người dùng</div>
-              </div>
+            <div className="info-item" onClick={() => {
+              const val = `@${user?.username}`;
+              navigator.clipboard.writeText(val);
+              toast.success(`Đã sao chép ${val}`);
+          }} style={{ cursor: 'pointer' }}>
+            <div className="info-icon">
+              <UserPlus size={20} />
             </div>
+            <div className="info-details">
+              <div className="info-value">@{user?.username?.toLowerCase() || "username"}</div>
+              <div className="info-label">Tên người dùng</div>
+            </div>
+          </div>
           )}
           {isGroup && conversation?.description && (
             <div className="info-item">

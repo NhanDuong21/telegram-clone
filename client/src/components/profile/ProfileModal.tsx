@@ -14,6 +14,7 @@ import {
     Bell,
     BellOff,
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { updateProfileApi } from '../../api/userApi';
 import type { User } from '../../types/chat';
@@ -250,7 +251,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                                 </div>
                                             )}
 
-                                            <div className="profile-info-item">
+                                            <div className="profile-info-item" onClick={() => {
+                                                const val = `@${displayUser?.username}`;
+                                                navigator.clipboard.writeText(val);
+                                                toast.success(`Đã sao chép ${val}`);
+                                            }} style={{ cursor: 'pointer' }}>
                                                 <div className="info-icon"><UserIcon size={22} /></div>
                                                 <div className="info-details">
                                                     <div className="info-value">@{displayUser?.username}</div>

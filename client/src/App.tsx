@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from 'react-hot-toast';
 import { useAuth } from "./context/AuthContext";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 
@@ -27,6 +28,7 @@ function App() {
   return (
     <BrowserRouter>
       <ErrorBoundary>
+        <Toaster position="bottom-center" />
         <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
           <Routes>
             <Route

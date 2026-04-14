@@ -112,7 +112,7 @@ const Sidebar = ({
 
     const handleSearch = async (searchTerm: string) => {
         const trimmed = searchTerm.trim();
-        if (trimmed.length < 3) {
+        if (!trimmed.startsWith('@') || trimmed.length < 2) {
             setResults([]);
             return;
         }
@@ -242,7 +242,7 @@ const Sidebar = ({
                     <input
                         ref={inputRef}
                         type="text"
-                        placeholder="Tìm kiếm"
+                        placeholder="Tìm người dùng @username..."
                         value={query}
                         onChange={handleQueryChange}
                         onFocus={() => setIsSearchFocused(true)}
@@ -293,8 +293,13 @@ const Sidebar = ({
                             className="sidebar__search-results-persistent"
                         >
                             {searchLoading && <p className="sidebar__status-msg">Đang tìm...</p>}
-                            {!searchLoading && query.trim().length >= 3 && results.length === 0 && (
-                                <p className="sidebar__status-msg">Không tìm thấy người dùng nào với username này</p>
+                             {!searchLoading && query.trim().length >= 2 && results.length === 0 && (
+                                <div className="sidebar__status-msg">
+                                    <p>Không tìm thấy người dùng nào</p>
+                                    <p style={{ fontSize: '12px', marginTop: '4px', opacity: 0.7 }}>
+                                        Mẹo: Bạn phải nhập chính xác @username để tìm kiếm
+                                    </p>
+                                </div>
                             )}
                             {results.map((user) => (
                                 <div

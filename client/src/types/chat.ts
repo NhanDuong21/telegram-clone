@@ -28,6 +28,7 @@ export interface Conversation {
     isMuted?: boolean;
     isTemporary?: boolean;
     isPinned?: boolean;
+    description?: string;
 }
 
 export interface Message {

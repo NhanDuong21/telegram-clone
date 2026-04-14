@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { memo } from "react";
 import {
   X,
   MessageCircle,
@@ -7,6 +7,13 @@ import {
   UserPlus,
   Image as ImageIcon,
   Users,
+  Phone,
+  MoreHorizontal,
+  Video,
+  FileText,
+  Music,
+  Link as LinkIcon,
+  Info,
 } from "lucide-react";
 import type { User, Conversation } from "../../../types";
 import Avatar from "../../common/Avatar";
@@ -33,10 +40,7 @@ const RightSidebar = ({
 
   const isGroup = conversation?.isGroup || false;
   const isMuted = conversation?.isMuted || false;
-  const displayName = mode === 'my-profile' 
-    ? (user?.fullName || user?.username) 
-    : (isGroup ? conversation?.name : (user?.fullName || user?.username));
-  const displayStatus = mode === 'my-profile' 
+  const statusText = mode === 'my-profile' 
     ? "Online" 
     : (isGroup
       ? `${conversation?.participants.length} thành viên`
@@ -45,19 +49,11 @@ const RightSidebar = ({
         : "Offline");
 
   return (
-    <motion.div
-      initial={{ width: 0, x: "20px", opacity: 0 }}
-      animate={{ width: "350px", x: 0, opacity: 1 }}
-      exit={{ width: 0, x: "20px", opacity: 0 }}
-      transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
-      className="right-sidebar"
-      style={{ overflow: "hidden" }}
-    >
-      <div style={{ width: "350px" }}>
+    <div className="right-sidebar">
       <div className="right-sidebar-header">
         <div className="header-left">
           <button className="sidebar-close-btn" onClick={onClose}>
-            <X size={22} />
+            <X size={20} />
           </button>
           <h3>{mode === 'my-profile' ? "Thông tin cá nhân" : "Thông tin"}</h3>
         </div>
@@ -67,16 +63,20 @@ const RightSidebar = ({
         <div className="profile-hero">
           <div className="profile-hero-avatar">
             {isGroup ? (
-              <div className="large-group-avatar">👥</div>
+              <div className="large-group-avatar">
+                {conversation?.imageUrl ? (
+                  <img src={conversation.imageUrl} alt={conversation.name} />
+                ) : (
+                  "👥"
+                )}
+              </div>
             ) : (
               <Avatar user={user} size={120} />
             )}
           </div>
           <div className="profile-hero-info">
-            <h2>{displayName}</h2>
-            <span className={isOnline ? "status-online" : "status-offline"}>
-              {displayStatus}
-            </span>
+            <h2>{mode === 'my-profile' ? (user?.fullName || user?.username) : (isGroup ? conversation?.name : (user?.fullName || user?.username))}</h2>
+            <p className={isOnline ? "status-online" : "status-offline"}>{statusText}</p>
           </div>
         </div>
 
@@ -85,89 +85,109 @@ const RightSidebar = ({
             <div className="q-action-icon">
               <MessageCircle size={22} />
             </div>
-            <span>{mode === 'my-profile' ? 'Chỉnh sửa' : 'Nhắn tin'}</span>
+            <span>Nhắn tin</span>
           </button>
           <button 
             className="q-action-item"
             onClick={() => conversation && onToggleMute?.(conversation._id)}
           >
             <div className="q-action-icon">
-              {mode === 'my-profile' ? <Bell size={22} /> : (isMuted ? <Bell size={22} /> : <BellOff size={22} />)}
+              {isMuted ? <Bell size={22} /> : <BellOff size={22} />}
             </div>
-            <span>
-              {mode === 'my-profile' 
-                ? 'Trạng thái' 
-                : (isMuted ? 'Bật âm' : 'Tắt âm')}
-            </span>
+            <span>{isMuted ? 'Bật âm' : 'Tắt âm'}</span>
+          </button>
+          <button className="q-action-item">
+            <div className="q-action-icon">
+              <Phone size={22} />
+            </div>
+            <span>Gọi điện</span>
+          </button>
+          <button className="q-action-item">
+            <div className="q-action-icon">
+              <MoreHorizontal size={22} />
+            </div>
+            <span>Thêm</span>
           </button>
         </div>
 
         <div className="info-section">
-          {!isGroup && (
-            <>
-              <div className="info-item">
-                <div className="info-icon">
-                  <UserPlus size={20} />
-                </div>
-                <div className="info-details">
-                  <div className="info-value">{user?.bio || "None"}</div>
-                  <div className="info-label">Bio</div>
-                </div>
-              </div>
-              <div className="info-item">
-                <div className="info-icon" style={{ opacity: 0 }}>
-                  <UserPlus size={20} />
-                </div>
-                <div className="info-details">
-                  <div className="info-value">
-                    @{user?.username?.toLowerCase() || "username"}
-                  </div>
-                  <div className="info-label">Tên người dùng</div>
-                </div>
-              </div>
-              {mode === 'my-profile' && (
-                  <div className="info-item">
-                    <div className="info-icon" style={{ opacity: 0 }}>
-                      <UserPlus size={20} />
-                    </div>
-                    <div className="info-details">
-                      <div className="info-value">{user?.email || "Chưa cập nhật"}</div>
-                      <div className="info-label">Email</div>
-                    </div>
-                  </div>
-              )}
-            </>
-          )}
-          {isGroup && (
+          {(!isGroup && user?.bio) && (
             <div className="info-item">
               <div className="info-icon">
-                <ImageIcon size={20} />
+                <Info size={20} />
               </div>
               <div className="info-details">
-                <div className="info-value">Mô tả nhóm này...</div>
-                <div className="info-label">Thông tin nhóm</div>
+                <div className="info-value">{user?.bio}</div>
+                <div className="info-label">Tiểu sử</div>
+              </div>
+            </div>
+          )}
+          {!isGroup && (
+            <div className="info-item">
+              <div className="info-icon">
+                <UserPlus size={20} />
+              </div>
+              <div className="info-details">
+                <div className="info-value">@{user?.username?.toLowerCase() || "username"}</div>
+                <div className="info-label">Tên người dùng</div>
+              </div>
+            </div>
+          )}
+          {isGroup && conversation?.description && (
+            <div className="info-item">
+              <div className="info-icon">
+                <Info size={20} />
+              </div>
+              <div className="info-details">
+                <div className="info-value">{conversation.description}</div>
+                <div className="info-label">Mô tả nhóm</div>
+              </div>
+            </div>
+          )}
+          {mode === 'my-profile' && (
+            <div className="info-item">
+              <div className="info-icon">
+                <UserPlus size={20} />
+              </div>
+              <div className="info-details">
+                <div className="info-value">{user?.email || "Chưa cập nhật"}</div>
+                <div className="info-label">Email</div>
               </div>
             </div>
           )}
         </div>
 
-        <div className="media-tabs-section">
-          <div className="media-tab-item">
-            <ImageIcon size={20} className="tab-icon" />
-            <span className="tab-label">0 ảnh</span>
+        <div className="shared-content-section">
+          <div className="shared-item">
+            <ImageIcon size={20} className="shared-icon" />
+            <span className="shared-label">0 ảnh</span>
           </div>
-
-          {!isGroup && mode !== 'my-profile' && (
-            <div className="media-tab-item">
-              <Users size={20} className="tab-icon" />
-              <span className="tab-label">0 nhóm chung</span>
+          <div className="shared-item">
+            <Video size={20} className="shared-icon" />
+            <span className="shared-label">0 video</span>
+          </div>
+          <div className="shared-item">
+            <FileText size={20} className="shared-icon" />
+            <span className="shared-label">0 tệp tin</span>
+          </div>
+          <div className="shared-item">
+            <Music size={20} className="shared-icon" />
+            <span className="shared-label">0 nhạc</span>
+          </div>
+          <div className="shared-item">
+            <LinkIcon size={20} className="shared-icon" />
+            <span className="shared-label">0 liên kết</span>
+          </div>
+          {!isGroup && (
+            <div className="shared-item">
+              <Users size={20} className="shared-icon" />
+              <span className="shared-label">0 nhóm chung</span>
             </div>
           )}
         </div>
       </div>
-      </div>
-    </motion.div>
+    </div>
   );
 };
 
-export default RightSidebar;
+export default memo(RightSidebar);

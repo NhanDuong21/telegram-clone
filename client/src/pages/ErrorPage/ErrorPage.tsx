@@ -77,7 +77,7 @@ const ErrorPage = ({ errorCode = 404 }: ErrorPageProps) => {
             badge: "500 Server Error",
             sticker: <ServerErrorSticker />,
             title: "Ối dồi ôi! Máy chủ đang nghỉ ngơi...",
-            desc: "Hệ thống đang gặp sự cố nhỏ. Đội ngũ kỹ thuật đang sửa chữa, bạn quay lại sau nhé!",
+            desc: "Hệ thống đang gặp sự cố nhỏ. Nyan đang sửa chữa, bạn quay lại sau nhé!",
             btnText: "Tải lại trang",
             action: () => window.location.reload()
         },

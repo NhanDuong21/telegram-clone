@@ -245,3 +245,9 @@ body {
 .status-offline {
   color: var(--text-secondary);
 }
+
+/* Modal Open Stability Fix */
+body.modal-open {
+  overflow: hidden;
+  padding-right: var(--scrollbar-width, 15px);
+}

@@ -12,6 +12,7 @@ import DeleteConfirmModal from "../../components/chat/Modals/DeleteConfirmModal"
 import RightSidebar from "../../components/chat/RightSidebar/RightSidebar";
 import GroupSettingsModal from "../../components/chat/GroupSettingsModal/GroupSettingsModal";
 import ProfileModal from "../../components/profile/ProfileModal";
+import type { ProfileMode } from "../../components/profile/ProfileModal";
 import ImagePreviewModal from "../../components/chat/ImagePreviewModal/ImagePreviewModal";
 import DeleteMessageModal from "../../components/chat/DeleteMessageModal/DeleteMessageModal";
 import ForwardModal from "../../components/chat/ForwardModal/ForwardModal";
@@ -80,7 +81,8 @@ const ChatPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCallModal, setShowCallModal] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [profileModalMode, setProfileModalMode] = useState<'VIEW' | 'EDIT'>('VIEW');
+  const [profileModalMode, setProfileModalMode] = useState<ProfileMode>('VIEW');
+  const [profileModalUser, setProfileModalUser] = useState<User | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [confirmModalConfig, setConfirmModalConfig] = useState<{
@@ -222,6 +224,7 @@ const ChatPage = () => {
   };
 
   const handleOpenMyProfile = () => {
+    setProfileModalUser(null);
     setProfileModalMode('VIEW');
     setIsProfileModalOpen(true);
   };
@@ -292,7 +295,6 @@ const ChatPage = () => {
       </div>
 
       <motion.div 
-        layout
         className={`chat-main-area ${selectedConversationId ? 'is-active' : 'hidden-on-mobile'}`}
         style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', minWidth: 0 }}
       >
@@ -333,7 +335,14 @@ const ChatPage = () => {
                       <Avatar user={otherParticipant} size={36} />
                     </div>
                   )}
-                    <div className="chat-header__text">
+                    <div className="chat-header__text" onClick={(e) => {
+                        e.stopPropagation();
+                        if (!activeConversation.isGroup && otherParticipant) {
+                          setProfileModalUser(otherParticipant);
+                          setProfileModalMode('VIEW');
+                          setIsProfileModalOpen(true);
+                        }
+                      }} style={{ cursor: activeConversation.isGroup ? 'default' : 'pointer' }}>
                       <span className="chat-header__name">{activeConversation.isGroup ? activeConversation.name : (otherParticipant?.fullName || otherParticipant?.username || "Chat")}</span>
                       {!activeConversation.isGroup && otherParticipant && (
                         <span className={`chat-header__status ${typingUsers.has(otherParticipant._id) ? 'status-typing' : (onlineUsers.includes(otherParticipant._id) ? 'status-online' : 'status-offline')}`}>
@@ -474,6 +483,14 @@ const ChatPage = () => {
             isOpen={isProfileModalOpen}
             onClose={() => setIsProfileModalOpen(false)}
             initialMode={profileModalMode}
+            userToDisplay={
+              profileModalUser && otherParticipant && profileModalUser._id === otherParticipant._id 
+                ? otherParticipant 
+                : profileModalUser
+            }
+            isMuted={activeConversation?.isMuted}
+            onToggleMute={() => activeConversation && toggleMuteConversation(activeConversation._id)}
+            onMessage={() => setIsProfileModalOpen(false)}
           />
         )}
         {previewImageUrl && <ImagePreviewModal imageUrl={previewImageUrl} onClose={() => setPreviewImageUrl(null)} />}
@@ -522,15 +539,15 @@ const ChatPage = () => {
             targetName={activeConversation?.isGroup ? "mọi người" : (activeConversation?.name || activeConversation?.participants[0]?.username)}
           />
         )}
-        {rightPanelMode === 'info' && activeConversation && (
-          <RightSidebar 
+        <div className={`right-sidebar-wrapper ${rightPanelMode === 'info' ? 'is-open' : ''}`}>
+           <RightSidebar 
             onClose={() => setRightPanelMode('none')}
             user={otherParticipant ?? null}
             conversation={activeConversation ?? null}
             isOnline={otherParticipant ? onlineUsers.includes(otherParticipant._id) : false}
             onToggleMute={toggleMuteConversation}
           />
-        )}
+        </div>
         {rightPanelMode === 'search' && activeConversation && (
             <SearchSidebar 
                 messages={messages}
@@ -567,6 +584,7 @@ const ChatPage = () => {
             onClose={() => setShowSettings(false)}
             user={user}
             onEditProfile={() => {
+              setProfileModalUser(null);
               setProfileModalMode('EDIT');
               setIsProfileModalOpen(true);
             }}

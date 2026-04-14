@@ -10,9 +10,13 @@ import {
     User as UserIcon,
     Info,
     Cake,
+    MessageCircle,
+    Bell,
+    BellOff,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { updateProfileApi } from '../../api/userApi';
+import type { User } from '../../types/chat';
 import Avatar from '../common/Avatar';
 import EditEmailView from './EditEmailView';
 import './ProfileModal.css';
@@ -23,24 +27,34 @@ interface ProfileModalProps {
     isOpen: boolean;
     onClose: () => void;
     initialMode?: ProfileMode;
+    userToDisplay?: User | null;
+    isMuted?: boolean;
+    onToggleMute?: () => void;
+    onMessage?: () => void;
 }
 
 const ProfileModal: React.FC<ProfileModalProps> = ({ 
     isOpen, 
     onClose, 
-    initialMode = 'VIEW' 
+    initialMode = 'VIEW',
+    userToDisplay,
+    isMuted,
+    onToggleMute,
+    onMessage,
 }) => {
-    const { user, updateUser } = useAuth();
+    const { user: currentUser, updateUser } = useAuth();
+    const displayUser = userToDisplay || currentUser;
+    const isOwnProfile = !userToDisplay || userToDisplay._id === currentUser?._id;
     const [mode, setMode] = useState<ProfileMode>(initialMode);
     
     // Form states
-    const [fullName, setFullName] = useState(user?.fullName || user?.username || "");
-    const [bio, setBio] = useState(user?.bio || "");
-    const [username, setUsername] = useState(user?.username || "");
-    const [birthday, setBirthday] = useState(user?.birthday ? user.birthday.split('T')[0] : "");
-    const [email, setEmail] = useState(user?.email || "");
+    const [fullName, setFullName] = useState(displayUser?.fullName || displayUser?.username || "");
+    const [bio, setBio] = useState(displayUser?.bio || "");
+    const [username, setUsername] = useState(displayUser?.username || "");
+    const [birthday, setBirthday] = useState(displayUser?.birthday ? displayUser.birthday.split('T')[0] : "");
+    const [email, setEmail] = useState(displayUser?.email || "");
     
-    const [localPreview, setLocalPreview] = useState<string>(user?.avatar || "");
+    const [localPreview, setLocalPreview] = useState<string>(displayUser?.avatar || "");
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
@@ -50,16 +64,23 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     // Sync state when final user state changes or modal opens
     useEffect(() => {
         if (isOpen) {
-            setMode(initialMode);
-            setFullName(user?.fullName || user?.username || "");
-            setBio(user?.bio || "");
-            setUsername(user?.username || "");
-            setBirthday(user?.birthday ? user.birthday.split('T')[0] : "");
-            setEmail(user?.email || "");
-            setLocalPreview(user?.avatar || "");
+            document.body.classList.add('modal-open');
+            setMode(userToDisplay ? 'VIEW' : initialMode);
+            setFullName(displayUser?.fullName || displayUser?.username || "");
+            setBio(displayUser?.bio || "");
+            setUsername(displayUser?.username || "");
+            setBirthday(displayUser?.birthday ? displayUser.birthday.split('T')[0] : "");
+            setEmail(displayUser?.email || "");
+            setLocalPreview(displayUser?.avatar || "");
             setError("");
+        } else {
+            document.body.classList.remove('modal-open');
         }
-    }, [isOpen, initialMode, user]);
+
+        return () => {
+            document.body.classList.remove('modal-open');
+        };
+    }, [isOpen, initialMode, displayUser, userToDisplay]);
 
     const calculateAge = (birthDateStr: string) => {
         if (!birthDateStr) return null;
@@ -171,9 +192,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                         className="profile-view-container"
                                     >
                                         <div className="profile-header">
-                                            <button className="profile-icon-btn" onClick={() => setMode('EDIT')}>
-                                                <Pencil size={20} />
-                                            </button>
+                                            {isOwnProfile ? (
+                                                <button className="profile-icon-btn" onClick={() => setMode('EDIT')}>
+                                                    <Pencil size={20} />
+                                                </button>
+                                            ) : <div />}
                                             <button className="profile-icon-btn" onClick={onClose}>
                                                 <X size={22} />
                                             </button>
@@ -183,35 +206,54 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
 
                                         <div className="profile-hero">
                                             <div className="profile-hero-avatar">
-                                                <Avatar user={user} size={120} />
+                                                <Avatar user={displayUser} size={120} />
                                             </div>
                                             <div className="profile-hero-info">
-                                                <h2 className="profile-display-name">{user?.fullName || user?.username}</h2>
+                                                <h2 className="profile-display-name">{displayUser?.fullName || displayUser?.username}</h2>
                                                 <span className="profile-online-status">online</span>
                                             </div>
                                         </div>
 
-                                        <div className="profile-info-section">
-                                            <div className="profile-info-item">
-                                                <div className="info-icon"><Mail size={22} /></div>
-                                                <div className="info-details">
-                                                    <div className="info-value">{user?.email || "Chưa cập nhật"}</div>
-                                                    <div className="info-label">Email</div>
-                                                </div>
+                                        {!isOwnProfile && (
+                                            <div className="profile-quick-actions">
+                                                <button className="p-action-btn" onClick={() => { onMessage?.(); onClose(); }}>
+                                                    <div className="p-action-icon"><MessageCircle size={22} /></div>
+                                                    <span>Nhắn tin</span>
+                                                </button>
+                                                <button className="p-action-btn" onClick={onToggleMute}>
+                                                    <div className="p-action-icon">
+                                                        {isMuted ? <Bell size={22} /> : <BellOff size={22} />}
+                                                    </div>
+                                                    <span>{isMuted ? 'Bật âm' : 'Tắt âm'}</span>
+                                                </button>
                                             </div>
+                                        )}
 
-                                            <div className="profile-info-item">
-                                                <div className="info-icon"><Info size={22} /></div>
-                                                <div className="info-details">
-                                                    <div className="info-value">{user?.bio || "Chưa có tiểu sử"}</div>
-                                                    <div className="info-label">Tiểu sử</div>
+                                        <div className="profile-info-section">
+                                            {isOwnProfile && (
+                                                <div className="profile-info-item">
+                                                    <div className="info-icon"><Mail size={22} /></div>
+                                                    <div className="info-details">
+                                                        <div className="info-value">{displayUser?.email || "Chưa cập nhật"}</div>
+                                                        <div className="info-label">Email</div>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
+
+                                            {displayUser?.bio && (
+                                                <div className="profile-info-item">
+                                                    <div className="info-icon"><Info size={22} /></div>
+                                                    <div className="info-details">
+                                                        <div className="info-value">{displayUser.bio}</div>
+                                                        <div className="info-label">Tiểu sử</div>
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             <div className="profile-info-item">
                                                 <div className="info-icon"><UserIcon size={22} /></div>
                                                 <div className="info-details">
-                                                    <div className="info-value">@{user?.username}</div>
+                                                    <div className="info-value">@{displayUser?.username}</div>
                                                     <div className="info-label">Tên người dùng</div>
                                                 </div>
                                             </div>
@@ -220,18 +262,20 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                                 <div className="info-icon"><Cake size={22} /></div>
                                                 <div className="info-details">
                                                     <div className="info-value">
-                                                        {user?.birthday ? (
-                                                            `${formatDate(user.birthday)} (${calculateAge(user.birthday)} tuổi)`
-                                                        ) : "Chưa cập nhật"}
+                                                        {displayUser?.birthday ? (
+                                                            `${formatDate(displayUser.birthday)} (${calculateAge(displayUser.birthday)} tuổi)`
+                                                        ) : "N/A"}
                                                     </div>
                                                     <div className="info-label">Ngày sinh</div>
                                                 </div>
                                             </div>
                                         </div>
                                         
-                                        <div className="profile-settings-hint" onClick={() => setMode('EDIT')}>
-                                            <span>Click để chỉnh sửa thông tin cá nhân</span>
-                                        </div>
+                                        {isOwnProfile && (
+                                            <div className="profile-settings-hint" onClick={() => setMode('EDIT')}>
+                                                <span>Click để chỉnh sửa thông tin cá nhân</span>
+                                            </div>
+                                        )}
                                     </motion.div>
                                 )}
 
@@ -259,7 +303,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                             {error && <div className="profile-error-banner">{error}</div>}
                                             <div className="avatar-edit-box">
                                                 <div className="avatar-preview-container" onClick={() => fileInputRef.current?.click()}>
-                                                    <Avatar user={{ ...user, avatar: localPreview } as any} size={100} />
+                                                    <Avatar user={{ ...currentUser, avatar: localPreview } as any} size={100} />
                                                     <div className="avatar-overlay"><Camera size={28} /></div>
                                                 </div>
                                                 <input 

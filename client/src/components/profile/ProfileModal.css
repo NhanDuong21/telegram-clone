@@ -97,6 +97,51 @@
     font-weight: 500;
 }
 
+.profile-quick-actions {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    padding: 16px 24px;
+    background-color: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.p-action-btn {
+    background: transparent;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: var(--accent-color);
+    transition: transform 0.2s;
+}
+
+.p-action-btn:hover {
+    transform: translateY(-2px);
+}
+
+.p-action-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: rgba(var(--accent-rgb), 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.p-action-btn:hover .p-action-icon {
+    background-color: rgba(var(--accent-rgb), 0.2);
+}
+
+.p-action-btn span {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
 .profile-info-section {
     padding: 8px 0;
     display: flex;

@@ -112,14 +112,14 @@ export const getSharedMedia = async (req: AuthRequest, res: Response) => {
 export const removeFile = async (req: AuthRequest, res: Response) => {
     try {
         const { messageId } = req.params;
-        const { fileUrl } = req.body;
+        const { fileUrl, type } = req.body;
         const userId = req.user!._id;
 
         if (!fileUrl) {
             return res.status(400).json({ message: "fileUrl là bắt buộc" });
         }
 
-        const result = await messageService.removeFileService(messageId, userId.toString(), fileUrl);
+        const result = await messageService.removeFileService(messageId, userId.toString(), fileUrl, type);
         return res.status(200).json(result);
     } catch (error: any) {
         console.error("Remove file error:", error);

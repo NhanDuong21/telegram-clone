@@ -68,7 +68,7 @@ const ChatPage = () => {
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const [replyTarget, setReplyTarget] = useState<Message | null>(null);
   const [editTarget, setEditTarget] = useState<Message | null>(null);
-  const [messageToDelete, setMessageToDelete] = useState<Message | null>(null);
+  const [messageToDelete, setMessageToDelete] = useState<{ msg: Message, fileUrl?: string } | null>(null);
   const [messageToPin, setMessageToPin] = useState<Message | null>(null);
   const [messageToForward, setMessageToForward] = useState<Message | null>(null);
 
@@ -439,7 +439,7 @@ const ChatPage = () => {
                   loadingMore={loadingMore}
                   isGroup={activeConversation.isGroup ?? false}
                   onImagePreview={(url, msgId) => setPreviewImageData(url && msgId ? { url, messageId: msgId } : null)}
-                  onDeleteMessage={setMessageToDelete}
+                  onDeleteMessage={(msg, fileUrl) => setMessageToDelete({ msg, fileUrl })}
                   onReactMessage={handleReactMessage}
                   onReplyMessage={(msg) => { setEditTarget(null); setReplyTarget(msg); }}
                   onEditMessage={(msg) => { setReplyTarget(null); setEditTarget(msg); }}
@@ -517,13 +517,18 @@ const ChatPage = () => {
         {messageToDelete && (
           <DeleteMessageModal 
             onClose={() => setMessageToDelete(null)}
-            onConfirm={(type) => {
+            onConfirm={async (type) => {
               if (messageToDelete) {
-                deleteMessage(messageToDelete, type);
+                if (messageToDelete.fileUrl) {
+                  await removeFileApi(messageToDelete.msg._id, messageToDelete.fileUrl, type);
+                } else {
+                  deleteMessage(messageToDelete.msg, type);
+                }
                 setMessageToDelete(null);
               }
             }}
-            isSender={(messageToDelete.sender as unknown as User)?._id === user?._id}
+            isSender={(messageToDelete.msg.sender as unknown as User)?._id === user?._id}
+            isDeletingFile={!!messageToDelete.fileUrl}
             targetName={activeConversation?.isGroup ? "mọi người" : (activeConversation?.name || activeConversation?.participants[0]?.username)}
           />
         )}

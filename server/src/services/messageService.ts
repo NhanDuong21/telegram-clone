@@ -375,9 +375,32 @@ export const getSharedMediaService = async (conversationId: string, userId: stri
     return { media: flattenedMedia, hasMore, totalCount };
 };
 
-export const removeFileService = async (messageId: string, userId: string, fileUrl: string) => {
-    const message = await Message.findOne({ _id: messageId, sender: userId });
-    if (!message) throw new Error("Tin nhắn không tồn tại hoặc bạn không có quyền xóa");
+export const removeFileService = async (messageId: string, userId: string, fileUrl: string, type: 'one-way' | 'two-way' = 'two-way') => {
+    const message = await Message.findOne({ _id: messageId });
+    if (!message) throw new Error("Tin nhắn không tồn tại");
+
+    if (type === 'one-way') {
+        const userIdObj = new mongoose.Types.ObjectId(userId);
+        if (!message.deletedFor.includes(userIdObj)) {
+            message.deletedFor.push(userIdObj);
+            await message.save();
+        }
+        
+        const io = getIO();
+        io.to(userId).emit(SOCKET_EVENTS.MESSAGE_DELETED, {
+            messageId,
+            conversationId: message.conversationId,
+            type: 'one-way',
+            userId
+        });
+        
+        return { deleted: true, type: 'one-way' };
+    }
+
+    // Two-way deletion logic (Editing the actual message)
+    if (message.sender.toString() !== userId) {
+        throw new Error("Chỉ người gửi mới có thể xóa ảnh khỏi album cho mọi người");
+    }
 
     let isModified = false;
 

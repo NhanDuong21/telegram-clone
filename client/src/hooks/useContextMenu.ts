@@ -8,21 +8,24 @@ interface ContextMenuPos {
 export const useContextMenu = () => {
     const [pos, setPos] = useState<ContextMenuPos | null>(null);
     const [targetItem, setTargetItem] = useState<any>(null);
+    const [targetFileUrl, setTargetFileUrl] = useState<string | null>(null);
     const longPressTimer = useRef<any>(null);
 
-    const onContextMenu = useCallback((e: React.MouseEvent, item: any) => {
+    const onContextMenu = useCallback((e: React.MouseEvent, item: any, fileUrl?: string) => {
         e.preventDefault();
         e.stopPropagation();
         setPos({ x: e.clientX, y: e.clientY });
         setTargetItem(item);
+        setTargetFileUrl(fileUrl || null);
     }, []);
 
-    const onTouchStart = useCallback((e: React.TouchEvent, item: any) => {
+    const onTouchStart = useCallback((e: React.TouchEvent, item: any, fileUrl?: string) => {
         longPressTimer.current = setTimeout(() => {
             const touch = e.touches[0];
             e.stopPropagation();
             setPos({ x: touch.clientX, y: touch.clientY });
             setTargetItem(item);
+            setTargetFileUrl(fileUrl || null);
         }, 500);
     }, []);
 
@@ -36,6 +39,7 @@ export const useContextMenu = () => {
     const closeContextMenu = useCallback(() => {
         setPos(null);
         setTargetItem(null);
+        setTargetFileUrl(null);
     }, []);
 
     useEffect(() => {
@@ -53,6 +57,7 @@ export const useContextMenu = () => {
     return {
         pos,
         targetItem,
+        targetFileUrl,
         onContextMenu,
         onTouchStart,
         onTouchEnd,

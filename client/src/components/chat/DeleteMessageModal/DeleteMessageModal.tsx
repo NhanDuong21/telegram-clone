@@ -8,9 +8,10 @@ interface DeleteMessageModalProps {
     onConfirm: (type: 'one-way' | 'two-way') => void;
     isSender: boolean;
     targetName?: string; // The person on the other end
+    isDeletingFile?: boolean;
 }
 
-const DeleteMessageModal = ({ onClose, onConfirm, isSender, targetName }: DeleteMessageModalProps) => {
+const DeleteMessageModal = ({ onClose, onConfirm, isSender, targetName, isDeletingFile }: DeleteMessageModalProps) => {
     const [deleteForBoth, setDeleteForBoth] = useState(isSender);
 
     const handleDelete = () => {
@@ -27,7 +28,9 @@ const DeleteMessageModal = ({ onClose, onConfirm, isSender, targetName }: Delete
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="delete-modal-header">
-                    <h3 className="delete-modal-title">Bạn có muốn xóa tin nhắn này?</h3>
+                    <h3 className="delete-modal-title">
+                        {isDeletingFile ? "Bạn có muốn xóa ảnh này?" : "Bạn có muốn xóa tin nhắn này?"}
+                    </h3>
                     <button className="delete-modal-close" onClick={onClose}>
                         <X size={20} />
                     </button>
@@ -35,9 +38,9 @@ const DeleteMessageModal = ({ onClose, onConfirm, isSender, targetName }: Delete
 
                 <div className="delete-modal-body">
                     <p className="delete-modal-desc">
-                        {deleteForBoth 
-                            ? "Tin nhắn sẽ bị xóa khỏi lịch sử của bạn và đối phương."
-                            : "Tin nhắn sẽ bị xóa khỏi lịch sử của bạn."}
+                        {isDeletingFile
+                            ? (deleteForBoth ? "Ảnh sẽ bị xóa khỏi album cho tất cả mọi người." : "Ảnh sẽ bị ẩn khỏi lịch sử của bạn.")
+                            : (deleteForBoth ? "Tin nhắn sẽ bị xóa khỏi lịch sử của bạn và đối phương." : "Tin nhắn sẽ bị xóa khỏi lịch sử của bạn.")}
                     </p>
 
                     {isSender && targetName && (

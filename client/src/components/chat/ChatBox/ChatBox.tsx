@@ -17,7 +17,7 @@ interface ChatBoxProps {
     loadingMore?: boolean;
     isGroup?: boolean;
     onImagePreview?: (url: string, messageId?: string) => void;
-    onDeleteMessage?: (msg: Message) => void;
+    onDeleteMessage?: (msg: Message, targetFileUrl?: string) => void;
     onReactMessage?: (msg: Message, emoji: string) => void;
     onReplyMessage?: (msg: Message) => void;
     onEditMessage?: (msg: Message) => void;
@@ -70,7 +70,7 @@ const ChatBox = ({
     const bottomRef = useRef<HTMLDivElement>(null);
     const lastMessageId = useRef<string | null>(null);
     const prevConvId = useRef<string | null>(null);
-    const { pos, targetItem, onContextMenu, onTouchStart, onTouchEnd, closeContextMenu } = useContextMenu();
+    const { pos, targetItem, targetFileUrl, onContextMenu, onTouchStart, onTouchEnd, closeContextMenu } = useContextMenu();
 
     const pinnedMessages = useMemo(() => 
         messages.filter(m => m.isPinned || m.pinnedFor?.includes(currentUserId)), 
@@ -303,6 +303,7 @@ const ChatBox = ({
                                         <ImageAlbum 
                                             images={msg.imageUrls} 
                                             onImageClick={(url) => onImagePreview?.(url, msg._id)} 
+                                            onContextMenu={(e, url) => onContextMenu(e, msg, url)}
                                         />
                                     ) : msg.imageUrl && !msg.isDeleted && (
                                         <img
@@ -361,7 +362,7 @@ const ChatBox = ({
                             text={targetItem?.text}
                             isPinned={targetItem?.isPinned}
                             onClose={closeContextMenu}
-                            onDelete={() => onDeleteMessage?.(targetItem)}
+                            onDelete={() => onDeleteMessage?.(targetItem, targetFileUrl || undefined)}
                             onReact={(emoji) => onReactMessage?.(targetItem, emoji)}
                             onReply={() => onReplyMessage?.(targetItem)}
                             onEdit={() => onEditMessage?.(targetItem)}

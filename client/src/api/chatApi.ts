@@ -111,8 +111,8 @@ export const deleteMessageApi = (messageId: string, type: 'one-way' | 'two-way')
         ...getAuthHeader()
     });
 
-export const removeFileApi = (messageId: string, fileUrl: string) =>
-    axiosClient.patch(`/messages/${messageId}/remove-file`, { fileUrl }, getAuthHeader());
+export const removeFileApi = (messageId: string, fileUrl: string, type: 'one-way' | 'two-way' = 'two-way') =>
+    axiosClient.patch(`/messages/${messageId}/remove-file`, { fileUrl, type }, getAuthHeader());
 
 export const getSharedMediaApi = (
     conversationId: string,

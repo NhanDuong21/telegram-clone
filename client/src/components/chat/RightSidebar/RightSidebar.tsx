@@ -70,11 +70,10 @@ const RightSidebar = ({
 
     const handleMessageDeleted = ({ messageId, conversationId: deletedConvId }: any) => {
         if (String(deletedConvId) === String(conversation._id)) {
-            // Find if the deleted message was an image in our state
             setPhotos(prev => {
-                const found = prev.find(p => p._id === messageId);
-                if (found) {
-                    setPhotosCount(c => Math.max(0, c - 1));
+                const affectedImages = prev.filter(p => p._id === messageId);
+                if (affectedImages.length > 0) {
+                    setPhotosCount(c => Math.max(0, c - affectedImages.length));
                     return prev.filter(p => p._id !== messageId);
                 }
                 return prev;
@@ -84,7 +83,24 @@ const RightSidebar = ({
 
     const handleMessageUpdated = (updatedMsg: any) => {
         if (String(updatedMsg.conversationId) === String(conversation._id)) {
-            fetchMediaData();
+            setPhotos(prev => {
+                const oldImagesCount = prev.filter(p => p._id === updatedMsg._id).length;
+                const remaining = prev.filter(p => p._id !== updatedMsg._id);
+                
+                const newImages: any[] = [];
+                if (updatedMsg.imageUrls && updatedMsg.imageUrls.length > 0) {
+                    updatedMsg.imageUrls.forEach((url: string) => {
+                        newImages.push({ _id: updatedMsg._id, imageUrl: url, createdAt: updatedMsg.createdAt });
+                    });
+                } else if (updatedMsg.imageUrl) {
+                    newImages.push({ _id: updatedMsg._id, imageUrl: updatedMsg.imageUrl, createdAt: updatedMsg.createdAt });
+                }
+
+                setPhotosCount(c => Math.max(0, c - oldImagesCount + newImages.length));
+                return [...newImages, ...remaining].sort((a, b) => 
+                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                );
+            });
         }
     };
 

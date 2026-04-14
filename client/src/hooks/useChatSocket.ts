@@ -248,9 +248,9 @@ export const useChatSocket = ({
            }
         } else {
            setMessages((prev) =>
-             prev.map((m) =>
+             [...prev.map((m) =>
                m._id === messageId ? { ...m, text: "Tin nhắn đã bị xóa", imageUrl: "", isDeleted: true } : m
-             )
+             )]
            );
         }
       }
@@ -281,9 +281,10 @@ export const useChatSocket = ({
     });
 
     socket.on(SOCKET_EVENTS.MESSAGE_UPDATED, (updatedMsg: Message) => {
+      console.log("📡 !!! RECEIVED message-updated event:", updatedMsg);
       if (selectedIdRef.current === updatedMsg.conversationId) {
         setMessages((prev) =>
-          prev.map((m) => (m._id === updatedMsg._id ? updatedMsg : m))
+          [...prev.map((m) => (m._id === updatedMsg._id ? updatedMsg : m))]
         );
       }
       

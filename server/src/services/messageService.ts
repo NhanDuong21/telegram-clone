@@ -431,20 +431,33 @@ export const removeFileService = async (messageId: string, userId: string, fileU
     const hasContent = remainingImages > 0 || (message.text && message.text.trim() !== "");
 
     const io = getIO();
+    const conversation = await Conversation.findById(message.conversationId).select("participants").lean();
 
     if (!hasContent) {
         // Delete entire message if empty
         await Message.deleteOne({ _id: messageId });
-        io.to(message.conversationId.toString()).emit(SOCKET_EVENTS.MESSAGE_DELETED, {
-            messageId,
-            conversationId: message.conversationId,
-            type: 'two-way'
-        });
+        
+        if (conversation) {
+            console.log(`📡 Emitting MESSAGE_DELETED for album/message ${messageId} to participants`);
+            conversation.participants.forEach((p: any) => {
+                io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGE_DELETED, {
+                    messageId,
+                    conversationId: message.conversationId.toString(),
+                    type: 'two-way'
+                });
+            });
+        }
         return { deleted: true };
     } else {
         await message.save();
         const updatedMsg = await Message.findById(messageId).populate("sender", "username fullName avatar");
-        io.to(message.conversationId.toString()).emit(SOCKET_EVENTS.MESSAGE_UPDATED, updatedMsg);
+        
+        if (conversation && updatedMsg) {
+            console.log(`📡 Emitting MESSAGE_UPDATED for album ${messageId} to participants`);
+            conversation.participants.forEach((p: any) => {
+                io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGE_UPDATED, updatedMsg);
+            });
+        }
         return { deleted: false, message: updatedMsg };
     }
 };

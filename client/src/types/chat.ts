@@ -36,6 +36,7 @@ export interface Message {
     conversationId: string;
     text?: string;
     imageUrl?: string;
+    imageUrls?: string[];
     sender: {
         _id: string;
         username: string;

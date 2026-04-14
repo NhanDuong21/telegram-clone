@@ -4,18 +4,27 @@ import * as messageService from "../services/messageService";
 
 export const sendMessage = async (req: AuthRequest, res: Response) => {
     try {
-        const { conversationId, text, imageUrl, replyTo, forwardFrom, type } = req.body;
+        let { conversationId, text, imageUrl, replyTo, forwardFrom, type } = req.body;
         const senderId = req.user!._id;
+
+        const files = req.files as Express.Multer.File[];
+        let imageUrls: string[] = [];
+
+        if (files && files.length > 0) {
+            imageUrls = files.map(f => f.path);
+            if (!imageUrl) imageUrl = imageUrls[0];
+            type = 'image';
+        }
 
         if (!conversationId) {
             return res.status(400).json({ message: "conversationId là bắt buộc" });
         }
         
-        if (type !== 'system' && !text?.trim() && !imageUrl?.trim()) {
+        if (type !== 'system' && !text?.trim() && !imageUrl?.trim() && imageUrls.length === 0) {
             return res.status(400).json({ message: "Cần ít nhất text hoặc hình ảnh" });
         }
 
-        const message = await messageService.sendMessageService(conversationId, senderId.toString(), text, imageUrl, replyTo, forwardFrom, type);
+        const message = await messageService.sendMessageService(conversationId, senderId.toString(), text, imageUrl, replyTo, forwardFrom, type, imageUrls);
         return res.status(201).json({ message });
     } catch (error: unknown) {
         console.error("Send message error:", error);

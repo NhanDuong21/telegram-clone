@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import imageCompression from "browser-image-compression";
 import { useAuth } from "../../../context/AuthContext";
 import { sendMessageApi, updateMessageApi } from "../../../api/chatApi";
 import { getSocket } from "../../../socket";
 import type { Message, Conversation } from "../../../types";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
 import { X, CornerUpLeft, Pencil, Paperclip, SendHorizontal } from "lucide-react";
+import SendImageModal from "../Modals/SendImageModal";
 import './MessageInput.css';
 
 interface MessageInputProps {
@@ -33,6 +33,8 @@ const MessageInput = ({
     const [text, setText] = useState("");
     const [sending, setSending] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [pendingImages, setPendingImages] = useState<File[]>([]);
+    
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -46,59 +48,80 @@ const MessageInput = ({
         }
     }, [editTarget, replyTarget]);
 
-    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
         
-        if (!file.type.startsWith("image/")) {
+        const imageFiles = files.filter(f => f.type.startsWith("image/"));
+        if (imageFiles.length === 0) {
             alert("Vui lòng chọn file ảnh hợp lệ.");
             return;
         }
 
-        setIsUploading(true);
-        try {
-            const options = {
-                maxSizeMB: 0.5,
-                maxWidthOrHeight: 1280,
-                useWebWorker: true
-            };
-            const compressedFile = await imageCompression(file, options);
+        setPendingImages(prev => [...prev, ...imageFiles]);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
 
-            const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dqc4hufot";
-            const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "ml_default";
+    const handlePaste = (e: React.ClipboardEvent) => {
+        const items = e.clipboardData?.items;
+        if (!items) return;
 
-            const formData = new FormData();
-            formData.append("file", compressedFile);
-            formData.append("upload_preset", uploadPreset);
-            formData.append("cloud_name", cloudName);
-
-            const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-            const response = await fetch(cloudinaryUrl, {
-                method: "POST",
-                body: formData
-            });
-
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData?.error?.message || "Cloudinary upload failed");
+        const files: File[] = [];
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.startsWith("image/")) {
+                const file = items[i].getAsFile();
+                if (file) files.push(file);
             }
+        }
 
-            const data = await response.json();
-            const uploadedImageUrl = data.secure_url;
+        if (files.length > 0) {
+            e.preventDefault();
+            setPendingImages(prev => [...prev, ...files]);
+        }
+    };
 
-            const sendRes = await sendMessageApi(conversationId, { 
-                text: "", 
-                imageUrl: uploadedImageUrl,
-                replyTo: replyTarget?._id
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        const files = Array.from(e.dataTransfer.files || []);
+        const imageFiles = files.filter(f => f.type.startsWith("image/"));
+        
+        if (imageFiles.length > 0) {
+            setPendingImages(prev => [...prev, ...imageFiles]);
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+    };
+
+    const handleSendImages = async (caption: string, files: File[]) => {
+        if (files.length === 0 || isUploading) return;
+        
+        setIsUploading(true);
+        setPendingImages([]); // Close modal
+
+        try {
+            const formData = new FormData();
+            formData.append("text", caption);
+            if (replyTarget) formData.append("replyTo", replyTarget._id);
+            formData.append("type", "image");
+
+            // Option A: Upload each file to Cloudinary from client (parallel)
+            // Option B: Multi-part upload to backend
+            // User requested FormData with File objects -> Option B
+            
+            files.forEach(file => {
+                formData.append("images", file);
             });
-            onMessageSent(sendRes.data.message);
+
+            const res = await sendMessageApi(conversationId, formData);
+            onMessageSent(res.data.message);
             if (replyTarget) onCancelMode?.();
         } catch (error: any) {
-            console.error("Upload and send failed:", error);
-            alert(`Lỗi: ${error?.message || "Không thể upload ảnh"}`);
+            console.error("Upload and send multiple images failed:", error);
+            alert(`Lỗi: ${error?.message || "Không thể gửi ảnh"}`);
         } finally {
             setIsUploading(false);
-            if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
 
@@ -204,7 +227,11 @@ const MessageInput = ({
     const canSend = text.trim() && !sending;
 
     return (
-        <div className="message-input-container">
+        <div 
+            className="message-input-container"
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+        >
             {(replyTarget || editTarget) && (
                 <div className="message-input-mode-preview">
                     <div className="mode-preview-icon">
@@ -227,6 +254,7 @@ const MessageInput = ({
                 <input
                     type="file"
                     accept="image/*"
+                    multiple
                     ref={fileInputRef}
                     onChange={handleFileChange}
                     style={{ display: "none" }}
@@ -250,6 +278,7 @@ const MessageInput = ({
                         value={text}
                         onChange={handleChange}
                         onKeyDown={handleKeyDown}
+                        onPaste={handlePaste}
                         onBlur={() => {
                             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
                             emitTyping(false);
@@ -266,6 +295,15 @@ const MessageInput = ({
                     {sending ? "..." : <SendHorizontal size={20} />}
                 </button>
             </div>
+
+            {pendingImages.length > 0 && (
+                <SendImageModal 
+                    files={pendingImages}
+                    onClose={() => setPendingImages([])}
+                    onAddMore={() => fileInputRef.current?.click()}
+                    onSend={handleSendImages}
+                />
+            )}
         </div>
     );
 };

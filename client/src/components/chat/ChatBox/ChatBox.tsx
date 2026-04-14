@@ -298,7 +298,19 @@ const ChatBox = ({
 
                                     {renderReplySnippet(msg)}
                                     
-                                    {msg.imageUrl && !msg.isDeleted && (
+                                    {msg.imageUrls && msg.imageUrls.length > 0 && !msg.isDeleted ? (
+                                        <div className={`message-image-grid grid-${Math.min(msg.imageUrls.length, 4)}`}>
+                                            {msg.imageUrls.map((url, i) => (
+                                                <img
+                                                    key={i}
+                                                    src={url}
+                                                    alt="Attached"
+                                                    className="message-image-grid-item"
+                                                    onClick={() => onImagePreview?.(url)}
+                                                />
+                                            ))}
+                                        </div>
+                                    ) : msg.imageUrl && !msg.isDeleted && (
                                         <img
                                             src={msg.imageUrl}
                                             alt="Attached"

@@ -24,6 +24,10 @@ const messageSchema = new Schema<IMessage>(
             trim: true,
             default: "",
         },
+        imageUrls: {
+            type: [String],
+            default: [],
+        },
         readBy: [
             {
                 type: Schema.Types.ObjectId,

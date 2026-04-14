@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { protect } from "../middlewares/authMiddleware";
 import { sendMessage, getMessages, deleteMessage, updateMessage, getSharedMedia } from "../controllers/messageController";
+import { upload } from "../middlewares/uploadMiddleware";
 
 const router = Router();
 
 // POST /api/messages — gửi tin nhắn
-router.post("/", protect, sendMessage);
+router.post("/", protect, upload.array("images", 10), sendMessage);
 
 // GET /api/messages/:conversationId — lấy tin nhắn theo conversation
 router.get("/:conversationId", protect, getMessages);

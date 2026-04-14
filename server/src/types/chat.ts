@@ -5,6 +5,7 @@ export interface IMessage extends mongoose.Document {
     sender: mongoose.Types.ObjectId;
     text?: string;
     imageUrl?: string;
+    imageUrls?: string[];
     readBy: mongoose.Types.ObjectId[];
     isRead: boolean;
     deletedFor: mongoose.Types.ObjectId[];

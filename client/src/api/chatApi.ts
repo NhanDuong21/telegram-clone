@@ -71,9 +71,21 @@ export const getMessagesApi = (
 
 export const sendMessageApi = (
     conversationId: string,
-    data: { text?: string; imageUrl?: string; replyTo?: string; forwardFrom?: string; type?: string }
-): Promise<AxiosResponse<{ message: Message }>> =>
-    axiosClient.post(`/messages`, { conversationId, ...data }, getAuthHeader());
+    data: any // Can be object or FormData
+): Promise<AxiosResponse<{ message: Message }>> => {
+    if (data instanceof FormData) {
+        if (!data.has("conversationId")) {
+            data.append("conversationId", conversationId);
+        }
+        return axiosClient.post(`/messages`, data, {
+            headers: {
+                ...getAuthHeader().headers,
+                "Content-Type": "multipart/form-data",
+            },
+        });
+    }
+    return axiosClient.post(`/messages`, { conversationId, ...data }, getAuthHeader());
+};
 
 export const updateMessageApi = (
     messageId: string,

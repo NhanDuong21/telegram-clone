@@ -21,7 +21,7 @@ import SearchSidebar from "../../components/chat/RightSidebar/SearchSidebar";
 import { toggleBlockUserApi } from "../../api/userApi";
 import CallModal from "../../components/chat/CallModal/CallModal";
 import ConfirmModal from "../../components/chat/Modals/ConfirmModal";
-import { sendMessageApi } from "../../api/chatApi";
+import { sendMessageApi, removeFileApi } from "../../api/chatApi";
 import SettingsModal from "../../components/chat/Settings/SettingsModal";
 
 import { disconnectSocket, getSocket } from "../../socket";
@@ -84,7 +84,7 @@ const ChatPage = () => {
   const [profileModalMode, setProfileModalMode] = useState<ProfileMode>('VIEW');
   const [profileModalUser, setProfileModalUser] = useState<User | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [previewImageData, setPreviewImageData] = useState<{ url: string, messageId: string } | null>(null);
   const [confirmModalConfig, setConfirmModalConfig] = useState<{
     title: string;
     description: string;
@@ -227,6 +227,20 @@ const ChatPage = () => {
     setProfileModalUser(null);
     setProfileModalMode('VIEW');
     setIsProfileModalOpen(true);
+  };
+
+  const handleDeletePreviewImage = async () => {
+    if (!previewImageData) return;
+    if (window.confirm("Bạn có chắc muốn xóa ảnh này khỏi cuộc trò chuyện?")) {
+      try {
+        await removeFileApi(previewImageData.messageId, previewImageData.url);
+        setPreviewImageData(null);
+        // Socket listener will handle the message update/deletion
+      } catch (err) {
+        console.error("Delete preview image failed:", err);
+        alert("Không thể xóa ảnh.");
+      }
+    }
   };
 
   return (
@@ -424,7 +438,7 @@ const ChatPage = () => {
                   hasMore={hasMore}
                   loadingMore={loadingMore}
                   isGroup={activeConversation.isGroup ?? false}
-                  onImagePreview={setPreviewImageUrl}
+                  onImagePreview={(url, msgId) => setPreviewImageData(url && msgId ? { url, messageId: msgId } : null)}
                   onDeleteMessage={setMessageToDelete}
                   onReactMessage={handleReactMessage}
                   onReplyMessage={(msg) => { setEditTarget(null); setReplyTarget(msg); }}
@@ -493,7 +507,13 @@ const ChatPage = () => {
             onMessage={() => setIsProfileModalOpen(false)}
           />
         )}
-        {previewImageUrl && <ImagePreviewModal imageUrl={previewImageUrl} onClose={() => setPreviewImageUrl(null)} />}
+        {previewImageData && (
+          <ImagePreviewModal 
+            imageUrl={previewImageData.url} 
+            onClose={() => setPreviewImageData(null)} 
+            onDelete={handleDeletePreviewImage}
+          />
+        )}
         {messageToDelete && (
           <DeleteMessageModal 
             onClose={() => setMessageToDelete(null)}

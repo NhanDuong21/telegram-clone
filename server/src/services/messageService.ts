@@ -287,6 +287,8 @@ export const markAsReadService = async (conversationId: string, userId: string) 
     }
 };
 
+import mongoose from "mongoose";
+
 export const getSharedMediaService = async (conversationId: string, userId: string, type: string, before?: string, limit: number = 30) => {
     const conversation = await Conversation.findOne({
         _id: conversationId,
@@ -298,13 +300,17 @@ export const getSharedMediaService = async (conversationId: string, userId: stri
     }
 
     const query: any = { 
-        conversationId,
-        deletedFor: { $ne: userId }
+        conversationId: new mongoose.Types.ObjectId(conversationId),
+        deletedFor: { $ne: new mongoose.Types.ObjectId(userId) },
+        isDeleted: { $ne: true }
     };
 
     if (type === 'image') {
-        query.$or = [{ type: 'image' }, { imageUrl: { $ne: "" } }];
-        query.isDeleted = { $ne: true };
+        query.$or = [
+            { type: 'image' }, 
+            { imageUrl: { $ne: "" } },
+            { imageUrls: { $exists: true, $not: { $size: 0 } } }
+        ];
     }
 
     if (before) {
@@ -312,7 +318,7 @@ export const getSharedMediaService = async (conversationId: string, userId: stri
     }
 
     const messages = await Message.find(query)
-        .select("imageUrl createdAt")
+        .select("imageUrl imageUrls createdAt")
         .sort({ createdAt: -1 })
         .limit(limit + 1)
         .lean();
@@ -322,12 +328,100 @@ export const getSharedMediaService = async (conversationId: string, userId: stri
         messages.pop();
     }
 
-    const totalCount = await Message.countDocuments({
-        conversationId,
-        deletedFor: { $ne: userId },
-        isDeleted: { $ne: true },
-        $or: [{ type: 'image' }, { imageUrl: { $ne: "" } }]
+    // Flatten media items: if a message has multiple imageUrls, create multiple gallery entries
+    const flattenedMedia: any[] = [];
+    messages.forEach(msg => {
+        if (msg.imageUrls && msg.imageUrls.length > 0) {
+            // New format: album
+            msg.imageUrls.forEach((url: string) => {
+                flattenedMedia.push({ _id: msg._id, imageUrl: url, createdAt: msg.createdAt });
+            });
+        } else if (msg.imageUrl) {
+            // Old format: single photo
+            flattenedMedia.push({ _id: msg._id, imageUrl: msg.imageUrl, createdAt: msg.createdAt });
+        }
     });
 
-    return { media: messages, hasMore, totalCount };
+    // Accurate total count using aggregation
+    const aggregationResult = await Message.aggregate([
+        { $match: { 
+            conversationId: new mongoose.Types.ObjectId(conversationId),
+            deletedFor: { $ne: new mongoose.Types.ObjectId(userId) },
+            isDeleted: { $ne: true },
+            $or: [
+                { type: 'image' }, 
+                { imageUrl: { $ne: "" } },
+                { imageUrls: { $exists: true, $not: { $size: 0 } } }
+            ]
+        } },
+        { 
+            $project: {
+                count: { 
+                    $cond: [
+                        { $and: [{ $isArray: "$imageUrls" }, { $gt: [{ $size: "$imageUrls" }, 0] }] },
+                        { $size: "$imageUrls" },
+                        { $cond: [{ $gt: ["$imageUrl", ""] }, 1, 0] }
+                    ]
+                }
+            }
+        },
+        { $group: { _id: null, total: { $sum: "$count" } } }
+    ]);
+
+    console.log("📊 Aggregation Result for Shared Media:", JSON.stringify(aggregationResult, null, 2));
+
+    const totalCount = aggregationResult.length > 0 ? aggregationResult[0].total : 0;
+
+    return { media: flattenedMedia, hasMore, totalCount };
+};
+
+export const removeFileService = async (messageId: string, userId: string, fileUrl: string) => {
+    const message = await Message.findOne({ _id: messageId, sender: userId });
+    if (!message) throw new Error("Tin nhắn không tồn tại hoặc bạn không có quyền xóa");
+
+    let isModified = false;
+
+    // Handle imageUrls array
+    if (message.imageUrls && message.imageUrls.length > 0) {
+        const originalLength = message.imageUrls.length;
+        message.imageUrls = message.imageUrls.filter(url => url !== fileUrl);
+        if (message.imageUrls.length !== originalLength) {
+            isModified = true;
+            // Also update legacy imageUrl if it was pointing to the deleted file
+            if (message.imageUrl === fileUrl) {
+                message.imageUrl = message.imageUrls.length > 0 ? message.imageUrls[0] : "";
+            }
+        }
+    } else if (message.imageUrl === fileUrl) {
+        message.imageUrl = "";
+        isModified = true;
+    }
+
+    if (!isModified) {
+        throw new Error("Không tìm thấy tệp đính kèm để xóa");
+    }
+
+    const remainingImages = (message.imageUrls && message.imageUrls.length > 0) 
+        ? message.imageUrls.length 
+        : (message.imageUrl && message.imageUrl.trim() !== "" ? 1 : 0);
+        
+    const hasContent = remainingImages > 0 || (message.text && message.text.trim() !== "");
+
+    const io = getIO();
+
+    if (!hasContent) {
+        // Delete entire message if empty
+        await Message.deleteOne({ _id: messageId });
+        io.to(message.conversationId.toString()).emit(SOCKET_EVENTS.MESSAGE_DELETED, {
+            messageId,
+            conversationId: message.conversationId,
+            type: 'two-way'
+        });
+        return { deleted: true };
+    } else {
+        await message.save();
+        const updatedMsg = await Message.findById(messageId).populate("sender", "username fullName avatar");
+        io.to(message.conversationId.toString()).emit(SOCKET_EVENTS.MESSAGE_UPDATED, updatedMsg);
+        return { deleted: false, message: updatedMsg };
+    }
 };

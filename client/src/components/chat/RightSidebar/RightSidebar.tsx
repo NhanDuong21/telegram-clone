@@ -18,13 +18,13 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from 'react-hot-toast';
-import { getSharedMediaApi } from "../../../api/chatApi";
 import type { User, Conversation } from "../../../types";
 import Avatar from "../../common/Avatar";
 import ImagePreviewModal from "../ImagePreviewModal/ImagePreviewModal";
 import { AnimatePresence } from "framer-motion";
 import { connectSocket } from "../../../socket";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
+import { removeFileApi, getSharedMediaApi } from "../../../api/chatApi";
 import "./RightSidebar.css";
 
 interface RightSidebarProps {
@@ -47,7 +47,7 @@ const RightSidebar = ({
   const [view, setView] = useState<'info' | 'photos'>('info');
   const [photos, setPhotos] = useState<any[]>([]);
   const [photosCount, setPhotosCount] = useState(0);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState<{ url: string, messageId: string } | null>(null);
 
   useEffect(() => {
     if (conversation?._id) {
@@ -82,12 +82,20 @@ const RightSidebar = ({
         }
     };
 
+    const handleMessageUpdated = (updatedMsg: any) => {
+        if (String(updatedMsg.conversationId) === String(conversation._id)) {
+            fetchMediaData();
+        }
+    };
+
     socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, handleNewMessage);
     socket.on(SOCKET_EVENTS.MESSAGE_DELETED, handleMessageDeleted);
+    socket.on(SOCKET_EVENTS.MESSAGE_UPDATED, handleMessageUpdated);
 
     return () => {
       socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE, handleNewMessage);
       socket.off(SOCKET_EVENTS.MESSAGE_DELETED, handleMessageDeleted);
+      socket.off(SOCKET_EVENTS.MESSAGE_UPDATED, handleMessageUpdated);
     };
   }, [conversation?._id]);
 
@@ -99,6 +107,21 @@ const RightSidebar = ({
       setPhotosCount(res.data.totalCount);
     } catch (error) {
       console.error("Fetch shared media failed:", error);
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    if (!previewData || !conversation?._id) return;
+    
+    if (window.confirm("Bạn có chắc muốn xóa ảnh này khỏi cuộc trò chuyện?")) {
+        try {
+            await removeFileApi(previewData.messageId, previewData.url);
+            setPreviewData(null);
+            // State will be updated via socket listener fetchMediaData
+        } catch (error) {
+            console.error("Delete photo failed:", error);
+            alert("Không thể xóa ảnh.");
+        }
     }
   };
 
@@ -289,7 +312,7 @@ const RightSidebar = ({
                   <div 
                     key={msg._id || idx} 
                     className="photo-grid-item"
-                    onClick={() => setPreviewImage(msg.imageUrl)}
+                    onClick={() => setPreviewData({ url: msg.imageUrl, messageId: msg._id })}
                   >
                     <img src={msg.imageUrl} alt="Shared" loading="lazy" />
                   </div>
@@ -301,10 +324,11 @@ const RightSidebar = ({
       </div>
 
       <AnimatePresence>
-        {previewImage && (
+        {previewData && (
           <ImagePreviewModal 
-            imageUrl={previewImage}
-            onClose={() => setPreviewImage(null)}
+            imageUrl={previewData.url}
+            onClose={() => setPreviewData(null)}
+            onDelete={handleDeletePhoto}
           />
         )}
       </AnimatePresence>

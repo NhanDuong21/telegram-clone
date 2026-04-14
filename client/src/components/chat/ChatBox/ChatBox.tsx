@@ -16,7 +16,7 @@ interface ChatBoxProps {
     hasMore?: boolean;
     loadingMore?: boolean;
     isGroup?: boolean;
-    onImagePreview?: (url: string) => void;
+    onImagePreview?: (url: string, messageId?: string) => void;
     onDeleteMessage?: (msg: Message) => void;
     onReactMessage?: (msg: Message, emoji: string) => void;
     onReplyMessage?: (msg: Message) => void;
@@ -302,14 +302,14 @@ const ChatBox = ({
                                     {msg.imageUrls && msg.imageUrls.length > 0 && !msg.isDeleted ? (
                                         <ImageAlbum 
                                             images={msg.imageUrls} 
-                                            onImageClick={(url) => onImagePreview?.(url)} 
+                                            onImageClick={(url) => onImagePreview?.(url, msg._id)} 
                                         />
                                     ) : msg.imageUrl && !msg.isDeleted && (
                                         <img
                                             src={msg.imageUrl}
                                             alt="Attached"
                                             className={`message-image ${isMe ? "message-image--me" : "message-image--other"} ${msg.text ? "message-image--with-text" : ""}`}
-                                            onClick={() => onImagePreview?.(msg.imageUrl!)}
+                                            onClick={() => onImagePreview?.(msg.imageUrl!, msg._id)}
                                             onError={(e) => {
                                                 e.currentTarget.style.display = "none";
                                             }}

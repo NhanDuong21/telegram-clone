@@ -9,6 +9,7 @@ export interface User {
     fullName?: string;
     birthday?: string;
     lastSeen?: string;
+    phone?: string;
     blockedUsers?: string[];
 }
 

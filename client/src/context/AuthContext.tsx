@@ -15,6 +15,7 @@ interface User {
   bio?: string;
   fullName?: string;
   birthday?: string;
+  phone?: string;
   blockedUsers?: string[];
 }
 

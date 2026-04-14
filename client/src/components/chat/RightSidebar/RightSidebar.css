@@ -230,6 +230,42 @@
     color: var(--text-main);
 }
 
+/* Shared Media Grid Styles */
+.shared-media-grid {
+    padding: 2px;
+}
+
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+}
+
+.photo-grid-item {
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    cursor: pointer;
+    background-color: var(--input-bg);
+}
+
+.photo-grid-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s ease;
+}
+
+.photo-grid-item:hover img {
+    transform: scale(1.05);
+}
+
+.empty-media {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .right-sidebar-wrapper {

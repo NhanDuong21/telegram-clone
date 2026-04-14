@@ -79,3 +79,23 @@ export const updateMessage = async (req: AuthRequest, res: Response) => {
         return res.status(status).json({ message: err.message || "Server error" });
     }
 };
+
+export const getSharedMedia = async (req: AuthRequest, res: Response) => {
+    try {
+        const { conversationId } = req.params;
+        const { type, before, limit } = req.query;
+        const userId = req.user!._id;
+
+        const result = await messageService.getSharedMediaService(
+            conversationId, 
+            userId.toString(), 
+            (type as string) || 'image', 
+            before as string, 
+            parseInt(limit as string) || 30
+        );
+        return res.status(200).json(result);
+    } catch (error: unknown) {
+        console.error("Get shared media error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};

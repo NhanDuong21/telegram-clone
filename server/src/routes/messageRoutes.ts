@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { protect } from "../middlewares/authMiddleware";
-import { sendMessage, getMessages, deleteMessage, updateMessage } from "../controllers/messageController";
+import { sendMessage, getMessages, deleteMessage, updateMessage, getSharedMedia } from "../controllers/messageController";
 
 const router = Router();
 
@@ -15,5 +15,8 @@ router.patch("/:id", protect, updateMessage);
 
 // DELETE /api/messages/:id — xóa tin nhắn
 router.delete("/:id", protect, deleteMessage);
+
+// GET /api/messages/shared-media/:conversationId — lấy media chung
+router.get("/shared-media/:conversationId", protect, getSharedMedia);
 
 export default router;

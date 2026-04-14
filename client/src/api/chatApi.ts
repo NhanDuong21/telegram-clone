@@ -98,3 +98,14 @@ export const deleteMessageApi = (messageId: string, type: 'one-way' | 'two-way')
         data: { type },
         ...getAuthHeader()
     });
+
+export const getSharedMediaApi = (
+    conversationId: string,
+    type: string = 'image',
+    before?: string,
+    limit: number = 30
+): Promise<AxiosResponse<{ media: any[]; hasMore: boolean; totalCount: number }>> => {
+    let url = `/messages/shared-media/${conversationId}?type=${type}&limit=${limit}`;
+    if (before) url += `&before=${encodeURIComponent(before)}`;
+    return axiosClient.get(url, getAuthHeader());
+};

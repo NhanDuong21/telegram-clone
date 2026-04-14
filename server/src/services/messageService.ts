@@ -285,3 +285,48 @@ export const markAsReadService = async (conversationId: string, userId: string) 
         }
     }
 };
+
+export const getSharedMediaService = async (conversationId: string, userId: string, type: string, before?: string, limit: number = 30) => {
+    const conversation = await Conversation.findOne({
+        _id: conversationId,
+        participants: userId,
+    }).select("_id").lean();
+
+    if (!conversation) {
+        throw new Error("Conversation không tồn tại");
+    }
+
+    const query: any = { 
+        conversationId,
+        deletedFor: { $ne: userId }
+    };
+
+    if (type === 'image') {
+        query.$or = [{ type: 'image' }, { imageUrl: { $ne: "" } }];
+        query.isDeleted = { $ne: true };
+    }
+
+    if (before) {
+        query.createdAt = { $lt: new Date(before) };
+    }
+
+    const messages = await Message.find(query)
+        .select("imageUrl createdAt")
+        .sort({ createdAt: -1 })
+        .limit(limit + 1)
+        .lean();
+
+    const hasMore = messages.length > limit;
+    if (hasMore) {
+        messages.pop();
+    }
+
+    const totalCount = await Message.countDocuments({
+        conversationId,
+        deletedFor: { $ne: userId },
+        isDeleted: { $ne: true },
+        $or: [{ type: 'image' }, { imageUrl: { $ne: "" } }]
+    });
+
+    return { media: messages, hasMore, totalCount };
+};

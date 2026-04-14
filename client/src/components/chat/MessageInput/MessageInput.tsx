@@ -6,6 +6,7 @@ import type { Message, Conversation } from "../../../types";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
 import { X, CornerUpLeft, Pencil, Paperclip, SendHorizontal } from "lucide-react";
 import SendImageModal from "../Modals/SendImageModal";
+import { toast } from 'react-hot-toast';
 import './MessageInput.css';
 
 interface MessageInputProps {
@@ -54,7 +55,12 @@ const MessageInput = ({
         
         const imageFiles = files.filter(f => f.type.startsWith("image/"));
         if (imageFiles.length === 0) {
-            alert("Vui lòng chọn file ảnh hợp lệ.");
+            toast.error("Vui lòng chọn file ảnh hợp lệ.");
+            return;
+        }
+
+        if (pendingImages.length + imageFiles.length > 5) {
+            toast.error("Bạn chỉ có thể gửi tối đa 5 ảnh một lúc.");
             return;
         }
 
@@ -75,8 +81,12 @@ const MessageInput = ({
         }
 
         if (files.length > 0) {
-            e.preventDefault();
-            setPendingImages(prev => [...prev, ...files]);
+            if (pendingImages.length + files.length > 5) {
+                toast.error("Bạn chỉ có thể gửi tối đa 5 ảnh một lúc.");
+            } else {
+                e.preventDefault();
+                setPendingImages(prev => [...prev, ...files]);
+            }
         }
     };
 
@@ -86,7 +96,11 @@ const MessageInput = ({
         const imageFiles = files.filter(f => f.type.startsWith("image/"));
         
         if (imageFiles.length > 0) {
-            setPendingImages(prev => [...prev, ...imageFiles]);
+            if (pendingImages.length + imageFiles.length > 5) {
+                toast.error("Bạn chỉ có thể gửi tối đa 5 ảnh một lúc.");
+            } else {
+                setPendingImages(prev => [...prev, ...imageFiles]);
+            }
         }
     };
 

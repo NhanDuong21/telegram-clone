@@ -6,6 +6,7 @@ import { useContextMenu } from "../../../hooks/useContextMenu";
 import { getSocket } from "../../../socket";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
 import ContextMenu from "../Message/ContextMenu";
+import ImageAlbum from "../Message/ImageAlbum";
 import './ChatBox.css';
 
 interface ChatBoxProps {
@@ -299,17 +300,10 @@ const ChatBox = ({
                                     {renderReplySnippet(msg)}
                                     
                                     {msg.imageUrls && msg.imageUrls.length > 0 && !msg.isDeleted ? (
-                                        <div className={`message-image-grid grid-${Math.min(msg.imageUrls.length, 4)}`}>
-                                            {msg.imageUrls.map((url, i) => (
-                                                <img
-                                                    key={i}
-                                                    src={url}
-                                                    alt="Attached"
-                                                    className="message-image-grid-item"
-                                                    onClick={() => onImagePreview?.(url)}
-                                                />
-                                            ))}
-                                        </div>
+                                        <ImageAlbum 
+                                            images={msg.imageUrls} 
+                                            onImageClick={(url) => onImagePreview?.(url)} 
+                                        />
                                     ) : msg.imageUrl && !msg.isDeleted && (
                                         <img
                                             src={msg.imageUrl}

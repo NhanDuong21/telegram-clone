@@ -1,0 +1,199 @@
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+}
+
+/* Flying Container */
+.flying-container {
+    position: relative;
+    width: 200px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Paper Plane styling and flight animation */
+.plane-wrapper {
+    position: relative;
+    color: var(--accent-color);
+    width: 80px;
+    height: 80px;
+    z-index: 5;
+    animation: flight 3s ease-in-out infinite;
+    filter: drop-shadow(0 10px 15px rgba(51, 144, 236, 0.2));
+}
+
+.paper-plane-svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Wings Tilt for flight effect */
+@keyframes flight {
+    0%, 100% {
+        transform: translateY(0) rotate(-5deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(5deg);
+    }
+}
+
+/* Wind Streaks Logic */
+.wind-streaks {
+    position: absolute;
+    right: 60%; /* Position behind the tail */
+    width: 100px;
+    height: 60px;
+}
+
+.streak {
+    position: absolute;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+    border-radius: 2px;
+    opacity: 0;
+    animation: wind 1.2s linear infinite;
+}
+
+.streak-1 {
+    top: 10%;
+    width: 40px;
+    animation-delay: 0s;
+}
+
+.streak-2 {
+    top: 50%;
+    width: 60px;
+    animation-delay: 0.4s;
+    right: -20px;
+}
+
+.streak-3 {
+    top: 80%;
+    width: 35px;
+    animation-delay: 0.8s;
+}
+
+@keyframes wind {
+    0% {
+        transform: translateX(100px) scaleX(0.5);
+        opacity: 0;
+    }
+    20% {
+        opacity: 0.6;
+    }
+    80% {
+        opacity: 0.3;
+    }
+    100% {
+        transform: translateX(-50px) scaleX(1.5);
+        opacity: 0;
+    }
+}
+
+/* Loading text and progress bar */
+.loading-info {
+    text-align: center;
+}
+
+.loading-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.loading-status {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    opacity: 0.7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1px;
+}
+
+.dot {
+    animation: loading-dots 1.5s infinite;
+    opacity: 0;
+}
+
+.dot:nth-child(1) { animation-delay: 0s; }
+.dot:nth-child(2) { animation-delay: 0.3s; }
+.dot:nth-child(3) { animation-delay: 0.6s; }
+
+@keyframes loading-dots {
+    0%, 100% { opacity: 0; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-2px); }
+}
+
+.loading-progress-bar {
+    width: 180px;
+    height: 4px;
+    background: var(--bg-hover);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 40%;
+    background: var(--accent-color);
+    border-radius: 10px;
+    animation: loading-progress 2s ease-in-out infinite;
+}
+
+@keyframes loading-progress {
+    0% {
+        transform: translateX(-100%);
+    }
+    50% {
+        transform: translateX(50%);
+    }
+    100% {
+        transform: translateX(150%);
+    }
+}
+
+/* Pulsing effect on the whole plane area */
+.flying-container::after {
+    content: "";
+    position: absolute;
+    width: 120px;
+    height: 40px;
+    background: radial-gradient(ellipse at center, var(--accent-color), transparent);
+    opacity: 0.1;
+    bottom: -20px;
+    filter: blur(10px);
+    animation: shadow-float 3s ease-in-out infinite;
+}
+
+@keyframes shadow-float {
+    0%, 100% {
+        transform: scaleX(1);
+        opacity: 0.1;
+    }
+    50% {
+        transform: scaleX(0.8);
+        opacity: 0.05;
+    }
+}

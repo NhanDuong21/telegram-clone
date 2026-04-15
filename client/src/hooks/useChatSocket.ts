@@ -65,7 +65,6 @@ export const useChatSocket = ({
                   text: message.text || "", 
                   type: message.type,
                   imageUrl: message.imageUrl,
-                  videoUrl: message.videoUrl,
                   isDeleted: message.isDeleted,
                   isRead: false,
                   createdAt: message.createdAt
@@ -107,7 +106,6 @@ export const useChatSocket = ({
               text: message.text || "", 
               type: message.type,
               imageUrl: message.imageUrl,
-              videoUrl: message.videoUrl,
               isDeleted: message.isDeleted,
               isRead: (message.sender._id !== user._id) && (selectedIdRef.current === convId),
               createdAt: message.createdAt
@@ -312,7 +310,6 @@ export const useChatSocket = ({
                   text: updatedMsg.text || "",
                   type: updatedMsg.type,
                   imageUrl: updatedMsg.imageUrl,
-                  videoUrl: updatedMsg.videoUrl,
                   isDeleted: updatedMsg.isDeleted
               } : null 
             }

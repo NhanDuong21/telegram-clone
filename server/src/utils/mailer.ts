@@ -4,17 +4,22 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587,
+    secure: false, 
+    requireTLS: true, 
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_APP_PASSWORD,
+        pass: process.env.EMAIL_APP_PASSWORD || process.env.EMAIL_PASS,
     },
-    // Add strict timeouts for production (Render)
-    connectionTimeout: 10000, // 10s
-    greetingTimeout: 10000,   // 10s
-    socketTimeout: 10000,     // 10s
-    debug: true,              // Log message traffic
-    logger: true              // Log information into console
+    tls: {
+        rejectUnauthorized: false
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,   
+    socketTimeout: 10000,     
+    debug: true,             
+    logger: true             
 });
 
 export const sendOtpEmail = async (email: string, otp: string) => {
@@ -44,6 +49,6 @@ export const sendOtpEmail = async (email: string, otp: string) => {
         return result;
     } catch (error) {
         console.error('SMTP Error details:', error);
-        throw error; // Let the controller handle the response
+        throw error; 
     }
 };

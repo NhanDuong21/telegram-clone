@@ -19,7 +19,15 @@ export const createGroupService = async (name: string, participantIds: string[],
         owner: new mongoose.Types.ObjectId(ownerId)
     });
 
-    return await newGroup.populate("participants", "-password");
+    const populated = await newGroup.populate("participants", "-password");
+
+    // Notify all participants so the group appears in their sidebar instantly
+    const io = getIO();
+    (populated.participants as unknown as IUser[]).forEach((p) => {
+        io.to(`user_${p._id.toString()}`).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
+    });
+
+    return populated;
 };
 
 export const updateGroupSettingsService = async (id: string, userId: string, data: { name?: string, imageUrl?: string }) => {
@@ -97,9 +105,10 @@ export const removeMemberService = async (id: string, userId: string, memberId: 
 
     const io = getIO();
     (populated.participants as unknown as IUser[]).forEach((p) => {
-        io.to(p._id.toString()).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
+        io.to(`user_${p._id.toString()}`).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
     });
-    io.to(memberId).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
+    // Notify the kicked member separately
+    io.to(`user_${memberId}`).emit(SOCKET_EVENTS.MEMBER_KICKED, { conversationId: id, kickedUserId: memberId });
 
     return populated;
 };
@@ -119,10 +128,50 @@ export const deleteGroupService = async (id: string, userId: string) => {
 
     const io = getIO();
     participantIds.forEach(p => {
-        io.to(p).emit(SOCKET_EVENTS.GROUP_DELETED, { conversationId: id });
+        io.to(`user_${p}`).emit(SOCKET_EVENTS.GROUP_DELETED, { conversationId: id });
     });
 
     return id;
+};
+
+export const leaveGroupService = async (id: string, userId: string) => {
+    const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
+    if (!conversation) throw new Error("Group không tồn tại hoặc bạn không phải thành viên");
+
+    const currentIds = conversation.participants.map((p: any) => p.toString());
+    const remaining = currentIds.filter(pid => pid !== userId);
+
+    // If group drops below 3, auto-delete
+    if (remaining.length < 3) {
+        await Message.deleteMany({ conversationId: id });
+        await Conversation.findByIdAndDelete(id);
+
+        const io = getIO();
+        currentIds.forEach(p => {
+            io.to(`user_${p}`).emit(SOCKET_EVENTS.GROUP_DELETED, { conversationId: id });
+        });
+        return { deleted: true, conversationId: id };
+    }
+
+    // Transfer ownership if the owner is leaving
+    if (conversation.owner && conversation.owner.toString() === userId) {
+        const newOwner = remaining[0];
+        conversation.owner = new mongoose.Types.ObjectId(newOwner);
+    }
+
+    conversation.participants = remaining as any[];
+    await conversation.save();
+
+    const populated = await conversation.populate("participants", "-password");
+
+    const io = getIO();
+    (populated.participants as unknown as IUser[]).forEach((p) => {
+        io.to(`user_${p._id.toString()}`).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
+    });
+    // Notify the user who left
+    io.to(`user_${userId}`).emit(SOCKET_EVENTS.MEMBER_LEFT, { conversationId: id, userId });
+
+    return { deleted: false, conversation: populated };
 };
 
 export const createOrGetConversationService = async (senderId: string, receiverId: string) => {

@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
 import {
   X,
   MessageCircle,
@@ -16,7 +16,6 @@ import {
   Info,
   ArrowLeft,
 } from "lucide-react";
-import { useState, useEffect } from "react";
 import { toast } from 'react-hot-toast';
 import type { User, Conversation } from "../../../types";
 import Avatar from "../../common/Avatar";
@@ -24,7 +23,8 @@ import ImagePreviewModal from "../ImagePreviewModal/ImagePreviewModal";
 import { AnimatePresence } from "framer-motion";
 import { connectSocket } from "../../../socket";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
-import { removeFileApi, getSharedMediaApi } from "../../../api/chatApi";
+import { removeFileApi, getSharedMediaApi, removeMemberApi, leaveGroupApi } from "../../../api/chatApi";
+import { UserMinus, LogOut } from "lucide-react";
 import "./RightSidebar.css";
 
 interface RightSidebarProps {
@@ -34,6 +34,9 @@ interface RightSidebarProps {
   isOnline: boolean;
   mode?: 'info' | 'my-profile';
   onToggleMute?: (conversationId: string) => void;
+  onlineUsers?: string[];
+  currentUserId?: string;
+  onGroupUpdated?: (conv: Conversation) => void;
 }
 
 const RightSidebar = ({
@@ -43,6 +46,9 @@ const RightSidebar = ({
   isOnline,
   mode = 'info',
   onToggleMute,
+  onlineUsers = [],
+  currentUserId,
+  onGroupUpdated,
 }: RightSidebarProps) => {
   const [view, setView] = useState<'info' | 'photos' | 'videos'>('info');
   const [photos, setPhotos] = useState<any[]>([]);
@@ -349,6 +355,81 @@ const RightSidebar = ({
                 </div>
               )}
             </div>
+
+            {/* Group Members List */}
+            {isGroup && conversation && (
+              <div className="group-members-section">
+                <div className="members-section-title">
+                  <Users size={18} />
+                  <span>Thành viên ({conversation.participants.length})</span>
+                </div>
+                <div className="members-list">
+                  {conversation.participants.map((p: User) => {
+                    const isMemberOnline = onlineUsers.includes(p._id);
+                    const isOwner = conversation.owner === p._id;
+                    const isCurrentUser = p._id === currentUserId;
+                    const amIOwner = conversation.owner === currentUserId;
+
+                    return (
+                      <div key={p._id} className="member-list-item">
+                        <div className="member-avatar-wrapper">
+                          <Avatar user={p} size={36} />
+                          <div className={`member-online-dot ${isMemberOnline ? 'online' : 'offline'}`} />
+                        </div>
+                        <div className="member-info">
+                          <span className="member-display-name">
+                            {p.fullName || p.username}
+                            {isCurrentUser && <span className="member-you-tag"> (Bạn)</span>}
+                          </span>
+                          <span className="member-role">
+                            {isOwner ? 'Admin' : (isMemberOnline ? 'Online' : 'Offline')}
+                          </span>
+                        </div>
+                        {amIOwner && !isCurrentUser && (
+                          <button
+                            className="member-kick-btn"
+                            onClick={async () => {
+                              if (!confirm(`Kick ${p.fullName || p.username} khỏi nhóm?`)) return;
+                              try {
+                                const res = await removeMemberApi(conversation._id, p._id);
+                                onGroupUpdated?.(res.data.conversation);
+                                toast.success(`Đã kick ${p.username}`);
+                              } catch (err) {
+                                console.error('Kick failed:', err);
+                                toast.error('Không thể kick thành viên');
+                              }
+                            }}
+                          >
+                            <UserMinus size={16} />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Leave Group button for non-owners */}
+                {currentUserId && conversation.owner !== currentUserId && (
+                  <button
+                    className="leave-group-btn"
+                    onClick={async () => {
+                      if (!confirm('Bạn có chắc chắn muốn rời nhóm?')) return;
+                      try {
+                        await leaveGroupApi(conversation._id);
+                        toast.success('Đã rời nhóm');
+                        onClose();
+                      } catch (err) {
+                        console.error('Leave group failed:', err);
+                        toast.error('Không thể rời nhóm');
+                      }
+                    }}
+                  >
+                    <LogOut size={18} />
+                    <span>Rời nhóm</span>
+                  </button>
+                )}
+              </div>
+            )}
           </>
         ) : view === 'photos' ? (
             <div className="shared-media-grid">

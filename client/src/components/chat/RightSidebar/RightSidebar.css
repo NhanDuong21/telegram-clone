@@ -330,6 +330,144 @@
     font-size: 14px;
 }
 
+/* ======= Group Members List ======= */
+.group-members-section {
+    padding: 8px 0;
+    border-top: 8px solid rgba(0, 0, 0, 0.03);
+}
+
+.dark .group-members-section {
+    border-top-color: rgba(255, 255, 255, 0.04);
+}
+
+.members-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #3390ec;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.members-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.member-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    transition: background 0.12s;
+}
+
+.member-list-item:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.dark .member-list-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.member-avatar-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.member-online-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.dark .member-online-dot {
+    border-color: #212121;
+}
+
+.member-online-dot.online {
+    background: #4fad2d;
+}
+
+.member-online-dot.offline {
+    background: #999;
+}
+
+.member-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.member-display-name {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.member-you-tag {
+    color: #999;
+    font-weight: 400;
+}
+
+.member-role {
+    font-size: 12px;
+    color: #999;
+}
+
+.member-kick-btn {
+    background: none;
+    border: none;
+    color: #e53e3e;
+    padding: 6px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+}
+
+.member-list-item:hover .member-kick-btn {
+    opacity: 1;
+}
+
+.member-kick-btn:hover {
+    background: rgba(229, 62, 62, 0.1);
+}
+
+.leave-group-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: calc(100% - 32px);
+    margin: 8px 16px;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: #e53e3e;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.leave-group-btn:hover {
+    background: rgba(229, 62, 62, 0.08);
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .right-sidebar-wrapper {

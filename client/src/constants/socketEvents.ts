@@ -19,4 +19,6 @@ export const SOCKET_EVENTS = {
     MESSAGE_UPDATED: "message-updated",
     USER_BLOCK_UPDATED: "user-block-updated",
     USER_UPDATED: "user-updated",
+    MEMBER_KICKED: "member-kicked",
+    MEMBER_LEFT: "member-left",
 };

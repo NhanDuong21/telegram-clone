@@ -4,6 +4,7 @@ import { Menu, Search as SearchIcon, ArrowLeft, BellOff, Pin } from "lucide-reac
 import { searchUsersApi } from "../../../api/userApi";
 import Avatar from "../../common/Avatar";
 import DrawerMenu from "./DrawerMenu";
+import CreateGroupModal from "../CreateGroupModal/CreateGroupModal";
 import SearchDefaultView from "./SearchDefaultView";
 import SidebarContextMenu from "./SidebarContextMenu";
 import type { User, Conversation } from "../../../types/chat";
@@ -52,6 +53,7 @@ const Sidebar = ({
     const [searchLoading, setSearchLoading] = useState(false);
     const [startingChat, setStartingChat] = useState<string | null>(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [showCreateGroup, setShowCreateGroup] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [menuConfig, setMenuConfig] = useState<{
         isOpen: boolean;
@@ -277,7 +279,20 @@ const Sidebar = ({
                 onLogout={onLogout}
                 onOpenMyProfile={onOpenMyProfile}
                 onOpenSettings={onOpenSettings}
+                onCreateGroup={() => setShowCreateGroup(true)}
             />
+
+            <AnimatePresence>
+                {showCreateGroup && (
+                    <CreateGroupModal
+                        onClose={() => setShowCreateGroup(false)}
+                        onGroupCreated={(group) => {
+                            onSelectConversation(group);
+                            setShowCreateGroup(false);
+                        }}
+                    />
+                )}
+            </AnimatePresence>
 
             <div className="sidebar__main-content">
                 <AnimatePresence mode="wait">

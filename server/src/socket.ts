@@ -81,6 +81,18 @@ export const initSocket = (httpServer: HttpServer) => {
 
         socket.join(`user_${userId}`);
         userSocketMap.set(socket.id, userId);
+
+        // Auto-join all group conversation rooms
+        try {
+            const Conversation = (await import("./models/Conversation")).default;
+            const groups = await Conversation.find({ isGroup: true, participants: userId }).select("_id").lean();
+            groups.forEach(g => {
+                socket.join(g._id.toString());
+            });
+        } catch (err) {
+            console.error("Auto-join group rooms failed:", err);
+        }
+
         await emitOnlineUsers();
 
         socket.on(SOCKET_EVENTS.TYPING, async ({ conversationId }: { conversationId: string }) => {

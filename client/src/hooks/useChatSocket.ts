@@ -384,6 +384,28 @@ export const useChatSocket = ({
       );
     });
 
+    socket.on(SOCKET_EVENTS.MEMBER_KICKED, ({ conversationId, kickedUserId }: { conversationId: string; kickedUserId: string }) => {
+      // If I was kicked, remove the group from my conversations
+      if (kickedUserId === user?._id) {
+        setConversations((prev) => prev.filter((c) => c._id !== conversationId));
+        if (selectedIdRef.current === conversationId) {
+          setSelectedConversationId(null);
+          if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
+        }
+      }
+    });
+
+    socket.on(SOCKET_EVENTS.MEMBER_LEFT, ({ conversationId, userId: leftUserId }: { conversationId: string; userId: string }) => {
+      // If I left (confirmation), remove the group from my conversations
+      if (leftUserId === user?._id) {
+        setConversations((prev) => prev.filter((c) => c._id !== conversationId));
+        if (selectedIdRef.current === conversationId) {
+          setSelectedConversationId(null);
+          if (user?._id) localStorage.removeItem(`tg_sel_conv_${user._id}`);
+        }
+      }
+    });
+
     return () => {
       socket.off(SOCKET_EVENTS.CONNECT);
       socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE);
@@ -401,6 +423,8 @@ export const useChatSocket = ({
       socket.off(SOCKET_EVENTS.MESSAGE_UPDATED);
       socket.off(SOCKET_EVENTS.USER_BLOCK_UPDATED);
       socket.off(SOCKET_EVENTS.USER_UPDATED);
+      socket.off(SOCKET_EVENTS.MEMBER_KICKED);
+      socket.off(SOCKET_EVENTS.MEMBER_LEFT);
     };
   }, [user, selectedConversationId]);
 };

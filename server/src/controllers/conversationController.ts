@@ -87,6 +87,23 @@ export const deleteGroupConversation = async (req: AuthRequest, res: Response) =
     }
 };
 
+export const leaveGroup = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user!._id.toString();
+
+        const result = await conversationService.leaveGroupService(id as string, userId);
+        if (result.deleted) {
+            return res.status(200).json({ message: "Nhóm đã bị xóa do không đủ thành viên", deleted: true });
+        }
+        return res.status(200).json({ message: "Đã rời nhóm", conversation: result.conversation });
+    } catch (error: unknown) {
+        console.error("Leave group error:", error);
+        const err = error as Error;
+        return res.status(400).json({ message: err.message || "Server error" });
+    }
+};
+
 export const createOrGetConversation = async (req: AuthRequest, res: Response) => {
     try {
         const { receiverId } = req.body;

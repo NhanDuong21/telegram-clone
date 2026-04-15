@@ -33,6 +33,26 @@ const formatTime = (iso: string) => {
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
+// Telegram-style sender name colors — deterministic from userId
+const SENDER_COLORS = [
+    '#c03d33', // red
+    '#4fad2d', // green
+    '#d09306', // orange
+    '#168acd', // blue
+    '#8544d6', // purple
+    '#cd4073', // pink
+    '#2996ad', // teal
+    '#ce671b', // burnt orange
+];
+
+const getSenderColor = (userId: string) => {
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+        hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return SENDER_COLORS[Math.abs(hash) % SENDER_COLORS.length];
+};
+
 const MessageItem = ({
     msg, isMe, isRead, isGroupConversation, isFirst, isLast, showAvatar,
     searchQuery, onImagePreview, onContextMenu, onTouchStart, onTouchEnd,
@@ -136,7 +156,10 @@ const MessageItem = ({
                 )}
 
                 {!isMe && isGroupConversation && isFirst && (
-                    <div className="message-sender">
+                    <div 
+                        className="message-sender"
+                        style={{ color: getSenderColor(senderObj?._id || '') }}
+                    >
                         {senderObj?.fullName || senderObj?.username}
                     </div>
                 )}
@@ -146,7 +169,6 @@ const MessageItem = ({
                 {msg.type === 'video' && msg.videoUrl && !msg.isDeleted && (
                     <VideoMessage 
                         videoUrl={msg.videoUrl} 
-                        videoDuration={msg.videoDuration}
                         videoWidth={msg.videoWidth}
                         videoHeight={msg.videoHeight}
                         createdAt={msg.createdAt}

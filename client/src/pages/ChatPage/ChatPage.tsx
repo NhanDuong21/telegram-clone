@@ -585,6 +585,9 @@ const ChatPage = () => {
             conversation={activeConversation ?? null}
             isOnline={otherParticipant ? onlineUsers.includes(otherParticipant._id) : false}
             onToggleMute={toggleMuteConversation}
+            onlineUsers={onlineUsers}
+            currentUserId={user?._id}
+            onGroupUpdated={(updatedConv) => setConversations(prev => prev.map(c => c._id === updatedConv._id ? updatedConv : c))}
           />
         </div>
         {rightPanelMode === 'search' && activeConversation && (

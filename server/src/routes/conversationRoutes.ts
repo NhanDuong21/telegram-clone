@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { protect } from "../middlewares/authMiddleware";
-import { createOrGetConversation, getMyConversations, createGroupConversation, updateGroupSettings, addMembers, removeMember, deleteGroupConversation, clearChat, deleteConversation } from "../controllers/conversationController";
+import { createOrGetConversation, getMyConversations, createGroupConversation, updateGroupSettings, addMembers, removeMember, deleteGroupConversation, leaveGroup, clearChat, deleteConversation } from "../controllers/conversationController";
 
 const router = Router();
 
@@ -9,6 +9,7 @@ router.post("/group", protect, createGroupConversation);
 router.put("/:id/group-settings", protect, updateGroupSettings);
 router.put("/:id/members", protect, addMembers);
 router.delete("/:id/members/:memberId", protect, removeMember);
+router.post("/:id/leave", protect, leaveGroup);
 router.delete("/:id/group", protect, deleteGroupConversation);
 
 // POST /api/conversations — tạo hoặc lấy conversation 1-1

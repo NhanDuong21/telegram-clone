@@ -16,11 +16,12 @@ export const createOrGetConversationApi = (receiverId: string): Promise<AxiosRes
 
 export const createGroupConversationApi = (
     name: string,
-    participantIds: string[]
+    participantIds: string[],
+    imageUrl?: string
 ): Promise<AxiosResponse<{ conversation: Conversation }>> =>
     axiosClient.post(
         `/conversations/group`,
-        { name, participantIds },
+        { name, participantIds, imageUrl },
         getAuthHeader()
     );
 
@@ -49,6 +50,9 @@ export const removeMemberApi = (conversationId: string, memberId: string) =>
 
 export const deleteGroupApi = (conversationId: string) =>
     axiosClient.delete(`/conversations/${conversationId}/group`, getAuthHeader());
+
+export const leaveGroupApi = (conversationId: string) =>
+    axiosClient.post(`/conversations/${conversationId}/leave`, {}, getAuthHeader());
 
 export const clearChatApi = (conversationId: string, deleteForBoth: boolean = false) =>
     axiosClient.delete(

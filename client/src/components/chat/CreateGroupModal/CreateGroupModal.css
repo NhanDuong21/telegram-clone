@@ -1,211 +1,397 @@
-.modal-overlay {
+/* ======= CreateGroupModal — Telegram-Style 2-Step ======= */
+
+.cgm-overlay {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    backdrop-filter: blur(4px);
 }
 
-.modal-content {
-    background-color: #17212b;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 24px;
-    border-radius: 18px;
-    width: 400px;
-    max-width: 90%;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+.cgm-modal {
+    width: 420px;
+    max-width: 95vw;
+    max-height: 85vh;
+    border-radius: 12px;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    color: white;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
 }
 
-.modal-title {
+:root .cgm-modal {
+    background: #ffffff;
+    color: #222;
+}
+
+.dark .cgm-modal {
+    background: #212121;
+    color: #e4e4e4;
+}
+
+.cgm-step {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 85vh;
+}
+
+/* Header */
+.cgm-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 12px 12px 8px;
+    gap: 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dark .cgm-header {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.cgm-header-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.cgm-header-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.dark .cgm-header-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.cgm-title {
+    flex: 1;
+    font-size: 17px;
+    font-weight: 600;
     margin: 0;
-    font-size: 20px;
-    font-weight: 700;
-    color: white;
 }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.form-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 600;
-    color: #333;
-}
-
-.form-input {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    outline: none;
-    box-sizing: border-box;
-    font-size: 14px;
-    transition: border-color 0.2s;
-}
-
-.form-input:focus {
-    border-color: #0088cc;
-}
-
-.search-input-group {
-    display: flex;
-    gap: 8px;
-}
-
-.search-btn {
-    padding: 8px 16px;
-    border-radius: 8px;
+.cgm-next-btn,
+.cgm-create-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     border: none;
-    background: #0088cc;
-    color: white;
-    cursor: pointer;
-    font-weight: 500;
-    transition: opacity 0.2s;
-}
-
-.search-btn:disabled {
-    opacity: 0.7;
+    background: rgba(0, 0, 0, 0.06);
+    color: #999;
     cursor: not-allowed;
-}
-
-.search-results {
-    margin-top: 8px;
-    max-height: 150px;
-    overflow-y: auto;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    padding: 4px;
-}
-
-.search-result-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 8px;
-    border-radius: 6px;
-    background-color: #f9f9f9;
-    margin-bottom: 4px;
+    justify-content: center;
+    transition: all 0.2s;
 }
 
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.user-name {
-    font-size: 13px;
-    color: #333;
-}
-
-.add-btn {
-    border: none;
-    background: #e4eef7;
-    color: #0088cc;
-    padding: 4px 8px;
-    border-radius: 4px;
+.cgm-next-btn.active,
+.cgm-create-btn.active {
+    background: #3390ec;
+    color: white;
     cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    transition: background 0.2s;
 }
 
-.add-btn:hover {
-    background: #d0e4f5;
+.cgm-next-btn.active:hover,
+.cgm-create-btn.active:hover {
+    background: #2b7ed8;
 }
 
-.selected-users-section {
+/* Selected users strip */
+.cgm-selected-strip {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.selected-count {
-    font-size: 13px;
-    color: #666;
-}
-
-.selected-users-list {
-    display: flex;
-    flex-wrap: wrap;
     gap: 8px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    scrollbar-width: none;
 }
 
-.selected-user-tag {
+.cgm-selected-strip::-webkit-scrollbar {
+    display: none;
+}
+
+.dark .cgm-selected-strip {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.cgm-selected-chip {
     display: flex;
     align-items: center;
     gap: 6px;
-    background-color: #e4eef7;
-    padding: 4px 10px;
-    border-radius: 16px;
-    font-size: 12px;
-    color: #0088cc;
+    padding: 4px 10px 4px 4px;
+    background: rgba(51, 144, 236, 0.1);
+    border-radius: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+
+.cgm-selected-chip:hover {
+    background: rgba(51, 144, 236, 0.2);
+}
+
+.cgm-chip-name {
+    font-size: 13px;
     font-weight: 500;
+    color: #3390ec;
 }
 
-.remove-tag-btn {
-    cursor: pointer;
-    color: #d63031;
+.cgm-chip-x {
+    color: #3390ec;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+/* Search box */
+.cgm-search-box {
     display: flex;
     align-items: center;
-    transition: transform 0.1s;
-}
-
-.remove-tag-btn:hover {
-    transform: scale(1.1);
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
+    padding: 8px 14px;
     gap: 10px;
-    margin-top: 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.btn-secondary {
-    padding: 10px 16px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    background: white;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 14px;
-    transition: background 0.2s;
+.dark .cgm-search-box {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
-.btn-secondary:hover {
-    background: #f5f5f5;
+.cgm-search-icon {
+    color: #999;
+    flex-shrink: 0;
 }
 
-.btn-primary {
-    padding: 10px 16px;
-    border-radius: 8px;
+.cgm-search-input {
+    flex: 1;
     border: none;
-    background: #0088cc;
-    color: white;
+    outline: none;
+    background: transparent;
+    font-size: 15px;
+    color: inherit;
+    padding: 6px 0;
+}
+
+.cgm-search-input::placeholder {
+    color: #999;
+}
+
+.cgm-search-clear {
+    background: none;
+    border: none;
+    color: #999;
     cursor: pointer;
-    font-weight: 600;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+}
+
+/* User list */
+.cgm-user-list {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 200px;
+    max-height: 400px;
+}
+
+.cgm-user-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.12s;
+}
+
+.cgm-user-item:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.dark .cgm-user-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.cgm-user-item.selected {
+    background: rgba(51, 144, 236, 0.06);
+}
+
+.cgm-user-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.cgm-user-name {
     font-size: 14px;
-    min-width: 120px;
-    transition: background 0.2s, opacity 0.2s;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.btn-primary:disabled {
-    background: #ccc;
-    cursor: not-allowed;
+.cgm-user-handle {
+    font-size: 12px;
+    color: #999;
 }
 
-.btn-primary:not(:disabled):hover {
-    background: #0077b5;
+.cgm-checkbox {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.dark .cgm-checkbox {
+    border-color: #555;
+}
+
+.cgm-checkbox.checked {
+    border-color: #3390ec;
+    background: #3390ec;
+    color: white;
+}
+
+.cgm-loading,
+.cgm-empty {
+    text-align: center;
+    padding: 30px 14px;
+    color: #999;
+    font-size: 14px;
+}
+
+/* Step 2 — Group Info */
+.cgm-info-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 18px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dark .cgm-info-section {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.cgm-avatar-upload {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    cursor: pointer;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.cgm-avatar-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.cgm-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #3390ec;
+    color: white;
+    border-radius: 50%;
+    transition: opacity 0.15s;
+}
+
+.cgm-avatar-upload:hover .cgm-avatar-placeholder {
+    opacity: 0.85;
+}
+
+.cgm-name-input {
+    flex: 1;
+    border: none;
+    border-bottom: 2px solid #3390ec;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    color: inherit;
+    padding: 8px 0;
+    font-weight: 500;
+}
+
+.cgm-name-input::placeholder {
+    color: #999;
+    font-weight: 400;
+}
+
+/* Members preview */
+.cgm-members-preview {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 12px;
+}
+
+.cgm-members-title {
+    padding: 12px 18px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #3390ec;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cgm-member-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 18px;
+}
+
+.cgm-member-name {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Spinner */
+.cgm-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: cgm-spin 0.6s linear infinite;
+}
+
+@keyframes cgm-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .cgm-modal {
+        width: 100%;
+        height: 100%;
+        max-width: 100vw;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .cgm-step {
+        max-height: 100vh;
+    }
 }

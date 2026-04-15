@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { ArrowLeft, ArrowRight, Camera, X, Search, Check } from "lucide-react";
 import { searchUsersApi } from "../../../api/userApi";
-import { createGroupConversationApi } from "../../../api/chatApi";
+import { createGroupConversationApi, uploadImageApi } from "../../../api/chatApi";
 import Avatar from "../../common/Avatar";
 import type { User, Conversation } from "../../../types";
 import './CreateGroupModal.css';
@@ -12,6 +13,7 @@ interface CreateGroupModalProps {
 }
 
 const CreateGroupModal = ({ onClose, onGroupCreated }: CreateGroupModalProps) => {
+    const [step, setStep] = useState<1 | 2>(1);
     const [groupName, setGroupName] = useState("");
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<User[]>([]);
@@ -19,12 +21,14 @@ const CreateGroupModal = ({ onClose, onGroupCreated }: CreateGroupModalProps) =>
     const [isSearching, setIsSearching] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Avatar states
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string>("");
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const handleSearch = async () => {
         const trimmed = query.trim();
-        if (!trimmed) {
-            setResults([]);
-            return;
-        }
+        if (!trimmed) { setResults([]); return; }
         setIsSearching(true);
         try {
             const res = await searchUsersApi(trimmed);
@@ -35,10 +39,6 @@ const CreateGroupModal = ({ onClose, onGroupCreated }: CreateGroupModalProps) =>
         } finally {
             setIsSearching(false);
         }
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter") handleSearch();
     };
 
     const addUser = (user: User) => {
@@ -53,139 +53,229 @@ const CreateGroupModal = ({ onClose, onGroupCreated }: CreateGroupModalProps) =>
         setSelectedUsers(selectedUsers.filter((u) => u._id !== userId));
     };
 
+    const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith("image/")) return;
+        setAvatarFile(file);
+        setAvatarPreview(URL.createObjectURL(file));
+    };
+
     const handleCreate = async () => {
         const name = groupName.trim();
         if (!name || selectedUsers.length < 2 || isSubmitting) return;
 
         setIsSubmitting(true);
         try {
+            let imageUrl: string | undefined;
+            if (avatarFile) {
+                const uploadRes = await uploadImageApi(avatarFile);
+                imageUrl = uploadRes.data.imageUrl;
+            }
+
             const participantIds = selectedUsers.map(u => u._id);
-            const res = await createGroupConversationApi(name, participantIds);
+            const res = await createGroupConversationApi(name, participantIds, imageUrl);
             onGroupCreated(res.data.conversation);
-            onClose();
         } catch (error) {
             console.error("Create group failed", error);
-            alert("Tạo nhóm thất bại. Đảm bảo nhóm không bị trùng lặp user.");
+            alert("Tạo nhóm thất bại.");
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const canCreate = groupName.trim() && selectedUsers.length >= 2;
+    const canProceedToStep2 = selectedUsers.length >= 2;
+    const canCreate = groupName.trim().length > 0;
 
     return (
-        <motion.div 
+        <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="modal-overlay"
+            className="cgm-overlay"
             onClick={onClose}
         >
-            <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 30 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                exit={{ opacity: 0, scale: 0.9, y: 30 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="modal-content"
+                className="cgm-modal"
                 onClick={(e) => e.stopPropagation()}
             >
-                <h3 className="modal-title">Tạo Nhóm Trò Chuyện</h3>
-
-                <div className="form-group">
-                    <label className="form-label">Tên nhóm</label>
-                    <input
-                        type="text"
-                        placeholder="Nhập tên nhóm..."
-                        value={groupName}
-                        onChange={(e) => setGroupName(e.target.value)}
-                        className="form-input"
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label className="form-label">Thêm thành viên</label>
-                    <div className="search-input-group">
-                        <input
-                            type="text"
-                            placeholder="Tìm kiếm user..."
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            className="form-input"
-                        />
-                        <button
-                            onClick={handleSearch}
-                            disabled={isSearching}
-                            className="search-btn"
+                <AnimatePresence mode="wait">
+                    {step === 1 ? (
+                        <motion.div
+                            key="step1"
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -40, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="cgm-step"
                         >
-                            Tìm
-                        </button>
-                    </div>
+                            <div className="cgm-header">
+                                <button className="cgm-header-btn" onClick={onClose}>
+                                    <X size={20} />
+                                </button>
+                                <h3 className="cgm-title">Thêm thành viên</h3>
+                                <button
+                                    className={`cgm-next-btn ${canProceedToStep2 ? 'active' : ''}`}
+                                    disabled={!canProceedToStep2}
+                                    onClick={() => setStep(2)}
+                                >
+                                    <ArrowRight size={20} />
+                                </button>
+                            </div>
 
-                    <AnimatePresence>
-                        {results.length > 0 && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="search-results"
-                            >
-                                {results.map((user) => (
-                                    <div key={user._id} className="search-result-item">
-                                        <div className="user-info">
-                                            <Avatar user={user} size={28} />
-                                            <span className="user-name">{user.username}</span>
+                            {/* Selected users horizontal strip */}
+                            <AnimatePresence>
+                                {selectedUsers.length > 0 && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="cgm-selected-strip"
+                                    >
+                                        {selectedUsers.map(u => (
+                                            <motion.div
+                                                key={u._id}
+                                                layout
+                                                initial={{ scale: 0, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                exit={{ scale: 0, opacity: 0 }}
+                                                className="cgm-selected-chip"
+                                                onClick={() => removeUser(u._id)}
+                                            >
+                                                <Avatar user={u} size={32} />
+                                                <span className="cgm-chip-name">{u.fullName || u.username}</span>
+                                                <X size={14} className="cgm-chip-x" />
+                                            </motion.div>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Search input */}
+                            <div className="cgm-search-box">
+                                <Search size={18} className="cgm-search-icon" />
+                                <input
+                                    type="text"
+                                    placeholder="Tìm kiếm người dùng..."
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                                    className="cgm-search-input"
+                                    autoFocus
+                                />
+                                {query && (
+                                    <button className="cgm-search-clear" onClick={() => { setQuery(""); setResults([]); }}>
+                                        <X size={16} />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Search results */}
+                            <div className="cgm-user-list">
+                                {isSearching && <div className="cgm-loading">Đang tìm kiếm...</div>}
+                                {results.map((user) => {
+                                    const isSelected = selectedUsers.some(u => u._id === user._id);
+                                    return (
+                                        <motion.div
+                                            key={user._id}
+                                            initial={{ opacity: 0, y: 5 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className={`cgm-user-item ${isSelected ? 'selected' : ''}`}
+                                            onClick={() => isSelected ? removeUser(user._id) : addUser(user)}
+                                        >
+                                            <Avatar user={user} size={40} />
+                                            <div className="cgm-user-info">
+                                                <span className="cgm-user-name">{user.fullName || user.username}</span>
+                                                <span className="cgm-user-handle">@{user.username}</span>
+                                            </div>
+                                            <div className={`cgm-checkbox ${isSelected ? 'checked' : ''}`}>
+                                                {isSelected && <Check size={14} />}
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })}
+                                {!isSearching && results.length === 0 && query.trim() && (
+                                    <div className="cgm-empty">Nhấn Enter để tìm kiếm</div>
+                                )}
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="step2"
+                            initial={{ x: 40, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: 40, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="cgm-step"
+                        >
+                            <div className="cgm-header">
+                                <button className="cgm-header-btn" onClick={() => setStep(1)}>
+                                    <ArrowLeft size={20} />
+                                </button>
+                                <h3 className="cgm-title">Thông tin nhóm</h3>
+                                <button
+                                    className={`cgm-create-btn ${canCreate ? 'active' : ''}`}
+                                    disabled={!canCreate || isSubmitting}
+                                    onClick={handleCreate}
+                                >
+                                    {isSubmitting ? (
+                                        <div className="cgm-spinner" />
+                                    ) : (
+                                        <Check size={20} />
+                                    )}
+                                </button>
+                            </div>
+
+                            <div className="cgm-info-section">
+                                {/* Avatar Upload */}
+                                <div
+                                    className="cgm-avatar-upload"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    {avatarPreview ? (
+                                        <img src={avatarPreview} alt="Group" className="cgm-avatar-preview" />
+                                    ) : (
+                                        <div className="cgm-avatar-placeholder">
+                                            <Camera size={28} />
                                         </div>
-                                        <button onClick={() => addUser(user)} className="add-btn">
-                                            + Thêm
-                                        </button>
+                                    )}
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleAvatarSelect}
+                                        hidden
+                                    />
+                                </div>
+
+                                {/* Group name input */}
+                                <input
+                                    type="text"
+                                    placeholder="Tên nhóm"
+                                    value={groupName}
+                                    onChange={(e) => setGroupName(e.target.value)}
+                                    className="cgm-name-input"
+                                    autoFocus
+                                />
+                            </div>
+
+                            {/* Member preview list */}
+                            <div className="cgm-members-preview">
+                                <div className="cgm-members-title">{selectedUsers.length} thành viên</div>
+                                {selectedUsers.map(u => (
+                                    <div key={u._id} className="cgm-member-row">
+                                        <Avatar user={u} size={36} />
+                                        <span className="cgm-member-name">{u.fullName || u.username}</span>
                                     </div>
                                 ))}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-
-                {selectedUsers.length > 0 && (
-                    <div className="selected-users-section">
-                        <div className="selected-count">Đã chọn ({selectedUsers.length})</div>
-                        <div className="selected-users-list">
-                            <AnimatePresence>
-                                {selectedUsers.map(user => (
-                                    <motion.div 
-                                        key={user._id}
-                                        layout
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.8 }}
-                                        className="selected-user-tag"
-                                    >
-                                        <span>{user.username}</span>
-                                        <span onClick={() => removeUser(user._id)} className="remove-tag-btn">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ width: "12px", height: "12px" }}>
-                                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                                            </svg>
-                                        </span>
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
-                        </div>
-                    </div>
-                )}
-
-                <div className="modal-footer">
-                    <button onClick={onClose} className="btn-secondary">
-                        Hủy
-                    </button>
-                    <button
-                        onClick={handleCreate}
-                        disabled={!canCreate || isSubmitting}
-                        className="btn-primary"
-                    >
-                        {isSubmitting ? "Đang tạo..." : "Tạo Nhóm"}
-                    </button>
-                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </motion.div>
         </motion.div>
     );

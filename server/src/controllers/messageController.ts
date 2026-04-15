@@ -4,13 +4,23 @@ import * as messageService from "../services/messageService";
 
 export const sendMessage = async (req: AuthRequest, res: Response) => {
     try {
-        let { conversationId, text, imageUrl, replyTo, forwardFrom, type } = req.body;
+        let { conversationId, text, imageUrl, replyTo, forwardFrom, type, duration, durations } = req.body;
         const senderId = req.user!._id;
 
         const files = req.files as any[];
         let imageUrls: string[] = [];
         let videoUrl: string = "";
-        let videoDuration: number | undefined;
+        let videoDuration: number = Number(duration) || 0;
+        let videoDurations: number[] = [];
+        
+        if (durations) {
+            try {
+                videoDurations = typeof durations === 'string' ? JSON.parse(durations) : durations;
+            } catch (e) {
+                console.error("Parse durations failed:", e);
+            }
+        }
+
         let videoWidth: number | undefined;
         let videoHeight: number | undefined;
 
@@ -22,10 +32,16 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
                 type = 'video';
                 // Extract metadata from Cloudinary result
                 if (firstFile.cloudinary) {
-                    videoDuration = firstFile.cloudinary.duration;
+                    if (!videoDuration) videoDuration = firstFile.cloudinary.duration;
                     videoWidth = firstFile.cloudinary.width;
                     videoHeight = firstFile.cloudinary.height;
                 }
+                
+                // If we have videoDurations from frontend, use them
+                if (videoDurations.length === 0 && videoDuration) {
+                    videoDurations = [videoDuration];
+                }
+
                 const message = await messageService.sendMessageService(
                     conversationId, 
                     senderId.toString(), 
@@ -39,7 +55,8 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
                     videoDuration,
                     videoWidth,
                     videoHeight,
-                    videoUrls
+                    videoUrls,
+                    videoDurations
                 );
                 return res.status(201).json({ message });
             } else {
@@ -70,7 +87,8 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
             videoDuration,
             videoWidth,
             videoHeight,
-            undefined
+            undefined,
+            videoDurations.length > 0 ? videoDurations : undefined
         );
         return res.status(201).json({ message });
     } catch (error: unknown) {

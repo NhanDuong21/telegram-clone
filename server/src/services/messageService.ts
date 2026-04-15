@@ -16,7 +16,8 @@ export const sendMessageService = async (
     videoDuration?: number,
     videoWidth?: number,
     videoHeight?: number,
-    videoUrls?: string[]
+    videoUrls?: string[],
+    videoDurations?: number[]
 ) => {
     const conversation = await Conversation.findOne({
         _id: conversationId,
@@ -60,6 +61,7 @@ export const sendMessageService = async (
         videoHeight,
         imageUrls: imageUrls || [],
         videoUrls: videoUrls || [],
+        videoDurations: videoDurations || [],
         readBy: [senderId],
         isRead: false,
         replyTo: replyTo || undefined,
@@ -339,7 +341,7 @@ export const getSharedMediaService = async (conversationId: string, userId: stri
     }
 
     const messages = await Message.find(query)
-        .select("imageUrl imageUrls videoUrl videoUrls createdAt type")
+        .select("imageUrl imageUrls videoUrl videoUrls videoDuration videoDurations createdAt type")
         .sort({ createdAt: -1 })
         .limit(limit + 1)
         .lean();
@@ -354,11 +356,12 @@ export const getSharedMediaService = async (conversationId: string, userId: stri
     messages.forEach(msg => {
         if (msg.type === 'video') {
             if (msg.videoUrls && msg.videoUrls.length > 0) {
-                msg.videoUrls.forEach((url: string) => {
-                    flattenedMedia.push({ _id: msg._id, imageUrl: url, createdAt: msg.createdAt, type: 'video' });
+                msg.videoUrls.forEach((url: string, idx: number) => {
+                    const duration = (msg.videoDurations && msg.videoDurations[idx]) || (idx === 0 ? msg.videoDuration : 0);
+                    flattenedMedia.push({ _id: msg._id, imageUrl: url, createdAt: msg.createdAt, type: 'video', duration });
                 });
             } else if (msg.videoUrl) {
-                flattenedMedia.push({ _id: msg._id, imageUrl: msg.videoUrl, createdAt: msg.createdAt, type: 'video' });
+                flattenedMedia.push({ _id: msg._id, imageUrl: msg.videoUrl, createdAt: msg.createdAt, type: 'video', duration: msg.videoDuration });
             }
         } else if (msg.imageUrls && msg.imageUrls.length > 0) {
             msg.imageUrls.forEach((url: string) => {

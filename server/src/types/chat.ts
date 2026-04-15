@@ -19,6 +19,7 @@ export interface IMessage extends mongoose.Document {
     videoUrl?: string;
     videoUrls?: string[];
     videoDuration?: number;
+    videoDurations?: number[];
     videoWidth?: number;
     videoHeight?: number;
     type?: 'text' | 'image' | 'video' | 'voice' | 'system';

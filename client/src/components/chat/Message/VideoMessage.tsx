@@ -5,7 +5,6 @@ import './VideoMessage.css';
 
 interface VideoMessageProps {
     videoUrl: string;
-    videoDuration?: number;
     videoWidth?: number;
     videoHeight?: number;
     createdAt: string;
@@ -20,7 +19,6 @@ interface VideoMessageProps {
 
 const VideoMessage = ({ 
     videoUrl, 
-    videoDuration, 
     videoWidth, 
     videoHeight, 
     createdAt,
@@ -34,13 +32,6 @@ const VideoMessage = ({
 }: VideoMessageProps) => {
     const videoRef = useRef<HTMLVideoElement>(null);
 
-    // Format duration helper (sec to mm:ss)
-    const formatDuration = (seconds?: number) => {
-        if (!seconds) return "";
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
 
     // Poster logic: Cloudinary auto-thumb
     const posterUrl = videoUrl.includes('cloudinary.com') 
@@ -105,9 +96,6 @@ const VideoMessage = ({
                 )}
 
                 <div className="video-info-bottom">
-                    <div className="video-duration">
-                        {videoDuration ? formatDuration(videoDuration) : ""}
-                    </div>
                     {/* Only show overlay here if it's pure media, otherwise it's in the bubble footer */}
                     {/* But wait, prompt says ALWAYS overlay for media. Let's follow prompt. */}
                     <MediaMetaOverlay 

@@ -21,6 +21,21 @@ interface MessageInputProps {
     onUploadProgress?: (tempId: string, progress: number | null) => void;
 }
 
+const getVideoDuration = (file: File): Promise<number> => {
+    return new Promise((resolve) => {
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.onloadedmetadata = () => {
+            window.URL.revokeObjectURL(video.src);
+            resolve(Math.round(video.duration));
+        };
+        video.onerror = () => {
+            resolve(0);
+        };
+        video.src = URL.createObjectURL(file);
+    });
+};
+
 const MessageInput = ({ 
     conversationId, 
     onMessageSent, 
@@ -131,6 +146,7 @@ const MessageInput = ({
         if (files.length === 0) return;
         
         const isVideo = files[0].type.startsWith("video/");
+        const durations = isVideo ? await Promise.all(files.map(f => getVideoDuration(f))) : [];
         const localUrls = files.map(file => URL.createObjectURL(file));
         const tempId = `temp-${Date.now()}`;
         
@@ -139,6 +155,8 @@ const MessageInput = ({
             conversationId,
             text: caption,
             type: isVideo ? 'video' : 'image',
+            videoDuration: durations[0] || 0,
+            videoDurations: durations,
             sender: {
                 _id: user?._id || "",
                 username: user?.username || "Bạn",
@@ -171,6 +189,10 @@ const MessageInput = ({
             formData.append("text", caption);
             if (replyTarget) formData.append("replyTo", replyTarget._id);
             formData.append("type", isVideo ? "video" : "image");
+            if (isVideo) {
+                formData.append("duration", (durations[0] || 0).toString());
+                formData.append("durations", JSON.stringify(durations));
+            }
             
             files.forEach(file => {
                 formData.append("media", file);

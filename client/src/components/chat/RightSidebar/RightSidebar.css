@@ -303,6 +303,26 @@
     background: rgba(0, 0, 0, 0.6);
 }
 
+.video-duration-badge {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 4px;
+    border-radius: 4px;
+    backdrop-filter: blur(4px);
+    z-index: 10;
+    pointer-events: none;
+    line-height: 1;
+}
+
+.video-grid-item:hover .video-duration-badge {
+    background: rgba(0, 0, 0, 0.8);
+}
+
 .empty-media {
     padding: 40px 20px;
     text-align: center;

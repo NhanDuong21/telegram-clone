@@ -85,7 +85,8 @@ const messageSchema = new Schema<IMessage>(
             type: [String],
             default: [],
         },
-        videoDuration: { type: Number },
+        videoDuration: { type: Number, default: 0 },
+        videoDurations: { type: [Number], default: [] },
         videoWidth: { type: Number },
         videoHeight: { type: Number },
         type: {

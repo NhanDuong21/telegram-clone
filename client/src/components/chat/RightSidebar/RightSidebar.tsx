@@ -153,6 +153,13 @@ const RightSidebar = ({
     }
   }, [view]);
 
+  const formatDuration = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleDeletePhoto = async () => {
     if (!previewData || !conversation?._id) return;
     
@@ -378,8 +385,8 @@ const RightSidebar = ({
                       onClick={() => setPreviewData({ url: msg.imageUrl, messageId: msg._id })}
                     >
                       <video src={msg.imageUrl} muted />
-                      <div className="video-overlay">
-                        <Video size={24} fill="white" color="white" />
+                      <div className="video-duration-badge">
+                        {formatDuration(msg.duration)}
                       </div>
                     </div>
                   ))}

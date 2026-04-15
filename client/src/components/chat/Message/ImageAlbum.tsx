@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import MediaMetaOverlay from './MediaMetaOverlay';
 import './ImageAlbum.css';
 
 interface ImageAlbumProps {
@@ -9,9 +10,12 @@ interface ImageAlbumProps {
     onImageClick?: (url: string) => void;
     onContextMenu?: (e: React.MouseEvent, imageUrl: string) => void;
     progress?: number;
+    isMe?: boolean;
+    isRead?: boolean;
+    createdAt?: string;
 }
 
-const ImageAlbum = ({ images, isSending, isError, onImageClick, onContextMenu, progress }: ImageAlbumProps) => {
+const ImageAlbum = ({ images, isSending, isError, onImageClick, onContextMenu, progress, isMe = false, isRead = false, createdAt }: ImageAlbumProps) => {
     const count = Math.min(images.length, 5);
     
     return (
@@ -54,6 +58,15 @@ const ImageAlbum = ({ images, isSending, isError, onImageClick, onContextMenu, p
                         <RefreshCw size={14} />
                     </button>
                 </div>
+            )}
+
+            {createdAt && (
+                <MediaMetaOverlay 
+                    createdAt={createdAt} 
+                    isMe={isMe} 
+                    isSending={isSending} 
+                    isRead={isRead} 
+                />
             )}
         </div>
     );

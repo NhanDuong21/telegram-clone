@@ -1,5 +1,6 @@
 import { useRef } from 'react';
-import { Play, Loader2, Maximize2 } from 'lucide-react';
+import { Play, Loader2 } from 'lucide-react';
+import MediaMetaOverlay from './MediaMetaOverlay';
 import './VideoMessage.css';
 
 interface VideoMessageProps {
@@ -10,6 +11,8 @@ interface VideoMessageProps {
     createdAt: string;
     isSending?: boolean;
     isError?: boolean;
+    isMe?: boolean;
+    isRead?: boolean;
     progress?: number;
     onVideoClick: (url: string) => void;
 }
@@ -22,6 +25,8 @@ const VideoMessage = ({
     createdAt,
     isSending, 
     isError, 
+    isMe = false,
+    isRead = false,
     progress,
     onVideoClick 
 }: VideoMessageProps) => {
@@ -33,11 +38,6 @@ const VideoMessage = ({
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    const formatTime = (iso: string) => {
-        const d = new Date(iso);
-        return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     };
 
     // Poster logic: Cloudinary auto-thumb
@@ -105,10 +105,14 @@ const VideoMessage = ({
                     <div className="video-duration">
                         {videoDuration ? formatDuration(videoDuration) : ""}
                     </div>
-                    <div className="video-meta-right">
-                        <span className="timestamp">{formatTime(createdAt)}</span>
-                        <Maximize2 size={12} className="maximize-icon" />
-                    </div>
+                    {/* Only show overlay here if it's pure media, otherwise it's in the bubble footer */}
+                    {/* But wait, prompt says ALWAYS overlay for media. Let's follow prompt. */}
+                    <MediaMetaOverlay 
+                        createdAt={createdAt} 
+                        isMe={isMe} 
+                        isSending={isSending} 
+                        isRead={isRead} 
+                    />
                 </div>
             </div>
 

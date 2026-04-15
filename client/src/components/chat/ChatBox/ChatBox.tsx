@@ -135,101 +135,110 @@ const ChatBox = ({
                 )}
             </AnimatePresence>
 
-            <div className="chat-box">
-                {messages.length === 0 && (
-                    <div className="chat-box--empty">
-                        <span className="chat-box__empty-icon">👋</span>
-                        Chưa có tin nhắn nào. Hãy nói lời chào!
-                    </div>
-                )}
-                {hasMore && messages.length > 0 && (
-                    <div className="chat-box__load-more">
-                        <button
-                            onClick={onLoadMore}
-                            disabled={loadingMore}
-                            className="chat-box__load-more-btn"
-                        >
-                            {loadingMore ? "Đang tải..." : "Tải thêm tin nhắn cũ"}
-                        </button>
-                    </div>
-                )}
-                
-                <AnimatePresence initial={false} mode="popLayout">
-                    {messages.map((msg, index) => {
-                        const isMe = (msg.sender as any)._id === currentUserId;
-                        const isRead = (msg.readBy || []).some((r: any) => r._id !== currentUserId) || msg.isRead;
-                        const senderObj = msg.sender as any;
-
-                        const prevMsg = messages[index - 1];
-                        const isFirstInGroup = !prevMsg || (prevMsg.sender as any)?._id !== senderObj?._id || prevMsg.type === 'system';
-                        const nextMsg = messages[index + 1];
-                        const isLastInGroup = !nextMsg || (nextMsg.sender as any)?._id !== senderObj?._id || nextMsg.type === 'system';
-                        const showAvatar = !isMe && isLastInGroup;
-
-                        if (msg.type === 'system') {
-                            return (
-                                <motion.div
-                                    key={msg._id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="system-message-container"
-                                >
-                                    <span>{msg.text}</span>
-                                </motion.div>
-                            );
-                        }
-
-                        return (
-                            <MessageItem 
-                                key={msg.tempId || msg._id}
-                                msg={msg}
-                                isMe={isMe}
-                                isRead={isRead}
-                                isGroupConversation={!!isGroup}
-                                isFirst={isFirstInGroup}
-                                isLast={isLastInGroup}
-                                showAvatar={showAvatar}
-                                currentUserId={currentUserId}
-                                searchQuery={searchQuery}
-                                onImagePreview={onImagePreview}
-                                onContextMenu={onContextMenu}
-                                onTouchStart={onTouchStart}
-                                onTouchEnd={onTouchEnd}
-                                onReplySnippetClick={scrollToMessage}
-                                uploadProgress={uploadProgress}
-                                reactions={msg.reactions}
-                            />
-                        );
-                    })}
-                </AnimatePresence>
-
-                <AnimatePresence>
-                    {pos && (
-                        <ContextMenu
-                            x={pos.x}
-                            y={pos.y}
-                            isMe={(targetItem?.sender?._id || targetItem?.sender) === currentUserId}
-                            text={targetItem?.text}
-                            isPinned={targetItem?.isPinned}
-                            onClose={closeContextMenu}
-                            onDelete={() => onDeleteMessage?.(targetItem, targetFileUrl || undefined)}
-                            onReact={(emoji) => onReactMessage?.(targetItem, emoji)}
-                            onReply={() => onReplyMessage?.(targetItem)}
-                            onEdit={() => onEditMessage?.(targetItem)}
-                            onPin={() => {
-                                if (targetItem?.isPinned) {
-                                    onUnpinMessage?.(targetItem);
-                                } else {
-                                    onPinMessage?.(targetItem);
-                                }
-                            }}
-                            onForward={() => onForwardMessage?.(targetItem)}
-                        />
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={conversationId}
+                    initial={{ opacity: 0, scale: 0.98, y: 5 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 1.02, y: -5 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="chat-box"
+                >
+                    {messages.length === 0 && (
+                        <div className="chat-box--empty">
+                            <span className="chat-box__empty-icon">👋</span>
+                            Chưa có tin nhắn nào. Hãy nói lời chào!
+                        </div>
                     )}
-                </AnimatePresence>
+                    {hasMore && messages.length > 0 && (
+                        <div className="chat-box__load-more">
+                            <button
+                                onClick={onLoadMore}
+                                disabled={loadingMore}
+                                className="chat-box__load-more-btn"
+                            >
+                                {loadingMore ? "Đang tải..." : "Tải thêm tin nhắn cũ"}
+                            </button>
+                        </div>
+                    )}
+                    
+                    <AnimatePresence initial={false} mode="popLayout">
+                        {messages.map((msg, index) => {
+                            const isMe = (msg.sender as any)._id === currentUserId;
+                            const isRead = (msg.readBy || []).some((r: any) => r._id !== currentUserId) || msg.isRead;
+                            const senderObj = msg.sender as any;
 
-                <div ref={bottomRef} />
-            </div>
+                            const prevMsg = messages[index - 1];
+                            const isFirstInGroup = !prevMsg || (prevMsg.sender as any)?._id !== senderObj?._id || prevMsg.type === 'system';
+                            const nextMsg = messages[index + 1];
+                            const isLastInGroup = !nextMsg || (nextMsg.sender as any)?._id !== senderObj?._id || nextMsg.type === 'system';
+                            const showAvatar = !isMe && isLastInGroup;
+
+                            if (msg.type === 'system') {
+                                return (
+                                    <motion.div
+                                        key={msg._id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="system-message-container"
+                                    >
+                                        <span>{msg.text}</span>
+                                    </motion.div>
+                                );
+                            }
+
+                            return (
+                                <MessageItem 
+                                    key={msg.tempId || msg._id}
+                                    msg={msg}
+                                    isMe={isMe}
+                                    isRead={isRead}
+                                    isGroupConversation={!!isGroup}
+                                    isFirst={isFirstInGroup}
+                                    isLast={isLastInGroup}
+                                    showAvatar={showAvatar}
+                                    currentUserId={currentUserId}
+                                    searchQuery={searchQuery}
+                                    onImagePreview={onImagePreview}
+                                    onContextMenu={onContextMenu}
+                                    onTouchStart={onTouchStart}
+                                    onTouchEnd={onTouchEnd}
+                                    onReplySnippetClick={scrollToMessage}
+                                    uploadProgress={uploadProgress}
+                                    reactions={msg.reactions}
+                                />
+                            );
+                        })}
+                    </AnimatePresence>
+
+                    <AnimatePresence>
+                        {pos && (
+                            <ContextMenu
+                                x={pos.x}
+                                y={pos.y}
+                                isMe={(targetItem?.sender?._id || targetItem?.sender) === currentUserId}
+                                text={targetItem?.text}
+                                isPinned={targetItem?.isPinned}
+                                onClose={closeContextMenu}
+                                onDelete={() => onDeleteMessage?.(targetItem, targetFileUrl || undefined)}
+                                onReact={(emoji) => onReactMessage?.(targetItem, emoji)}
+                                onReply={() => onReplyMessage?.(targetItem)}
+                                onEdit={() => onEditMessage?.(targetItem)}
+                                onPin={() => {
+                                    if (targetItem?.isPinned) {
+                                        onUnpinMessage?.(targetItem);
+                                    } else {
+                                        onPinMessage?.(targetItem);
+                                    }
+                                }}
+                                onForward={() => onForwardMessage?.(targetItem)}
+                            />
+                        )}
+                    </AnimatePresence>
+
+                    <div ref={bottomRef} />
+                </motion.div>
+            </AnimatePresence>
         </div>
     );
 };

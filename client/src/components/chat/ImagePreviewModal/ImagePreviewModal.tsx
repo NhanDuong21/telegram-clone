@@ -10,11 +10,13 @@ interface ImagePreviewModalProps {
 }
 
 const ImagePreviewModal = ({ imageUrl, onClose, onDelete, isOwner }: ImagePreviewModalProps) => {
+    const isVideo = imageUrl.match(/\.(mp4|webm|mov|mkv)(\?.*)?$/i) || imageUrl.includes('video/upload');
+
     const handleDownload = (e: React.MouseEvent) => {
         e.stopPropagation();
         const link = document.createElement('a');
         link.href = imageUrl;
-        link.download = `telegram_image_${Date.now()}.jpg`;
+        link.download = `telegram_media_${Date.now()}.${isVideo ? 'mp4' : 'jpg'}`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -33,7 +35,7 @@ const ImagePreviewModal = ({ imageUrl, onClose, onDelete, isOwner }: ImagePrevie
                     <Download size={24} />
                 </button>
                 {isOwner && onDelete && (
-                    <button className="image-preview-btn image-preview-delete-btn" onClick={(e) => { e.stopPropagation(); onDelete(); }} title="Xóa ảnh">
+                    <button className="image-preview-btn image-preview-delete-btn" onClick={(e) => { e.stopPropagation(); onDelete(); }} title={isVideo ? "Xóa video" : "Xóa ảnh"}>
                         <Trash2 size={24} />
                     </button>
                 )}
@@ -50,15 +52,25 @@ const ImagePreviewModal = ({ imageUrl, onClose, onDelete, isOwner }: ImagePrevie
                 className="image-preview-content"
                 onClick={(e) => e.stopPropagation()}
             >
-                <motion.img 
-                    src={imageUrl} 
-                    alt="Preview" 
-                    className="image-preview-main"
-                    drag
-                    dragConstraints={{ top: 0, left: 0, right: 0, bottom: 0 }}
-                    dragElastic={0.1}
-                    whileTap={{ cursor: "grabbing" }}
-                />
+                {isVideo ? (
+                    <video 
+                        src={imageUrl} 
+                        controls 
+                        autoPlay
+                        className="image-preview-main"
+                        style={{ maxHeight: '80vh', maxWidth: '90vw' }}
+                    />
+                ) : (
+                    <motion.img 
+                        src={imageUrl} 
+                        alt="Preview" 
+                        className="image-preview-main"
+                        drag
+                        dragConstraints={{ top: 0, left: 0, right: 0, bottom: 0 }}
+                        dragElastic={0.1}
+                        whileTap={{ cursor: "grabbing" }}
+                    />
+                )}
             </motion.div>
         </motion.div>
     );

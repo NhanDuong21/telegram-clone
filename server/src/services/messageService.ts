@@ -3,7 +3,20 @@ import Conversation from "../models/Conversation";
 import { getIO } from "../socket";
 import { SOCKET_EVENTS } from "../utils/socketEvents";
 
-export const sendMessageService = async (conversationId: string, senderId: string, text?: string, imageUrl?: string, replyTo?: string, forwardFrom?: string, type: 'text' | 'image' | 'voice' | 'system' = 'text', imageUrls?: string[]) => {
+export const sendMessageService = async (
+    conversationId: string, 
+    senderId: string, 
+    text?: string, 
+    imageUrl?: string, 
+    replyTo?: string, 
+    forwardFrom?: string, 
+    type: 'text' | 'image' | 'video' | 'voice' | 'system' = 'text', 
+    imageUrls?: string[], 
+    videoUrl?: string,
+    videoDuration?: number,
+    videoWidth?: number,
+    videoHeight?: number
+) => {
     const conversation = await Conversation.findOne({
         _id: conversationId,
         participants: senderId,
@@ -40,6 +53,10 @@ export const sendMessageService = async (conversationId: string, senderId: strin
         sender: senderId,
         text: text ? text.trim() : "",
         imageUrl: imageUrl ? imageUrl.trim() : "",
+        videoUrl: videoUrl ? videoUrl.trim() : "",
+        videoDuration,
+        videoWidth,
+        videoHeight,
         imageUrls: imageUrls || [],
         readBy: [senderId],
         isRead: false,

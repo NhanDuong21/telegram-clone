@@ -76,9 +76,17 @@ const messageSchema = new Schema<IMessage>(
             type: Schema.Types.ObjectId,
             ref: "User",
         },
+        videoUrl: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+        videoDuration: { type: Number },
+        videoWidth: { type: Number },
+        videoHeight: { type: Number },
         type: {
             type: String,
-            enum: ['text', 'image', 'voice', 'system'],
+            enum: ['text', 'image', 'video', 'voice', 'system'],
             default: 'text',
         },
     },

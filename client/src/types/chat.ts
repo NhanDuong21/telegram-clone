@@ -21,7 +21,7 @@ export interface Conversation {
     lastMessage?: {
         _id: string;
         text: string;
-        type?: 'text' | 'image' | 'voice' | 'system';
+        type?: 'text' | 'image' | 'video' | 'voice' | 'system';
         isDeleted?: boolean;
         isRead?: boolean;
         createdAt: string;
@@ -55,7 +55,11 @@ export interface Message {
     isEdited?: boolean;
     isPinned?: boolean;
     pinnedFor?: string[];
-    type?: 'text' | 'image' | 'voice' | 'system';
+    videoUrl?: string;
+    videoDuration?: number;
+    videoWidth?: number;
+    videoHeight?: number;
+    type?: 'text' | 'image' | 'video' | 'voice' | 'system';
     forwardFrom?: { _id: string; username: string; fullName?: string; avatar?: string };
     isSending?: boolean;
     isError?: boolean;

@@ -52,18 +52,36 @@ const MessageInput = ({
         const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
         
-        const imageFiles = files.filter(f => f.type.startsWith("image/"));
-        if (imageFiles.length === 0) {
-            toast.error("Vui lòng chọn file ảnh hợp lệ.");
+        const validFiles = files.filter(f => f.type.startsWith("image/") || f.type.startsWith("video/"));
+        if (validFiles.length === 0) {
+            toast.error("Vui lòng chọn file ảnh hoặc video hợp lệ.");
             return;
         }
 
-        if (pendingImages.length + imageFiles.length > 5) {
+        const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+        const tooLarge = validFiles.some(f => f.size > MAX_SIZE);
+        if (tooLarge) {
+            toast.error("File quá lớn (tối đa 50MB).");
+            return;
+        }
+
+        const videos = validFiles.filter(f => f.type.startsWith("video/"));
+        if (videos.length > 0 && validFiles.length > 1) {
+            toast.error("Hiện tại chỉ có thể gửi 1 video mỗi lần hoặc gửi tối đa 5 ảnh.");
+            return;
+        }
+
+        if (videos.length > 1) {
+             toast.error("Chỉ có thể gửi 1 video mỗi lần.");
+             return;
+        }
+
+        if (!videos.length && (pendingImages.length + validFiles.length > 5)) {
             toast.error("Bạn chỉ có thể gửi tối đa 5 ảnh một lúc.");
             return;
         }
 
-        setPendingImages(prev => [...prev, ...imageFiles]);
+        setPendingImages(prev => [...prev, ...validFiles]);
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
@@ -107,20 +125,18 @@ const MessageInput = ({
         e.preventDefault();
     };
 
-    const handleSendImages = async (caption: string, files: File[]) => {
+    const handleSendFiles = async (caption: string, files: File[]) => {
         if (files.length === 0) return;
         
-        // 1. Generate local previews
+        const isVideo = files[0].type.startsWith("video/");
         const localUrls = files.map(file => URL.createObjectURL(file));
         const tempId = `temp-${Date.now()}`;
         
-        // 2. Create optimistic message
-        const tempMsg: Message = {
+        const tempMsg: any = {
             _id: tempId,
             conversationId,
             text: caption,
-            type: 'image',
-            imageUrls: localUrls,
+            type: isVideo ? 'video' : 'image',
             sender: {
                 _id: user?._id || "",
                 username: user?.username || "Bạn",
@@ -134,44 +150,37 @@ const MessageInput = ({
             reactions: []
         };
 
+        if (isVideo) {
+            tempMsg.videoUrl = localUrls[0];
+        } else {
+            tempMsg.imageUrls = localUrls;
+        }
+
         if (replyTarget) {
             tempMsg.replyTo = replyTarget;
         }
 
-        // 3. Update UI instantly
         onMessageSent(tempMsg);
-        setPendingImages([]); // Close modal
+        setPendingImages([]);
         if (replyTarget) onCancelMode?.();
 
-        // 4. Background upload
         try {
             const formData = new FormData();
             formData.append("text", caption);
             if (replyTarget) formData.append("replyTo", replyTarget._id);
-            formData.append("type", "image");
+            formData.append("type", isVideo ? "video" : "image");
             
             files.forEach(file => {
-                formData.append("images", file);
+                formData.append("media", file);
             });
 
             const res = await sendMessageApi(conversationId, formData);
-            
-            // 5. Success: Reconcile state
             onMessageSent({ ...res.data.message, tempId });
-            
-            // Cleanup blob URLs
             localUrls.forEach(url => URL.revokeObjectURL(url));
         } catch (error: any) {
-            console.error("Upload and send multiple images failed:", error);
-            
-            // 6. Failure: Mark as error
-            onMessageSent({ 
-                ...tempMsg, 
-                isSending: false, 
-                isError: true 
-            });
-            
-            toast.error("Không thể gửi ảnh. Vui lòng thử lại.");
+            console.error("Upload failed:", error);
+            onMessageSent({ ...tempMsg, isSending: false, isError: true });
+            toast.error("Không thể gửi tệp. Vui lòng thử lại.");
         }
     };
 
@@ -303,7 +312,7 @@ const MessageInput = ({
             <div className="message-input-wrapper">
                 <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     multiple
                     ref={fileInputRef}
                     onChange={handleFileChange}
@@ -312,7 +321,7 @@ const MessageInput = ({
                 <button
                     onClick={() => fileInputRef.current?.click()}
                     className="file-upload-btn"
-                    title="Upload ảnh"
+                    title="Upload ảnh hoặc video"
                 >
                     <Paperclip size={20} />
                 </button>
@@ -346,7 +355,7 @@ const MessageInput = ({
                     files={pendingImages}
                     onClose={() => setPendingImages([])}
                     onAddMore={() => fileInputRef.current?.click()}
-                    onSend={handleSendImages}
+                    onSend={handleSendFiles}
                 />
             )}
         </div>

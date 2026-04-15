@@ -149,9 +149,11 @@ const Sidebar = ({
         }
         
         // 2. Then check for message type
-        if (lastMessage.type === 'image' || (!lastMessage.type && (lastMessage as any).imageUrl)) {
-            const caption = lastMessage.text?.trim();
-            return caption ? `[ Hình ảnh ] ${caption}` : "[ Hình ảnh ]";
+        if (lastMessage.type === 'image') {
+            return lastMessage.text ? `[ Hình ảnh ] ${lastMessage.text}` : "[ Hình ảnh ]";
+        }
+        if (lastMessage.type === 'video') {
+            return lastMessage.text ? `[ Video ] ${lastMessage.text}` : "[ Video ]";
         }
         
         return lastMessage.text || "Tin nhắn mới";

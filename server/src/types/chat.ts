@@ -16,7 +16,11 @@ export interface IMessage extends mongoose.Document {
     isPinned?: boolean;
     pinnedFor: mongoose.Types.ObjectId[];
     forwardFrom?: any;
-    type?: 'text' | 'image' | 'voice' | 'system';
+    videoUrl?: string;
+    videoDuration?: number;
+    videoWidth?: number;
+    videoHeight?: number;
+    type?: 'text' | 'image' | 'video' | 'voice' | 'system';
     createdAt: Date;
     updatedAt: Date;
 }

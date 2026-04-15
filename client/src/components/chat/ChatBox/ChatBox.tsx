@@ -7,6 +7,7 @@ import { getSocket } from "../../../socket";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
 import ContextMenu from "../Message/ContextMenu";
 import ImageAlbum from "../Message/ImageAlbum";
+import VideoMessage from "../Message/VideoMessage";
 import './ChatBox.css';
 
 interface ChatBoxProps {
@@ -299,6 +300,19 @@ const ChatBox = ({
 
                                     {renderReplySnippet(msg)}
                                     
+                                    {msg.type === 'video' && msg.videoUrl && !msg.isDeleted && (
+                                        <VideoMessage 
+                                            videoUrl={msg.videoUrl} 
+                                            videoDuration={msg.videoDuration}
+                                            videoWidth={msg.videoWidth}
+                                            videoHeight={msg.videoHeight}
+                                            createdAt={msg.createdAt}
+                                            isSending={msg.isSending}
+                                            isError={msg.isError}
+                                            onVideoClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)}
+                                        />
+                                    )}
+
                                     {msg.imageUrls && msg.imageUrls.length > 0 && !msg.isDeleted ? (
                                         <ImageAlbum 
                                             images={msg.imageUrls} 

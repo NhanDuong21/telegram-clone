@@ -47,7 +47,7 @@ const SendImageModal = ({ files, onClose, onSend, onAddMore }: SendImageModalPro
         <div className="send-image-overlay" onClick={onClose}>
             <div className="send-image-modal" onClick={e => e.stopPropagation()}>
                 <div className="send-image-header">
-                    <h3>Gửi {selectedFiles.length} ảnh</h3>
+                    <h3>Gửi {selectedFiles.length} tệp</h3>
                     <button className="close-icon-btn" onClick={onClose}>
                         <X size={24} />
                     </button>
@@ -55,9 +55,13 @@ const SendImageModal = ({ files, onClose, onSend, onAddMore }: SendImageModalPro
 
                 <div className="send-image-body">
                     <div className="image-previews-container">
-                        {previews.map((url, i) => (
+                        {selectedFiles.map((file, i) => (
                             <div key={i} className="preview-card">
-                                <img src={url} alt={`preview-${i}`} />
+                                {file.type.startsWith('video/') ? (
+                                    <video src={previews[i]} style={{ width: '100%', borderRadius: '8px' }} />
+                                ) : (
+                                    <img src={previews[i]} alt={`preview-${i}`} />
+                                )}
                                 <button className="remove-preview-btn" onClick={() => handleRemove(i)}>
                                     <Trash2 size={16} />
                                 </button>

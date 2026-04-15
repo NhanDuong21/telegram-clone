@@ -7,24 +7,53 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
         let { conversationId, text, imageUrl, replyTo, forwardFrom, type } = req.body;
         const senderId = req.user!._id;
 
-        const files = req.files as Express.Multer.File[];
+        const files = req.files as any[];
         let imageUrls: string[] = [];
+        let videoUrl: string = "";
+        let videoDuration: number | undefined;
+        let videoWidth: number | undefined;
+        let videoHeight: number | undefined;
 
         if (files && files.length > 0) {
-            imageUrls = files.map(f => f.path);
-            if (!imageUrl) imageUrl = imageUrls[0];
-            type = 'image';
+            const firstFile = files[0];
+            if (firstFile.mimetype.startsWith("video/")) {
+                videoUrl = firstFile.path;
+                type = 'video';
+                // Extract metadata from Cloudinary result
+                if (firstFile.cloudinary) {
+                    videoDuration = firstFile.cloudinary.duration;
+                    videoWidth = firstFile.cloudinary.width;
+                    videoHeight = firstFile.cloudinary.height;
+                }
+            } else {
+                imageUrls = files.map(f => f.path);
+                if (!imageUrl) imageUrl = imageUrls[0];
+                type = 'image';
+            }
         }
 
         if (!conversationId) {
             return res.status(400).json({ message: "conversationId là bắt buộc" });
         }
         
-        if (type !== 'system' && !text?.trim() && !imageUrl?.trim() && imageUrls.length === 0) {
-            return res.status(400).json({ message: "Cần ít nhất text hoặc hình ảnh" });
+        if (type !== 'system' && !text?.trim() && !imageUrl?.trim() && imageUrls.length === 0 && !videoUrl) {
+            return res.status(400).json({ message: "Cần ít nhất text, hình ảnh hoặc video" });
         }
 
-        const message = await messageService.sendMessageService(conversationId, senderId.toString(), text, imageUrl, replyTo, forwardFrom, type, imageUrls);
+        const message = await messageService.sendMessageService(
+            conversationId, 
+            senderId.toString(), 
+            text, 
+            imageUrl, 
+            replyTo, 
+            forwardFrom, 
+            type, 
+            imageUrls, 
+            videoUrl,
+            videoDuration,
+            videoWidth,
+            videoHeight
+        );
         return res.status(201).json({ message });
     } catch (error: unknown) {
         console.error("Send message error:", error);

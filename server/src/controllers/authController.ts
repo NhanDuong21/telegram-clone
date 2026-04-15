@@ -153,7 +153,10 @@ export async function sendOtp(req: Request, res: Response) {
         res.status(200).json({ message: "Mã OTP đã được gửi đến email của bạn" });
     } catch (error) {
         console.error("Send OTP error:", error);
-        res.status(500).json({ message: "Không thể gửi OTP" });
+        res.status(500).json({ 
+            message: "Không thể gửi email OTP lúc này. Vui lòng thử lại sau.",
+            error: process.env.NODE_ENV === 'development' ? error : undefined
+        });
     }
 }
 

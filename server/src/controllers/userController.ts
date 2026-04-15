@@ -214,7 +214,10 @@ export const requestEmailChange = async (req: AuthRequest, res: Response) => {
         return res.status(200).json({ message: "Mã OTP đã được gửi đến email mới của bạn" });
     } catch (error) {
         console.error("Request email change error:", error);
-        return res.status(500).json({ message: "Server error" });
+        return res.status(500).json({ 
+            message: "Không thể gửi email OTP lúc này. Vui lòng thử lại sau.",
+            error: process.env.NODE_ENV === 'development' ? error : undefined
+        });
     }
 };
 

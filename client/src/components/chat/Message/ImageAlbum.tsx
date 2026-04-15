@@ -13,9 +13,10 @@ interface ImageAlbumProps {
     isMe?: boolean;
     isRead?: boolean;
     createdAt?: string;
+    onMediaLoad?: () => void;
 }
 
-const ImageAlbum = ({ images, isSending, isError, onImageClick, onContextMenu, progress, isMe = false, isRead = false, createdAt }: ImageAlbumProps) => {
+const ImageAlbum = ({ images, isSending, isError, onImageClick, onContextMenu, progress, isMe = false, isRead = false, createdAt, onMediaLoad }: ImageAlbumProps) => {
     const count = Math.min(images.length, 5);
     
     return (
@@ -27,7 +28,7 @@ const ImageAlbum = ({ images, isSending, isError, onImageClick, onContextMenu, p
                     onClick={() => !isSending && onImageClick?.(url)}
                     onContextMenu={(e) => !isSending && onContextMenu?.(e, url)}
                 >
-                    <img src={url} alt={`Shared ${i + 1}`} loading="lazy" />
+                    <img src={url} alt={`Shared ${i + 1}`} loading="lazy" onLoad={onMediaLoad} />
                 </div>
             ))}
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo, memo, useLayoutEffect } from "react";
+import { useEffect, useRef, useMemo, memo, useLayoutEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pin, X } from "lucide-react";
 import type { Message } from "../../../types";
@@ -39,6 +39,7 @@ const ChatBox = ({
     searchQuery = "",
     conversationId,
 }: ChatBoxProps) => {
+    const [showScrollDown, setShowScrollDown] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
     const lastMessageId = useRef<string | null>(null);
@@ -46,6 +47,7 @@ const ChatBox = ({
     const prevMessagesLength = useRef<number>(0);
     const prevScrollHeight = useRef<number>(0);
     const isPrepending = useRef<boolean>(false);
+    const wasAtBottom = useRef<boolean>(true);
 
     const { pos, targetItem, targetFileUrl, onContextMenu, onTouchStart, onTouchEnd, closeContextMenu } = useContextMenu();
 
@@ -63,7 +65,7 @@ const ChatBox = ({
         
         // Only mark if the last message is NOT from me and I haven't read it yet
         const isMe = String(senderId) === String(currentUserId);
-        const alreadyReadByMe = lastMsg.readBy?.some(r => ((r as any)._id || r) === currentUserId);
+        const alreadyReadByMe = lastMsg.readBy?.some(r => String((r as any)._id || r) === String(currentUserId));
 
         if (!isMe && !alreadyReadByMe) {
             console.log("📤 SOCKET EMITTED: mark_as_read for chat:", conversationId);
@@ -107,7 +109,37 @@ const ChatBox = ({
         }
     };
 
-    // --- SCROLL ANCHORING LOGIC ---
+    // --- SMART SCROLL LOGIC ---
+    const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+        const container = containerRef.current;
+        if (!container) return;
+        container.scrollTo({
+            top: container.scrollHeight,
+            behavior
+        });
+    };
+
+    const handleScroll = () => {
+        const container = containerRef.current;
+        if (!container) return;
+        
+        // Use a more generous threshold for mobile/fractional scroll
+        const threshold = 200;
+        const isBottom = container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+        
+        wasAtBottom.current = isBottom;
+        setShowScrollDown(!isBottom);
+    };
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (container) {
+            container.addEventListener('scroll', handleScroll, { passive: true });
+            return () => container.removeEventListener('scroll', handleScroll);
+        }
+    }, []);
+
+    // --- DETECT PREPEND VS APPEND ---
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
@@ -117,8 +149,17 @@ const ChatBox = ({
         const msgLengthDiff = messages.length - prevMessagesLength.current;
         
         if (!isSwitch && msgLengthDiff > 0 && messages.length > 0 && prevMessagesLength.current > 0) {
-            // Simple check: if we switched messages but didn't switch conversation, it's likely a prepend
-            isPrepending.current = true;
+            // Check if the last message is new
+            const currentLastId = messages[messages.length - 1]._id;
+            const prevLastId = lastMessageId.current;
+            
+            if (currentLastId !== prevLastId) {
+                // Potential append
+                isPrepending.current = false;
+            } else {
+                // Potential prepend
+                isPrepending.current = true;
+            }
         } else {
             isPrepending.current = false;
         }
@@ -146,15 +187,23 @@ const ChatBox = ({
             container.scrollTop = container.scrollTop + heightDiff;
             isPrepending.current = false;
         } else {
-            // For new messages (append), only scroll if user is near bottom
+            // Smart Append Logic
             const currentLastMessage = messages[messages.length - 1];
             if (currentLastMessage && currentLastMessage._id !== lastMessageId.current) {
-                const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
-                const isMyMessage = (currentLastMessage.sender as any)._id === currentUserId;
+                const msgSenderId = (currentLastMessage.sender as any)._id || currentLastMessage.sender;
+                const isMe = String(msgSenderId) === String(currentUserId);
                 
-                if (isNearBottom || isMyMessage) {
-                    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+                if (isMe) {
+                    // Own messages: Always scroll
+                    scrollToBottom('auto');
+                } else if (wasAtBottom.current) {
+                    // Receiver AND was at bottom: Wait for DOM expansion then scroll
+                    setTimeout(() => {
+                        scrollToBottom('smooth');
+                    }, 50);
                 }
+                // If not at bottom and not my message, we stay put (wasAtBottom.current is already tracked)
+                
                 lastMessageId.current = currentLastMessage._id;
             }
         }
@@ -227,8 +276,11 @@ const ChatBox = ({
                     
                     <AnimatePresence initial={false} mode="popLayout">
                         {messages.map((msg, index) => {
-                            const isMe = (msg.sender as any)._id === currentUserId;
-                            const isRead = !!((msg.readBy || []).some((r: any) => r._id !== currentUserId) || msg.isRead);
+                            const msgSenderId = (msg.sender as any)._id || msg.sender;
+                            const isMe = String(msgSenderId) === String(currentUserId);
+                            // Read logic: has ANYONE else read it?
+                            const isReadByOthers = (msg.readBy || []).some((r: any) => String((r as any)._id || r) !== String(currentUserId));
+                            const isRead = !!(isReadByOthers || msg.isRead);
                             const senderObj = msg.sender as any;
 
                             const prevMsg = messages[index - 1];
@@ -269,6 +321,11 @@ const ChatBox = ({
                                     onReplySnippetClick={scrollToMessage}
                                     uploadProgress={uploadProgress}
                                     reactions={msg.reactions}
+                                    onMediaLoad={() => {
+                                        if (wasAtBottom.current) {
+                                            scrollToBottom('smooth');
+                                        }
+                                    }}
                                 />
                             );
                         })}
@@ -296,6 +353,22 @@ const ChatBox = ({
                                 }}
                                 onForward={() => onForwardMessage?.(targetItem)}
                             />
+                        )}
+                    </AnimatePresence>
+
+                    <AnimatePresence>
+                        {showScrollDown && (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.5, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.5, y: 10 }}
+                                className="scroll-down-btn"
+                                onClick={() => bottomRef.current?.scrollIntoView({ behavior: "smooth" })}
+                                title="Xuống cuối"
+                            >
+                                <div className="scroll-down-icon">↓</div>
+                                {messages.some(m => !m.isRead && (m.sender as any)._id !== currentUserId) && <div className="new-msg-dot" />}
+                            </motion.button>
                         )}
                     </AnimatePresence>
 

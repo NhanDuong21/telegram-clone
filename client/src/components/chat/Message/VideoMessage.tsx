@@ -15,6 +15,7 @@ interface VideoMessageProps {
     isRead?: boolean;
     progress?: number;
     onVideoClick: (url: string) => void;
+    onMediaLoad?: () => void;
 }
 
 const VideoMessage = ({ 
@@ -28,7 +29,8 @@ const VideoMessage = ({
     isMe = false,
     isRead = false,
     progress,
-    onVideoClick 
+    onVideoClick,
+    onMediaLoad
 }: VideoMessageProps) => {
     const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -62,7 +64,7 @@ const VideoMessage = ({
             onClick={handleContainerClick}
         >
             <div className="video-blurred-bg">
-                <img src={posterUrl} alt="" className="blurred-img" />
+                <img src={posterUrl} alt="" className="blurred-img" onLoad={onMediaLoad} />
             </div>
 
             <video 
@@ -71,6 +73,7 @@ const VideoMessage = ({
                 src={videoUrl}
                 poster={posterUrl}
                 preload="metadata"
+                onLoadedData={onMediaLoad}
             />
             
             <div className="video-content-overlay">

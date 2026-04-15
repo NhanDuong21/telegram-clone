@@ -149,8 +149,8 @@ export const useChatSocket = ({
         setMessages((prevMessages) =>
           prevMessages.map((msg) => {
             // Only update messages SENT BY ME (the current user) if someone else read them
-            // String comparison is safer
-            if (String(msg.sender._id) === String(user?._id) && !msg.isRead) {
+            const msgSenderId = (msg.sender as any)._id || msg.sender;
+            if (String(msgSenderId) === String(user?._id) && !msg.isRead) {
                return { ...msg, isRead: true };
             }
             return msg;
@@ -241,10 +241,7 @@ export const useChatSocket = ({
       }
     });
 
-    // Emit MARK_AS_READ when switching to a conversation
-    if (selectedConversationId) {
-        socket.emit(SOCKET_EVENTS.MARK_AS_READ, { conversationId: selectedConversationId });
-    }
+    // MARK_AS_READ is now handled by interaction/focus in ChatBox.tsx
 
     socket.on(SOCKET_EVENTS.MESSAGE_DELETED, ({ messageId, conversationId: deletedConvId, type, userId: actorId }) => {
       if (selectedIdRef.current === deletedConvId) {

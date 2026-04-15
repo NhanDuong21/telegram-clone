@@ -25,6 +25,7 @@ interface MessageItemProps {
     onReplySnippetClick: (targetId: string) => void;
     uploadProgress?: Record<string, number>;
     reactions?: any[];
+    onMediaLoad?: () => void;
 }
 
 const formatTime = (iso: string) => {
@@ -35,7 +36,7 @@ const formatTime = (iso: string) => {
 const MessageItem = ({
     msg, isMe, isRead, isGroupConversation, isFirst, isLast, showAvatar,
     searchQuery, onImagePreview, onContextMenu, onTouchStart, onTouchEnd,
-    onReplySnippetClick, uploadProgress, reactions = []
+    onReplySnippetClick, uploadProgress, reactions = [], onMediaLoad
 }: MessageItemProps) => {
     const senderObj = msg.sender as any;
     const isMediaMessage = (msg.type === 'image' || msg.type === 'video' || (msg.imageUrls && msg.imageUrls.length > 0)) && !msg.isDeleted;
@@ -155,6 +156,7 @@ const MessageItem = ({
                         isRead={isRead}
                         progress={uploadProgress?.[msg.tempId || msg._id]}
                         onVideoClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)}
+                        onMediaLoad={onMediaLoad}
                     />
                 )}
 
@@ -169,6 +171,7 @@ const MessageItem = ({
                         progress={uploadProgress?.[msg.tempId || msg._id]}
                         onImageClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)} 
                         onContextMenu={(e, _url) => onContextMenu(e, msg)}
+                        onMediaLoad={onMediaLoad}
                     />
                 ) : msg.imageUrl && !msg.isDeleted && (
                     <div className="single-image-container">
@@ -177,6 +180,7 @@ const MessageItem = ({
                             alt="Attached"
                             className={`message-image ${isMe ? "message-image--me" : "message-image--other"} ${msg.text ? "message-image--with-text" : ""}`}
                             onClick={() => onImagePreview?.(msg.imageUrl!, msg._id, (msg.sender as any)._id || msg.sender)}
+                            onLoad={onMediaLoad}
                         />
                         <MediaMetaOverlay 
                             createdAt={msg.createdAt} 

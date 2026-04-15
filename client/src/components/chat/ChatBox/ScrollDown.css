@@ -1,0 +1,45 @@
+.scroll-down-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--bg-header);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.scroll-down-btn:hover {
+    background-color: var(--bg-hover);
+    color: var(--accent-color);
+}
+
+.scroll-down-icon {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.new-msg-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #f72585;
+    border: 2px solid var(--bg-header);
+}
+
+/* Light Mode specific button shadow */
+:root[data-theme='light'] .scroll-down-btn {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}

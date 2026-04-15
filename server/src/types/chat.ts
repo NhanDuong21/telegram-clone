@@ -17,6 +17,7 @@ export interface IMessage extends mongoose.Document {
     pinnedFor: mongoose.Types.ObjectId[];
     forwardFrom?: any;
     videoUrl?: string;
+    videoUrls?: string[];
     videoDuration?: number;
     videoWidth?: number;
     videoHeight?: number;

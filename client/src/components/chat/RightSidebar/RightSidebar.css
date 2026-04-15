@@ -259,6 +259,50 @@
     transform: scale(1.05);
 }
 
+.video-grid-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000;
+}
+
+.video-grid-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8;
+    transition: transform 0.2s ease;
+}
+
+.video-grid-item:hover video {
+    transform: scale(1.05);
+    opacity: 1;
+}
+
+.video-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    background: rgba(0, 0, 0, 0.4);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid white;
+    backdrop-filter: blur(2px);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.video-grid-item:hover .video-overlay {
+    transform: translate(-50%, -50%) scale(1.1);
+    background: rgba(0, 0, 0, 0.6);
+}
+
 .empty-media {
     padding: 40px 20px;
     text-align: center;

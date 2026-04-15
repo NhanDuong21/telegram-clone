@@ -17,7 +17,8 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
         if (files && files.length > 0) {
             const firstFile = files[0];
             if (firstFile.mimetype.startsWith("video/")) {
-                videoUrl = firstFile.path;
+                let videoUrls: string[] = files.map(f => f.path);
+                videoUrl = videoUrls[0];
                 type = 'video';
                 // Extract metadata from Cloudinary result
                 if (firstFile.cloudinary) {
@@ -25,6 +26,22 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
                     videoWidth = firstFile.cloudinary.width;
                     videoHeight = firstFile.cloudinary.height;
                 }
+                const message = await messageService.sendMessageService(
+                    conversationId, 
+                    senderId.toString(), 
+                    text, 
+                    imageUrl, 
+                    replyTo, 
+                    forwardFrom, 
+                    type, 
+                    imageUrls, 
+                    videoUrl,
+                    videoDuration,
+                    videoWidth,
+                    videoHeight,
+                    videoUrls
+                );
+                return res.status(201).json({ message });
             } else {
                 imageUrls = files.map(f => f.path);
                 if (!imageUrl) imageUrl = imageUrls[0];
@@ -52,7 +69,8 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
             videoUrl,
             videoDuration,
             videoWidth,
-            videoHeight
+            videoHeight,
+            undefined
         );
         return res.status(201).json({ message });
     } catch (error: unknown) {

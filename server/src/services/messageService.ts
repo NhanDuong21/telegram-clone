@@ -15,7 +15,8 @@ export const sendMessageService = async (
     videoUrl?: string,
     videoDuration?: number,
     videoWidth?: number,
-    videoHeight?: number
+    videoHeight?: number,
+    videoUrls?: string[]
 ) => {
     const conversation = await Conversation.findOne({
         _id: conversationId,
@@ -58,6 +59,7 @@ export const sendMessageService = async (
         videoWidth,
         videoHeight,
         imageUrls: imageUrls || [],
+        videoUrls: videoUrls || [],
         readBy: [senderId],
         isRead: false,
         replyTo: replyTo || undefined,
@@ -328,6 +330,8 @@ export const getSharedMediaService = async (conversationId: string, userId: stri
             { imageUrl: { $ne: "" } },
             { imageUrls: { $exists: true, $not: { $size: 0 } } }
         ];
+    } else if (type === 'video') {
+        query.type = 'video';
     }
 
     if (before) {
@@ -335,7 +339,7 @@ export const getSharedMediaService = async (conversationId: string, userId: stri
     }
 
     const messages = await Message.find(query)
-        .select("imageUrl imageUrls createdAt")
+        .select("imageUrl imageUrls videoUrl videoUrls createdAt type")
         .sort({ createdAt: -1 })
         .limit(limit + 1)
         .lean();
@@ -345,51 +349,80 @@ export const getSharedMediaService = async (conversationId: string, userId: stri
         messages.pop();
     }
 
-    // Flatten media items: if a message has multiple imageUrls, create multiple gallery entries
+    // Flatten media items
     const flattenedMedia: any[] = [];
     messages.forEach(msg => {
-        if (msg.imageUrls && msg.imageUrls.length > 0) {
-            // New format: album
+        if (msg.type === 'video') {
+            if (msg.videoUrls && msg.videoUrls.length > 0) {
+                msg.videoUrls.forEach((url: string) => {
+                    flattenedMedia.push({ _id: msg._id, imageUrl: url, createdAt: msg.createdAt, type: 'video' });
+                });
+            } else if (msg.videoUrl) {
+                flattenedMedia.push({ _id: msg._id, imageUrl: msg.videoUrl, createdAt: msg.createdAt, type: 'video' });
+            }
+        } else if (msg.imageUrls && msg.imageUrls.length > 0) {
             msg.imageUrls.forEach((url: string) => {
-                flattenedMedia.push({ _id: msg._id, imageUrl: url, createdAt: msg.createdAt });
+                flattenedMedia.push({ _id: msg._id, imageUrl: url, createdAt: msg.createdAt, type: 'image' });
             });
         } else if (msg.imageUrl) {
-            // Old format: single photo
-            flattenedMedia.push({ _id: msg._id, imageUrl: msg.imageUrl, createdAt: msg.createdAt });
+            flattenedMedia.push({ _id: msg._id, imageUrl: msg.imageUrl, createdAt: msg.createdAt, type: 'image' });
         }
     });
 
-    // Accurate total count using aggregation
-    const aggregationResult = await Message.aggregate([
+    // Comprehensive Stats using aggregation
+    const statsAggregation = await Message.aggregate([
         {
             $match: {
                 conversationId: new mongoose.Types.ObjectId(conversationId),
                 deletedFor: { $ne: new mongoose.Types.ObjectId(userId) },
-                isDeleted: { $ne: true },
-                $or: [
-                    { type: 'image' },
-                    { imageUrl: { $ne: "" } },
-                    { imageUrls: { $exists: true, $not: { $size: 0 } } }
-                ]
+                isDeleted: { $ne: true }
             }
         },
         {
-            $project: {
-                count: {
-                    $cond: [
-                        { $and: [{ $isArray: "$imageUrls" }, { $gt: [{ $size: "$imageUrls" }, 0] }] },
-                        { $size: "$imageUrls" },
-                        { $cond: [{ $gt: ["$imageUrl", ""] }, 1, 0] }
-                    ]
+            $group: {
+                _id: "$type",
+                messageCount: { $sum: 1 },
+                // For images, we need to count individual files in albums
+                albumPhotoCount: {
+                    $sum: {
+                        $cond: [
+                            { $and: [{ $isArray: "$imageUrls" }, { $gt: [{ $size: "$imageUrls" }, 0] }] },
+                            { $size: "$imageUrls" },
+                            { $cond: [{ $and: [{ $eq: ["$type", "image"] }, { $gt: ["$imageUrl", ""] }] }, 1, 0] }
+                        ]
+                    }
+                },
+                albumVideoCount: {
+                    $sum: {
+                        $cond: [
+                            { $and: [{ $isArray: "$videoUrls" }, { $gt: [{ $size: "$videoUrls" }, 0] }] },
+                            { $size: "$videoUrls" },
+                            { $cond: [{ $and: [{ $eq: ["$type", "video"] }, { $gt: ["$videoUrl", ""] }] }, 1, 0] }
+                        ]
+                    }
                 }
             }
-        },
-        { $group: { _id: null, total: { $sum: "$count" } } }
+        }
     ]);
 
-    const totalCount = aggregationResult.length > 0 ? aggregationResult[0].total : 0;
+    const stats = {
+        image: 0,
+        video: 0,
+        file: 0,
+        voice: 0
+    };
 
-    return { media: flattenedMedia, hasMore, totalCount };
+    statsAggregation.forEach(item => {
+        if (item._id === 'image') stats.image = item.albumPhotoCount;
+        else if (item._id === 'video') stats.video = item.albumVideoCount;
+        else if (item._id === 'voice') stats.voice = item.messageCount;
+        // Add more types if needed
+    });
+
+    // Backward compatibility for totalCount
+    const totalCount = type === 'image' ? stats.image : (type === 'video' ? stats.video : 0);
+
+    return { media: flattenedMedia, hasMore, totalCount, stats };
 };
 
 export const removeFileService = async (messageId: string, userId: string, fileUrl: string, type: 'one-way' | 'two-way' = 'two-way') => {

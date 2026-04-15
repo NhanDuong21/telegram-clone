@@ -81,6 +81,10 @@ const messageSchema = new Schema<IMessage>(
             trim: true,
             default: "",
         },
+        videoUrls: {
+            type: [String],
+            default: [],
+        },
         videoDuration: { type: Number },
         videoWidth: { type: Number },
         videoHeight: { type: Number },

@@ -44,9 +44,16 @@ const RightSidebar = ({
   mode = 'info',
   onToggleMute,
 }: RightSidebarProps) => {
-  const [view, setView] = useState<'info' | 'photos'>('info');
+  const [view, setView] = useState<'info' | 'photos' | 'videos'>('info');
   const [photos, setPhotos] = useState<any[]>([]);
-  const [photosCount, setPhotosCount] = useState(0);
+  const [videos, setVideos] = useState<any[]>([]);
+  const [mediaStats, setMediaStats] = useState({
+    image: 0,
+    video: 0,
+    file: 0,
+    link: 0,
+    voice: 0
+  });
   const [previewData, setPreviewData] = useState<{ url: string, messageId: string } | null>(null);
 
   useEffect(() => {
@@ -61,46 +68,54 @@ const RightSidebar = ({
     const socket = connectSocket();
 
     const handleNewMessage = (message: any) => {
-      const isImage = message.type === 'image' || (message.imageUrl && message.imageUrl.trim() !== "");
-      if (String(message.conversationId) === String(conversation._id) && isImage) {
-        setPhotosCount(prev => prev + 1);
-        setPhotos(prev => [{ _id: message._id, imageUrl: message.imageUrl, createdAt: message.createdAt }, ...prev]);
+      if (String(message.conversationId) !== String(conversation._id)) return;
+
+      if (message.type === 'video' || (message.videoUrl && message.videoUrl.trim() !== "")) {
+        const count = (message.videoUrls && message.videoUrls.length > 0) ? message.videoUrls.length : 1;
+        setMediaStats(prev => ({ ...prev, video: prev.video + count }));
+
+        if (view === 'videos') {
+            const newItems: any[] = [];
+            if (message.videoUrls && message.videoUrls.length > 0) {
+                message.videoUrls.forEach((url: string) => {
+                    newItems.push({ _id: message._id, imageUrl: url, createdAt: message.createdAt, type: 'video' });
+                });
+            } else {
+                newItems.push({ _id: message._id, imageUrl: message.videoUrl, createdAt: message.createdAt, type: 'video' });
+            }
+            setVideos(prev => [...newItems, ...prev]);
+        }
+      } else if (message.type === 'image' || (message.imageUrl && message.imageUrl.trim() !== "")) {
+        const count = (message.imageUrls && message.imageUrls.length > 0) ? message.imageUrls.length : 1;
+        setMediaStats(prev => ({ ...prev, image: prev.image + count }));
+        
+        // If we are currently viewing photos, add it to the list
+        if (view === 'photos') {
+            const newItems: any[] = [];
+            if (message.imageUrls && message.imageUrls.length > 0) {
+                message.imageUrls.forEach((url: string) => {
+                    newItems.push({ _id: message._id, imageUrl: url, createdAt: message.createdAt, type: 'image' });
+                });
+            } else {
+                newItems.push({ _id: message._id, imageUrl: message.imageUrl, createdAt: message.createdAt, type: 'image' });
+            }
+            setPhotos(prev => [...newItems, ...prev]);
+        }
       }
     };
 
-    const handleMessageDeleted = ({ messageId, conversationId: deletedConvId }: any) => {
+    const handleMessageDeleted = ({ conversationId: deletedConvId }: any) => {
         if (String(deletedConvId) === String(conversation._id)) {
-            setPhotos(prev => {
-                const affectedImages = prev.filter(p => p._id === messageId);
-                if (affectedImages.length > 0) {
-                    setPhotosCount(c => Math.max(0, c - affectedImages.length));
-                    return prev.filter(p => p._id !== messageId);
-                }
-                return prev;
-            });
+            // Since we don't know the type from the socket event directly, 
+            // we'll re-fetch stats to ensure accuracy if something was deleted.
+            // Alternatively, we could check if it was in our 'photos' list.
+            fetchMediaData();
         }
     };
 
     const handleMessageUpdated = (updatedMsg: any) => {
         if (String(updatedMsg.conversationId) === String(conversation._id)) {
-            setPhotos(prev => {
-                const oldImagesCount = prev.filter(p => p._id === updatedMsg._id).length;
-                const remaining = prev.filter(p => p._id !== updatedMsg._id);
-                
-                const newImages: any[] = [];
-                if (updatedMsg.imageUrls && updatedMsg.imageUrls.length > 0) {
-                    updatedMsg.imageUrls.forEach((url: string) => {
-                        newImages.push({ _id: updatedMsg._id, imageUrl: url, createdAt: updatedMsg.createdAt });
-                    });
-                } else if (updatedMsg.imageUrl) {
-                    newImages.push({ _id: updatedMsg._id, imageUrl: updatedMsg.imageUrl, createdAt: updatedMsg.createdAt });
-                }
-
-                setPhotosCount(c => Math.max(0, c - oldImagesCount + newImages.length));
-                return [...newImages, ...remaining].sort((a, b) => 
-                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                );
-            });
+            fetchMediaData();
         }
     };
 
@@ -113,18 +128,30 @@ const RightSidebar = ({
       socket.off(SOCKET_EVENTS.MESSAGE_DELETED, handleMessageDeleted);
       socket.off(SOCKET_EVENTS.MESSAGE_UPDATED, handleMessageUpdated);
     };
-  }, [conversation?._id]);
+  }, [conversation?._id, view]);
 
-  const fetchMediaData = async () => {
+  const fetchMediaData = async (type: string = 'image') => {
     if (!conversation?._id) return;
     try {
-      const res = await getSharedMediaApi(conversation._id, 'image');
-      setPhotos(res.data.media);
-      setPhotosCount(res.data.totalCount);
+      const res = await getSharedMediaApi(conversation._id, type);
+      if (type === 'image') setPhotos(res.data.media);
+      if (type === 'video') setVideos(res.data.media);
+      
+      if ((res.data as any).stats) {
+        setMediaStats((res.data as any).stats);
+      }
     } catch (error) {
       console.error("Fetch shared media failed:", error);
     }
   };
+
+  useEffect(() => {
+    if (view === 'videos') {
+      fetchMediaData('video');
+    } else if (view === 'photos') {
+      fetchMediaData('image');
+    }
+  }, [view]);
 
   const handleDeletePhoto = async () => {
     if (!previewData || !conversation?._id) return;
@@ -154,14 +181,14 @@ const RightSidebar = ({
         : "Offline");
 
   const renderHeader = () => {
-    if (view === 'photos') {
+    if (view === 'photos' || view === 'videos') {
       return (
         <div className="right-sidebar-header">
           <div className="header-left">
             <button className="sidebar-close-btn" onClick={() => setView('info')}>
               <ArrowLeft size={20} />
             </button>
-            <h3>Ảnh</h3>
+            <h3>{view === 'photos' ? 'Ảnh' : 'Video'}</h3>
           </div>
         </div>
       );
@@ -290,23 +317,23 @@ const RightSidebar = ({
             <div className="shared-content-section">
               <div className="shared-item" onClick={() => setView('photos')} style={{ cursor: 'pointer' }}>
                 <ImageIcon size={20} className="shared-icon" />
-                <span className="shared-label">{photosCount} ảnh</span>
+                <span className="shared-label">{mediaStats.image} ảnh</span>
               </div>
-              <div className="shared-item">
+              <div className="shared-item" onClick={() => setView('videos')} style={{ cursor: 'pointer' }}>
                 <Video size={20} className="shared-icon" />
-                <span className="shared-label">0 video</span>
+                <span className="shared-label">{mediaStats.video} video</span>
               </div>
               <div className="shared-item">
                 <FileText size={20} className="shared-icon" />
-                <span className="shared-label">0 tệp tin</span>
+                <span className="shared-label">{mediaStats.file} tệp tin</span>
               </div>
               <div className="shared-item">
                 <Music size={20} className="shared-icon" />
-                <span className="shared-label">0 nhạc</span>
+                <span className="shared-label">{mediaStats.voice} nhạc</span>
               </div>
               <div className="shared-item">
                 <LinkIcon size={20} className="shared-icon" />
-                <span className="shared-label">0 liên kết</span>
+                <span className="shared-label">{mediaStats.link} liên kết</span>
               </div>
               {!isGroup && (
                 <div className="shared-item">
@@ -316,27 +343,50 @@ const RightSidebar = ({
               )}
             </div>
           </>
-        ) : (
-          <div className="shared-media-grid">
-            {photos.length === 0 ? (
-              <div className="empty-media">
-                <p>Chưa có ảnh nào được chia sẻ</p>
-              </div>
-            ) : (
-              <div className="photo-grid">
-                {photos.map((msg, idx) => (
-                  <div 
-                    key={msg._id || idx} 
-                    className="photo-grid-item"
-                    onClick={() => setPreviewData({ url: msg.imageUrl, messageId: msg._id })}
-                  >
-                    <img src={msg.imageUrl} alt="Shared" loading="lazy" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        ) : view === 'photos' ? (
+            <div className="shared-media-grid">
+              {photos.length === 0 ? (
+                <div className="empty-media">
+                  <p>Chưa có ảnh nào được chia sẻ</p>
+                </div>
+              ) : (
+                <div className="photo-grid">
+                  {photos.map((msg, idx) => (
+                    <div 
+                      key={msg._id || idx} 
+                      className="photo-grid-item"
+                      onClick={() => setPreviewData({ url: msg.imageUrl, messageId: msg._id })}
+                    >
+                      <img src={msg.imageUrl} alt="Shared" loading="lazy" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+           ) : (
+            <div className="shared-media-grid">
+              {videos.length === 0 ? (
+                <div className="empty-media">
+                  <p>Chưa có video nào được chia sẻ</p>
+                </div>
+              ) : (
+                <div className="photo-grid">
+                  {videos.map((msg, idx) => (
+                    <div 
+                      key={msg._id || idx} 
+                      className="photo-grid-item video-grid-item"
+                      onClick={() => setPreviewData({ url: msg.imageUrl, messageId: msg._id })}
+                    >
+                      <video src={msg.imageUrl} muted />
+                      <div className="video-overlay">
+                        <Video size={24} fill="white" color="white" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+           )}
       </div>
 
       <AnimatePresence>

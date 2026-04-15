@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 interface AvatarProps {
   user: {
@@ -12,6 +12,16 @@ interface AvatarProps {
 
 const Avatar = ({ user, size = 44 }: AvatarProps) => {
   const [imgError, setImgError] = useState(false);
+  const prevAvatar = useRef(user?.avatar);
+
+  if (user?.avatar !== prevAvatar.current) {
+    setImgError(false);
+    prevAvatar.current = user?.avatar;
+  }
+
+  const avatarUrl = user?.avatar 
+    ? (user.avatar.includes('?') ? `${user.avatar}&t=${Date.now()}` : `${user.avatar}?t=${Date.now()}`)
+    : null;
 
   // Fallback to unknown if user is null
   if (!user) {
@@ -36,10 +46,10 @@ const Avatar = ({ user, size = 44 }: AvatarProps) => {
   }
 
   // If avatar URL exists and hasn't failed loading
-  if (user.avatar && !imgError) {
+  if (avatarUrl && !imgError) {
     return (
       <img
-        src={user.avatar}
+        src={avatarUrl}
         alt={user.username}
         style={{
           width: size,

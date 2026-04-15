@@ -4,14 +4,14 @@ import { getIO } from "../socket";
 import { SOCKET_EVENTS } from "../utils/socketEvents";
 
 export const sendMessageService = async (
-    conversationId: string, 
-    senderId: string, 
-    text?: string, 
-    imageUrl?: string, 
-    replyTo?: string, 
-    forwardFrom?: string, 
-    type: 'text' | 'image' | 'video' | 'voice' | 'system' = 'text', 
-    imageUrls?: string[], 
+    conversationId: string,
+    senderId: string,
+    text?: string,
+    imageUrl?: string,
+    replyTo?: string,
+    forwardFrom?: string,
+    type: 'text' | 'image' | 'video' | 'voice' | 'system' = 'text',
+    imageUrls?: string[],
     videoUrl?: string,
     videoDuration?: number,
     videoWidth?: number,
@@ -30,7 +30,7 @@ export const sendMessageService = async (
     if (!conversation.isGroup && type !== 'system') {
         const User = (await import("../models/User")).default;
         const recipientId = conversation.participants.find(p => p.toString() !== senderId);
-        
+
         if (recipientId) {
             const users = await User.find({
                 _id: { $in: [senderId, recipientId] }
@@ -68,22 +68,22 @@ export const sendMessageService = async (
     // 1. Emit ngay lập tức sau khi tạo xong Message (Không đợi update Conversation)
     const populated = await newMessage.populate([
         { path: "sender", select: "username avatar email fullName" },
-        { 
-            path: "replyTo", 
+        {
+            path: "replyTo",
             populate: { path: "sender", select: "username fullName" },
             select: "text imageUrl sender"
         },
         { path: "forwardFrom", select: "username avatar fullName" }
     ]);
     const io = getIO();
-    
+
     // Broadcast message ngay (Non-blocking)
     conversation.participants.forEach((p) => {
         io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, populated);
     });
 
     // 2. Chạy update Conversation ngầm trong background (Giảm độ trễ cho recipient)
-    Conversation.findByIdAndUpdate(conversationId, { 
+    Conversation.findByIdAndUpdate(conversationId, {
         lastMessage: newMessage._id,
         updatedAt: new Date()
     }).exec().catch(err => console.error("Async lastMessage update failed:", err));
@@ -101,7 +101,7 @@ export const getMessagesService = async (conversationId: string, userId: string,
         throw new Error("Conversation không tồn tại");
     }
 
-    const query: any = { 
+    const query: any = {
         conversationId,
         deletedFor: { $ne: userId }
     };
@@ -138,7 +138,7 @@ export const deleteMessageService = async (messageId: string, userId: string, ty
         if (message.sender.toString() !== userId) {
             throw new Error("Bạn không có quyền xóa tin nhắn này cho mọi người");
         }
-        
+
         // Two-way delete: Clear content and set flag
         message.text = "Tin nhắn đã bị xóa";
         message.imageUrl = "";
@@ -154,11 +154,11 @@ export const deleteMessageService = async (messageId: string, userId: string, ty
 
     const io = getIO();
     const conversation = await Conversation.findById(message.conversationId).select("participants").lean();
-    
+
     if (conversation) {
         conversation.participants.forEach((p) => {
-            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGE_DELETED, { 
-                messageId, 
+            io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGE_DELETED, {
+                messageId,
                 conversationId: message.conversationId.toString(),
                 type,
                 userId // Who triggered the delete
@@ -260,7 +260,7 @@ export const updateMessageService = async (messageId: string, userId: string, da
 
     const io = getIO();
     const conversation = await Conversation.findById(message.conversationId).select("participants").lean();
-    
+
     if (conversation) {
         if (shouldBroadcastGlobally) {
             conversation.participants.forEach((p) => {
@@ -278,12 +278,12 @@ export const updateMessageService = async (messageId: string, userId: string, da
 export const markAsReadService = async (conversationId: string, userId: string) => {
     // 1. Bulk update in DB: mark all messages as read by this user
     const result = await Message.updateMany(
-        { 
-            conversationId, 
-            sender: { $ne: userId }, 
-            readBy: { $ne: userId } 
+        {
+            conversationId,
+            sender: { $ne: userId },
+            readBy: { $ne: userId }
         },
-        { 
+        {
             $set: { isRead: true },
             $addToSet: { readBy: userId }
         }
@@ -292,12 +292,12 @@ export const markAsReadService = async (conversationId: string, userId: string) 
     if (result.modifiedCount > 0) {
         const io = getIO();
         const conversation = await Conversation.findById(conversationId).select("participants").lean();
-        
+
         if (conversation) {
             conversation.participants.forEach((p) => {
-                io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGES_READ, { 
-                    conversationId, 
-                    readerId: userId 
+                io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGES_READ, {
+                    conversationId,
+                    readerId: userId
                 });
             });
         }
@@ -316,7 +316,7 @@ export const getSharedMediaService = async (conversationId: string, userId: stri
         throw new Error("Conversation không tồn tại");
     }
 
-    const query: any = { 
+    const query: any = {
         conversationId: new mongoose.Types.ObjectId(conversationId),
         deletedFor: { $ne: new mongoose.Types.ObjectId(userId) },
         isDeleted: { $ne: true }
@@ -324,7 +324,7 @@ export const getSharedMediaService = async (conversationId: string, userId: stri
 
     if (type === 'image') {
         query.$or = [
-            { type: 'image' }, 
+            { type: 'image' },
             { imageUrl: { $ne: "" } },
             { imageUrls: { $exists: true, $not: { $size: 0 } } }
         ];
@@ -361,19 +361,21 @@ export const getSharedMediaService = async (conversationId: string, userId: stri
 
     // Accurate total count using aggregation
     const aggregationResult = await Message.aggregate([
-        { $match: { 
-            conversationId: new mongoose.Types.ObjectId(conversationId),
-            deletedFor: { $ne: new mongoose.Types.ObjectId(userId) },
-            isDeleted: { $ne: true },
-            $or: [
-                { type: 'image' }, 
-                { imageUrl: { $ne: "" } },
-                { imageUrls: { $exists: true, $not: { $size: 0 } } }
-            ]
-        } },
-        { 
+        {
+            $match: {
+                conversationId: new mongoose.Types.ObjectId(conversationId),
+                deletedFor: { $ne: new mongoose.Types.ObjectId(userId) },
+                isDeleted: { $ne: true },
+                $or: [
+                    { type: 'image' },
+                    { imageUrl: { $ne: "" } },
+                    { imageUrls: { $exists: true, $not: { $size: 0 } } }
+                ]
+            }
+        },
+        {
             $project: {
-                count: { 
+                count: {
                     $cond: [
                         { $and: [{ $isArray: "$imageUrls" }, { $gt: [{ $size: "$imageUrls" }, 0] }] },
                         { $size: "$imageUrls" },
@@ -384,8 +386,6 @@ export const getSharedMediaService = async (conversationId: string, userId: stri
         },
         { $group: { _id: null, total: { $sum: "$count" } } }
     ]);
-
-    console.log("📊 Aggregation Result for Shared Media:", JSON.stringify(aggregationResult, null, 2));
 
     const totalCount = aggregationResult.length > 0 ? aggregationResult[0].total : 0;
 
@@ -402,7 +402,7 @@ export const removeFileService = async (messageId: string, userId: string, fileU
             message.deletedFor.push(userIdObj);
             await message.save();
         }
-        
+
         const io = getIO();
         io.to(userId).emit(SOCKET_EVENTS.MESSAGE_DELETED, {
             messageId,
@@ -410,7 +410,7 @@ export const removeFileService = async (messageId: string, userId: string, fileU
             type: 'one-way',
             userId
         });
-        
+
         return { deleted: true, type: 'one-way' };
     }
 
@@ -441,10 +441,10 @@ export const removeFileService = async (messageId: string, userId: string, fileU
         throw new Error("Không tìm thấy tệp đính kèm để xóa");
     }
 
-    const remainingImages = (message.imageUrls && message.imageUrls.length > 0) 
-        ? message.imageUrls.length 
+    const remainingImages = (message.imageUrls && message.imageUrls.length > 0)
+        ? message.imageUrls.length
         : (message.imageUrl && message.imageUrl.trim() !== "" ? 1 : 0);
-        
+
     const hasContent = remainingImages > 0 || (message.text && message.text.trim() !== "");
 
     const io = getIO();
@@ -457,7 +457,7 @@ export const removeFileService = async (messageId: string, userId: string, fileU
         message.imageUrl = "";
         message.imageUrls = [];
         await message.save();
-        
+
         if (conversation) {
             conversation.participants.forEach((p: any) => {
                 io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGE_DELETED, {
@@ -471,7 +471,7 @@ export const removeFileService = async (messageId: string, userId: string, fileU
     } else {
         await message.save();
         const updatedMsg = await Message.findById(messageId).populate("sender", "username fullName avatar");
-        
+
         if (conversation && updatedMsg) {
             console.log(`📡 Emitting MESSAGE_UPDATED for album ${messageId} to participants`);
             conversation.participants.forEach((p: any) => {

@@ -129,8 +129,8 @@ const MessageItem = ({
                 onTouchEnd={onTouchEnd}
             >
                 {msg.forwardFrom && (
-                    <div className="message-forwarded-info">
-                        <CornerUpRight size={12} className="forward-info-icon" />
+                    <div className="flex items-center gap-1.5 px-3 pt-1.5 text-[12px] font-medium text-blue-600 dark:text-sky-400">
+                        <CornerUpRight size={13} strokeWidth={2.5} />
                         <span>Chuyển tiếp từ <b>{msg.forwardFrom.fullName || msg.forwardFrom.username}</b></span>
                     </div>
                 )}

@@ -305,8 +305,8 @@
 
 .message-bubble {
     position: relative;
-    max-width: 65%;
-    padding: 10px 14px;
+    max-width: 72%;
+    width: fit-content;
     font-size: 14px;
     line-height: 1.5;
     word-break: break-word;

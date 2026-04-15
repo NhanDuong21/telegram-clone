@@ -1,14 +1,12 @@
 import { useEffect, useRef, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Pin, CornerUpRight, X, Check, CheckCheck, Clock } from "lucide-react";
+import { Pin, X } from "lucide-react";
 import type { Message } from "../../../types";
 import { useContextMenu } from "../../../hooks/useContextMenu";
 import { getSocket } from "../../../socket";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
 import ContextMenu from "../Message/ContextMenu";
-import ImageAlbum from "../Message/ImageAlbum";
-import VideoMessage from "../Message/VideoMessage";
-import MediaMetaOverlay from "../Message/MediaMetaOverlay";
+import MessageItem from "../Message/MessageItem";
 import './ChatBox.css';
 
 interface ChatBoxProps {
@@ -31,37 +29,7 @@ interface ChatBoxProps {
     conversationId?: string;
 }
 
-const HighlightText = ({ text, highlight }: { text: string; highlight: string }) => {
-    if (!highlight || !highlight.trim()) return <>{text}</>;
-    
-    // Escape special characters for regex
-    const escapedHighlight = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`(${escapedHighlight})`, 'gi');
-    const parts = text.split(regex);
-    
-    return (
-        <>
-            {parts.map((part, i) => 
-                part.toLowerCase() === highlight.toLowerCase() ? (
-                    <mark key={i} className="highlight-text">{part}</mark>
-                ) : (
-                    part
-                )
-            )}
-        </>
-    );
-};
-
-const formatTime = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-};
-
-const messageVariants = {
-    initial: { opacity: 0, scale: 0.9, y: 10 },
-    animate: { opacity: 1, scale: 1, y: 0 },
-    exit: { opacity: 0, scale: 0.9, transition: { duration: 0.1 } }
-};
+// messageVariants used to be here
 
 const ChatBox = ({ 
     messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, 
@@ -130,43 +98,9 @@ const ChatBox = ({
         }
     }, [messages]);
 
-    const renderReactions = (reactions: any[]) => {
-        if (!reactions || reactions.length === 0) return null;
-        
-        const counts: Record<string, number> = {};
-        reactions.forEach(r => counts[r.emoji] = (counts[r.emoji] || 0) + 1);
+    // renderReactions is now inside MessageItem
 
-        return (
-            <div className="message-reactions">
-                {Object.entries(counts).map(([emoji, count]) => (
-                    <motion.div 
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        key={emoji} 
-                        className="reaction-badge"
-                    >
-                        {emoji} {count > 1 && <span className="reaction-count">{count}</span>}
-                    </motion.div>
-                ))}
-            </div>
-        );
-    };
-
-    const renderReplySnippet = (msg: Message) => {
-        if (!msg.replyTo) return null;
-        
-        return (
-            <div 
-                className="message-reply-snippet"
-                onClick={() => scrollToMessage(msg.replyTo!._id)}
-            >
-                <div className="reply-sender">{msg.replyTo.sender.fullName || msg.replyTo.sender.username}</div>
-                <div className="reply-text">
-                    {msg.replyTo.text || (msg.replyTo.imageUrl ? "📷 Ảnh" : "Tin nhắn")}
-                </div>
-            </div>
-        );
-    };
+    // renderReplySnippet is now inside MessageItem
 
     return (
         <div className="chat-box-area">
@@ -225,9 +159,9 @@ const ChatBox = ({
                         const isMe = (msg.sender as any)._id === currentUserId;
                         const isRead = (msg.readBy || []).some((r: any) => r._id !== currentUserId) || msg.isRead;
                         const senderObj = msg.sender as any;
-                        const isMediaMessage = (msg.type === 'image' || msg.type === 'video' || (msg.imageUrls && msg.imageUrls.length > 0)) && !msg.isDeleted;
-                        const isPureMedia = isMediaMessage && !msg.text;
 
+                        const prevMsg = messages[index - 1];
+                        const isFirstInGroup = !prevMsg || (prevMsg.sender as any)?._id !== senderObj?._id || prevMsg.type === 'system';
                         const nextMsg = messages[index + 1];
                         const isLastInGroup = !nextMsg || (nextMsg.sender as any)?._id !== senderObj?._id || nextMsg.type === 'system';
                         const showAvatar = !isMe && isLastInGroup;
@@ -246,152 +180,25 @@ const ChatBox = ({
                         }
 
                         return (
-                            <motion.div
+                            <MessageItem 
                                 key={msg._id}
-                                layout
-                                variants={messageVariants}
-                                initial="initial"
-                                animate="animate"
-                                exit="exit"
-                                transition={{
-                                    type: "spring",
-                                    stiffness: 500,
-                                    damping: 40,
-                                    opacity: { duration: 0.2 }
-                                }}
-                                className={`message-row ${isMe ? "message-row--me" : "message-row--other"} ${isLastInGroup ? "message-row--group-last" : ""}`}
-                            >
-                                {!isMe && (
-                                    <div className="message-avatar" style={{ visibility: showAvatar ? 'visible' : 'hidden' }}>
-                                        {senderObj?.avatar ? (
-                                            <img 
-                                                src={senderObj.avatar} 
-                                                alt={senderObj.username || "Avatar"} 
-                                                className="message-avatar-img"
-                                                onError={(e) => {
-                                                    const target = e.currentTarget;
-                                                    target.style.display = 'none';
-                                                    const parent = target.parentElement;
-                                                    if (parent) {
-                                                        const fallback = document.createElement('div');
-                                                        fallback.className = 'message-avatar-fallback';
-                                                        const name = senderObj?.fullName || senderObj?.username || "?";
-                                                        fallback.innerText = name.substring(0, 1).toUpperCase();
-                                                        parent.appendChild(fallback);
-                                                    }
-                                                }}
-                                            />
-                                        ) : (
-                                            <div className="message-avatar-fallback">
-                                                {(senderObj?.fullName || senderObj?.username || "?").substring(0, 1).toUpperCase()}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                                <div 
-                                    id={`msg-${msg._id}`}
-                                    className={`message-bubble ${isMe ? "message-bubble--me" : "message-bubble--other"} ${msg.isDeleted ? "message-bubble--deleted" : ""} ${msg.isPinned || msg.pinnedFor?.includes(currentUserId) ? "message-bubble--pinned" : ""} ${isMediaMessage ? "message-bubble--media" : ""} ${isPureMedia ? "message-bubble--pure-media" : ""} ${!isLastInGroup ? "message-bubble--group-middle" : ""}`}
-                                    onContextMenu={(e) => !msg.isDeleted && onContextMenu(e, msg)}
-                                    onTouchStart={(e) => !msg.isDeleted && onTouchStart(e, msg)}
-                                    onTouchEnd={onTouchEnd}
-                                >
-                                    {msg.forwardFrom && (
-                                        <div className="message-forwarded-info">
-                                            <CornerUpRight size={12} className="forward-info-icon" />
-                                            <span>Chuyển tiếp từ <b>{msg.forwardFrom.fullName || msg.forwardFrom.username}</b></span>
-                                        </div>
-                                    )}
-
-                                    {!isMe && isGroup && (
-                                        <div className="message-sender">
-                                            {senderObj?.fullName || senderObj?.username}
-                                        </div>
-                                    )}
-
-                                    {renderReplySnippet(msg)}
-                                    
-                                    {msg.type === 'video' && msg.videoUrl && !msg.isDeleted && (
-                                        <VideoMessage 
-                                            videoUrl={msg.videoUrl} 
-                                            videoDuration={msg.videoDuration}
-                                            videoWidth={msg.videoWidth}
-                                            videoHeight={msg.videoHeight}
-                                            createdAt={msg.createdAt}
-                                            isSending={msg.isSending}
-                                            isError={msg.isError}
-                                            isMe={isMe}
-                                            isRead={isRead}
-                                            progress={uploadProgress?.[msg.tempId || msg._id]}
-                                            onVideoClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)}
-                                        />
-                                    )}
-
-                                    {msg.imageUrls && msg.imageUrls.length > 0 && !msg.isDeleted ? (
-                                        <ImageAlbum 
-                                            images={msg.imageUrls} 
-                                            isSending={msg.isSending}
-                                            isError={msg.isError}
-                                            isMe={isMe}
-                                            isRead={isRead}
-                                            createdAt={msg.createdAt}
-                                            progress={uploadProgress?.[msg.tempId || msg._id]}
-                                            onImageClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)} 
-                                            onContextMenu={(e, url) => onContextMenu(e, msg, url)}
-                                        />
-                                    ) : msg.imageUrl && !msg.isDeleted && (
-                                        <div className="single-image-container">
-                                            <img
-                                                src={msg.imageUrl}
-                                                alt="Attached"
-                                                className={`message-image ${isMe ? "message-image--me" : "message-image--other"} ${msg.text ? "message-image--with-text" : ""}`}
-                                                onClick={() => onImagePreview?.(msg.imageUrl!, msg._id, (msg.sender as any)._id || msg.sender)}
-                                                onError={(e) => {
-                                                    e.currentTarget.style.display = "none";
-                                                }}
-                                            />
-                                            <MediaMetaOverlay 
-                                                createdAt={msg.createdAt} 
-                                                isMe={isMe} 
-                                                isSending={msg.isSending} 
-                                                isRead={isRead} 
-                                            />
-                                        </div>
-                                    )}
-                                    
-                                    {msg.text && (
-                                        <div className={`message-text-content ${msg.isDeleted ? "message-text--deleted" : ""}`}>
-                                            {msg.isDeleted ? (
-                                                "Tin nhắn đã bị xóa"
-                                            ) : (
-                                                <HighlightText text={msg.text} highlight={searchQuery} />
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {!isPureMedia && (
-                                        <div className="message-footer">
-                                            <div className="footer-left">
-                                                {msg.isPinned && <Pin size={10} className="pin-hint-icon" />}
-                                                {msg.isEdited && <span className="edited-hint">đã sửa</span>}
-                                                <span className="timestamp">{formatTime(msg.createdAt)}</span>
-                                            </div>
-                                            {isMe && !msg.isDeleted && (
-                                                <div className="message-status-icons">
-                                                    {msg.isSending ? (
-                                                        <Clock size={12} className="status-icon--sending" />
-                                                    ) : isRead ? (
-                                                        <CheckCheck size={14} className="tick-read" />
-                                                    ) : (
-                                                        <Check size={14} className="tick-sent" />
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {renderReactions(msg.reactions || [])}
-                                </div>
-                            </motion.div>
+                                msg={msg}
+                                isMe={isMe}
+                                isRead={isRead}
+                                isGroupConversation={!!isGroup}
+                                isFirst={isFirstInGroup}
+                                isLast={isLastInGroup}
+                                showAvatar={showAvatar}
+                                currentUserId={currentUserId}
+                                searchQuery={searchQuery}
+                                onImagePreview={onImagePreview}
+                                onContextMenu={onContextMenu}
+                                onTouchStart={onTouchStart}
+                                onTouchEnd={onTouchEnd}
+                                onReplySnippetClick={scrollToMessage}
+                                uploadProgress={uploadProgress}
+                                reactions={msg.reactions}
+                            />
                         );
                     })}
                 </AnimatePresence>

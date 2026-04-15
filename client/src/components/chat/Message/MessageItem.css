@@ -1,0 +1,157 @@
+/* Tails logic using SVG or pseudo-elements */
+.message-bubble.has-tail::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    width: 10px;
+    height: 10px;
+}
+
+.message-bubble--me.has-tail::after {
+    right: -8px;
+    background: var(--msg-out);
+    clip-path: polygon(0 0, 0% 100%, 100% 100%);
+}
+
+.message-bubble--other.has-tail::after {
+    left: -8px;
+    background: var(--msg-in);
+    clip-path: polygon(100% 0, 0 100%, 100% 100%);
+}
+
+/* Pure media logic - no tail for pure media usually or transparent tail? */
+.message-bubble--pure-media.has-tail::after {
+    display: none;
+}
+
+/* Compact Meta */
+.message-text-content {
+    position: relative;
+    padding: 6px 10px 6px 12px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+}
+
+.text-wrapper {
+    display: inline;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.text-spacer {
+    display: inline-block;
+    width: 60px; /* Space for the floating timestamp */
+    height: 1px;
+}
+
+.compact-meta {
+    position: absolute;
+    bottom: 4px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px !important;
+    pointer-events: none;
+    line-height: 1;
+}
+
+.timestamp {
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+.message-bubble--me .compact-meta {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.message-bubble--me .tick-sent {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.message-bubble--me .tick-read {
+    color: #fff;
+}
+
+.message-bubble--other .compact-meta {
+    color: var(--text-secondary);
+}
+
+.message-bubble--other .tick-read {
+    color: var(--tick-read);
+}
+
+/* Overriding bubble width and radius for more "Telegram" feel */
+.message-bubble {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    width: fit-content !important;
+    max-width: 72% !important;
+}
+
+.message-bubble--me {
+    border-radius: 16px 16px 4px 16px !important;
+    margin-left: auto;
+}
+
+@media (max-width: 600px) {
+    .message-bubble {
+        max-width: 85% !important;
+    }
+}
+
+.message-bubble--me.message-bubble--group-middle {
+    border-radius: 16px !important;
+}
+
+.message-bubble--other {
+    border-radius: 16px 16px 16px 4px !important;
+}
+.message-bubble--other.message-bubble--group-middle {
+    border-radius: 16px !important;
+}
+
+/* Avatar adjustment */
+.message-row--group-last .message-avatar {
+    margin-bottom: 0;
+}
+
+.message-row {
+    margin-bottom: 2px; /* Tighter grouping */
+}
+
+.message-row--group-last {
+    margin-bottom: 8px; /* Gap between groups */
+}
+
+/* Footer removal from standard bubble as it's now compact-meta */
+.message-bubble .message-footer {
+    display: none;
+}
+
+.status-icon--sending {
+    animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.message-sender {
+    padding: 6px 12px 0;
+    font-size: 13px !important;
+    font-weight: 600;
+}
+
+.message-forwarded-info {
+    padding: 6px 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+}
+
+.message-reply-snippet {
+    margin: 4px 8px !important;
+}

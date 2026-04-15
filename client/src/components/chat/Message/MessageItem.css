@@ -132,6 +132,13 @@
     border-radius: 16px !important;
 }
 
+.avatar-wrapper {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    align-self: flex-end;
+}
+
 /* Avatar adjustment */
 .message-row--group-last .message-avatar {
     margin-bottom: 0;

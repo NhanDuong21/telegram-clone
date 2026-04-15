@@ -93,17 +93,29 @@ const MessageItem = ({
             className={`message-row ${isMe ? "message-row--me" : "message-row--other"} ${isLast ? "message-row--group-last" : ""} ${isFirst ? "message-row--group-first" : ""}`}
         >
             {!isMe && (
-                <div className="message-avatar" style={{ visibility: showAvatar ? 'visible' : 'hidden' }}>
-                    {senderObj?.avatar ? (
-                        <img 
-                            src={senderObj.avatar} 
-                            alt={senderObj.username || "Avatar"} 
-                            className="message-avatar-img"
-                        />
-                    ) : (
-                        <div className="message-avatar-fallback">
-                            {(senderObj?.fullName || senderObj?.username || "?").substring(0, 1).toUpperCase()}
-                        </div>
+                <div className="avatar-wrapper">
+                    {showAvatar && (
+                        <motion.div 
+                            layoutId={`avatar-${senderObj?._id || senderObj}`}
+                            transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 30
+                            }}
+                            className="message-avatar"
+                        >
+                            {senderObj?.avatar ? (
+                                <img 
+                                    src={senderObj.avatar} 
+                                    alt={senderObj.username || "Avatar"} 
+                                    className="message-avatar-img"
+                                />
+                            ) : (
+                                <div className="message-avatar-fallback">
+                                    {(senderObj?.fullName || senderObj?.username || "?").substring(0, 1).toUpperCase()}
+                                </div>
+                            )}
+                        </motion.div>
                     )}
                 </div>
             )}

@@ -10,6 +10,7 @@ interface VideoMessageProps {
     createdAt: string;
     isSending?: boolean;
     isError?: boolean;
+    progress?: number;
     onVideoClick: (url: string) => void;
 }
 
@@ -21,6 +22,7 @@ const VideoMessage = ({
     createdAt,
     isSending, 
     isError, 
+    progress,
     onVideoClick 
 }: VideoMessageProps) => {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -74,7 +76,22 @@ const VideoMessage = ({
             <div className="video-content-overlay">
                 {isSending ? (
                     <div className="video-status-center">
-                        <Loader2 className="animate-spin text-white" size={32} />
+                        {progress !== undefined && progress < 100 ? (
+                            <div className="upload-progress-circle">
+                                <svg viewBox="0 0 36 36" className="circular-chart">
+                                    <path className="circle-bg"
+                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    />
+                                    <path className="circle"
+                                        strokeDasharray={`${progress}, 100`}
+                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    />
+                                </svg>
+                                <div className="progress-text">{progress}%</div>
+                            </div>
+                        ) : (
+                            <Loader2 className="animate-spin text-white" size={32} />
+                        )}
                     </div>
                 ) : (
                     <div className="video-status-center">

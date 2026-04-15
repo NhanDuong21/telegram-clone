@@ -8,9 +8,10 @@ interface ImageAlbumProps {
     isError?: boolean;
     onImageClick?: (url: string) => void;
     onContextMenu?: (e: React.MouseEvent, imageUrl: string) => void;
+    progress?: number;
 }
 
-const ImageAlbum = ({ images, isSending, isError, onImageClick, onContextMenu }: ImageAlbumProps) => {
+const ImageAlbum = ({ images, isSending, isError, onImageClick, onContextMenu, progress }: ImageAlbumProps) => {
     const count = Math.min(images.length, 5);
     
     return (
@@ -28,8 +29,20 @@ const ImageAlbum = ({ images, isSending, isError, onImageClick, onContextMenu }:
 
             {isSending && (
                 <div className="album-overlay album-overlay--loading">
-                    <Loader2 className="spinner-icon" size={24} />
-                    <span>Đang gửi...</span>
+                    {progress !== undefined && progress < 100 ? (
+                        <div className="upload-progress-circle album-progress">
+                            <svg viewBox="0 0 36 36" className="circular-chart">
+                                <path className="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path className="circle" strokeDasharray={`${progress}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <div className="progress-text">{progress}%</div>
+                        </div>
+                    ) : (
+                        <>
+                            <Loader2 className="spinner-icon" size={24} />
+                            <span>Đang gửi...</span>
+                        </>
+                    )}
                 </div>
             )}
 

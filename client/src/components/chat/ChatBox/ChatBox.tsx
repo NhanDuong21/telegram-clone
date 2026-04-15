@@ -25,6 +25,7 @@ interface ChatBoxProps {
     onPinMessage?: (msg: Message) => void;
     onForwardMessage?: (msg: Message) => void;
     onUnpinMessage?: (msg: Message) => void;
+    uploadProgress?: Record<string, number>;
     searchQuery?: string;
     conversationId?: string;
 }
@@ -65,6 +66,7 @@ const ChatBox = ({
     messages, currentUserId, onLoadMore, hasMore, loadingMore, isGroup, 
     onImagePreview, onDeleteMessage, onReactMessage,
     onReplyMessage, onEditMessage, onPinMessage, onForwardMessage, onUnpinMessage,
+    uploadProgress,
     searchQuery = "",
     conversationId,
 }: ChatBoxProps) => {
@@ -309,6 +311,7 @@ const ChatBox = ({
                                             createdAt={msg.createdAt}
                                             isSending={msg.isSending}
                                             isError={msg.isError}
+                                            progress={uploadProgress?.[msg.tempId || msg._id]}
                                             onVideoClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)}
                                         />
                                     )}
@@ -318,6 +321,7 @@ const ChatBox = ({
                                             images={msg.imageUrls} 
                                             isSending={msg.isSending}
                                             isError={msg.isError}
+                                            progress={uploadProgress?.[msg.tempId || msg._id]}
                                             onImageClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)} 
                                             onContextMenu={(e, url) => onContextMenu(e, msg, url)}
                                         />

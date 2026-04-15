@@ -18,6 +18,7 @@ interface MessageInputProps {
     isTemporary?: boolean;
     otherUserId?: string;
     onConversationCreated?: (conv: Conversation) => void;
+    onUploadProgress?: (tempId: string, progress: number | null) => void;
 }
 
 const MessageInput = ({ 
@@ -28,7 +29,8 @@ const MessageInput = ({
     onCancelMode, 
     isTemporary, 
     otherUserId,
-    onConversationCreated 
+    onConversationCreated,
+    onUploadProgress
 }: MessageInputProps) => {
     const { user } = useAuth();
     const [text, setText] = useState("");
@@ -174,11 +176,16 @@ const MessageInput = ({
                 formData.append("media", file);
             });
 
-            const res = await sendMessageApi(conversationId, formData);
+            const res = await sendMessageApi(conversationId, formData, (percent) => {
+                if (onUploadProgress) onUploadProgress(tempId, percent);
+            });
+
+            if (onUploadProgress) onUploadProgress(tempId, null); // Clear progress on success
             onMessageSent({ ...res.data.message, tempId });
             localUrls.forEach(url => URL.revokeObjectURL(url));
         } catch (error: any) {
             console.error("Upload failed:", error);
+            if (onUploadProgress) onUploadProgress(tempId, null); // Clear progress on failure
             onMessageSent({ ...tempMsg, isSending: false, isError: true });
             toast.error("Không thể gửi tệp. Vui lòng thử lại.");
         }

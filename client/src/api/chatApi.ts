@@ -71,7 +71,8 @@ export const getMessagesApi = (
 
 export const sendMessageApi = (
     conversationId: string,
-    data: any // Can be object or FormData
+    data: any, // Can be object or FormData
+    onProgress?: (percent: number) => void
 ): Promise<AxiosResponse<{ message: Message }>> => {
     if (data instanceof FormData) {
         if (!data.has("conversationId")) {
@@ -82,6 +83,12 @@ export const sendMessageApi = (
                 ...getAuthHeader().headers,
                 "Content-Type": "multipart/form-data",
             },
+            onUploadProgress: (progressEvent) => {
+                if (onProgress && progressEvent.total) {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    onProgress(percentCompleted);
+                }
+            }
         });
     }
     return axiosClient.post(`/messages`, { conversationId, ...data }, getAuthHeader());

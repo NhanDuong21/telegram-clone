@@ -100,6 +100,7 @@ const ChatPage = () => {
   } | null>(null);
 
   const [tempConversation, setTempConversation] = useState<Conversation | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
 
   const handleToggleBlock = async (targetId: string) => {
     try {
@@ -447,6 +448,7 @@ const ChatPage = () => {
                   onUnpinMessage={(msg) => updateMessage(msg._id, { isPinned: false })}
                   onForwardMessage={setMessageToForward}
                   conversationId={activeConversation._id}
+                  uploadProgress={uploadProgress}
                 />
               </div>
 
@@ -472,6 +474,16 @@ const ChatPage = () => {
                     setConversations(prev => [conv, ...prev]);
                     setSelectedConversationId(conv._id);
                     setTempConversation(null);
+                  }}
+                  onUploadProgress={(tempId, progress) => {
+                    setUploadProgress(prev => {
+                      if (progress === null) {
+                        const newState = { ...prev };
+                        delete newState[tempId];
+                        return newState;
+                      }
+                      return { ...prev, [tempId]: progress };
+                    });
                   }}
                 />
               )}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo, memo } from "react";
+import { useEffect, useRef, useMemo, memo, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pin, X } from "lucide-react";
 import type { Message } from "../../../types";
@@ -39,9 +39,14 @@ const ChatBox = ({
     searchQuery = "",
     conversationId,
 }: ChatBoxProps) => {
+    const containerRef = useRef<HTMLDivElement>(null);
     const bottomRef = useRef<HTMLDivElement>(null);
     const lastMessageId = useRef<string | null>(null);
     const prevConvId = useRef<string | null>(null);
+    const prevMessagesLength = useRef<number>(0);
+    const prevScrollHeight = useRef<number>(0);
+    const isPrepending = useRef<boolean>(false);
+
     const { pos, targetItem, targetFileUrl, onContextMenu, onTouchStart, onTouchEnd, closeContextMenu } = useContextMenu();
 
     const pinnedMessages = useMemo(() => 
@@ -79,24 +84,58 @@ const ChatBox = ({
         }
     };
 
+    // --- SCROLL ANCHORING LOGIC ---
     useEffect(() => {
-        if (messages.length === 0) {
-            lastMessageId.current = null;
+        const container = containerRef.current;
+        if (!container) return;
+
+        // Detect if we are prepending (loading history)
+        const isSwitch = prevConvId.current !== conversationId;
+        const msgLengthDiff = messages.length - prevMessagesLength.current;
+        
+        if (!isSwitch && msgLengthDiff > 0 && messages.length > 0 && prevMessagesLength.current > 0) {
+            // Simple check: if we switched messages but didn't switch conversation, it's likely a prepend
+            isPrepending.current = true;
+        } else {
+            isPrepending.current = false;
+        }
+
+        prevMessagesLength.current = messages.length;
+        prevScrollHeight.current = container.scrollHeight;
+    }, [messages, conversationId]);
+
+    useLayoutEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const isSwitch = prevConvId.current !== conversationId;
+        
+        if (isSwitch) {
+            // Reset for new conversation
+            container.scrollTop = container.scrollHeight;
+            prevConvId.current = conversationId;
+            isPrepending.current = false;
             return;
         }
 
-        const currentConvId = messages[0].conversationId;
-        const isSwitch = prevConvId.current !== currentConvId;
-        if (isSwitch) {
-            prevConvId.current = currentConvId;
+        if (isPrepending.current) {
+            const heightDiff = container.scrollHeight - prevScrollHeight.current;
+            container.scrollTop = container.scrollTop + heightDiff;
+            isPrepending.current = false;
+        } else {
+            // For new messages (append), only scroll if user is near bottom
+            const currentLastMessage = messages[messages.length - 1];
+            if (currentLastMessage && currentLastMessage._id !== lastMessageId.current) {
+                const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
+                const isMyMessage = (currentLastMessage.sender as any)._id === currentUserId;
+                
+                if (isNearBottom || isMyMessage) {
+                    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+                }
+                lastMessageId.current = currentLastMessage._id;
+            }
         }
-
-        const currentLastMessage = messages[messages.length - 1];
-        if (currentLastMessage._id !== lastMessageId.current) {
-            bottomRef.current?.scrollIntoView({ behavior: isSwitch ? "auto" : "smooth" });
-            lastMessageId.current = currentLastMessage._id;
-        }
-    }, [messages]);
+    }, [messages, conversationId, currentUserId]);
 
     // renderReactions is now inside MessageItem
 
@@ -137,6 +176,7 @@ const ChatBox = ({
 
             <AnimatePresence mode="wait">
                 <motion.div
+                    ref={containerRef}
                     key={conversationId}
                     initial={{ opacity: 0, scale: 0.98, y: 5 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}

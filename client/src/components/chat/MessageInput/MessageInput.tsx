@@ -33,7 +33,6 @@ const MessageInput = ({
     const { user } = useAuth();
     const [text, setText] = useState("");
     const [sending, setSending] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
     const [pendingImages, setPendingImages] = useState<File[]>([]);
     
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -109,33 +108,70 @@ const MessageInput = ({
     };
 
     const handleSendImages = async (caption: string, files: File[]) => {
-        if (files.length === 0 || isUploading) return;
+        if (files.length === 0) return;
         
-        setIsUploading(true);
-        setPendingImages([]); // Close modal
+        // 1. Generate local previews
+        const localUrls = files.map(file => URL.createObjectURL(file));
+        const tempId = `temp-${Date.now()}`;
+        
+        // 2. Create optimistic message
+        const tempMsg: Message = {
+            _id: tempId,
+            conversationId,
+            text: caption,
+            type: 'image',
+            imageUrls: localUrls,
+            sender: {
+                _id: user?._id || "",
+                username: user?.username || "Bạn",
+                fullName: user?.fullName,
+                avatar: user?.avatar
+            },
+            isSending: true,
+            createdAt: new Date().toISOString(),
+            readBy: [],
+            isRead: false,
+            reactions: []
+        };
 
+        if (replyTarget) {
+            tempMsg.replyTo = replyTarget;
+        }
+
+        // 3. Update UI instantly
+        onMessageSent(tempMsg);
+        setPendingImages([]); // Close modal
+        if (replyTarget) onCancelMode?.();
+
+        // 4. Background upload
         try {
             const formData = new FormData();
             formData.append("text", caption);
             if (replyTarget) formData.append("replyTo", replyTarget._id);
             formData.append("type", "image");
-
-            // Option A: Upload each file to Cloudinary from client (parallel)
-            // Option B: Multi-part upload to backend
-            // User requested FormData with File objects -> Option B
             
             files.forEach(file => {
                 formData.append("images", file);
             });
 
             const res = await sendMessageApi(conversationId, formData);
-            onMessageSent(res.data.message);
-            if (replyTarget) onCancelMode?.();
+            
+            // 5. Success: Reconcile state
+            onMessageSent({ ...res.data.message, tempId });
+            
+            // Cleanup blob URLs
+            localUrls.forEach(url => URL.revokeObjectURL(url));
         } catch (error: any) {
             console.error("Upload and send multiple images failed:", error);
-            alert(`Lỗi: ${error?.message || "Không thể gửi ảnh"}`);
-        } finally {
-            setIsUploading(false);
+            
+            // 6. Failure: Mark as error
+            onMessageSent({ 
+                ...tempMsg, 
+                isSending: false, 
+                isError: true 
+            });
+            
+            toast.error("Không thể gửi ảnh. Vui lòng thử lại.");
         }
     };
 
@@ -275,15 +311,10 @@ const MessageInput = ({
                 />
                 <button
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className={`file-upload-btn ${isUploading ? "file-upload-btn--loading" : ""}`}
+                    className="file-upload-btn"
                     title="Upload ảnh"
                 >
-                    {isUploading ? (
-                        <div className="upload-spinner" />
-                    ) : (
-                        <Paperclip size={20} />
-                    )}
+                    <Paperclip size={20} />
                 </button>
                 <div className="text-input-container">
                     <textarea

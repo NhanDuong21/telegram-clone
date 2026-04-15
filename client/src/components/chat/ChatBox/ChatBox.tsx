@@ -302,6 +302,8 @@ const ChatBox = ({
                                     {msg.imageUrls && msg.imageUrls.length > 0 && !msg.isDeleted ? (
                                         <ImageAlbum 
                                             images={msg.imageUrls} 
+                                            isSending={msg.isSending}
+                                            isError={msg.isError}
                                             onImageClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)} 
                                             onContextMenu={(e, url) => onContextMenu(e, msg, url)}
                                         />

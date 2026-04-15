@@ -56,6 +56,7 @@ export interface Message {
     type?: 'text' | 'image' | 'voice' | 'system';
     forwardFrom?: { _id: string; username: string; fullName?: string; avatar?: string };
     isSending?: boolean;
+    isError?: boolean;
     tempId?: string;
     createdAt: string;
 }

@@ -113,7 +113,7 @@ const ChatBox = ({
         if (isSwitch) {
             // Reset for new conversation
             container.scrollTop = container.scrollHeight;
-            prevConvId.current = conversationId;
+            prevConvId.current = conversationId ?? null;
             isPrepending.current = false;
             return;
         }
@@ -205,7 +205,7 @@ const ChatBox = ({
                     <AnimatePresence initial={false} mode="popLayout">
                         {messages.map((msg, index) => {
                             const isMe = (msg.sender as any)._id === currentUserId;
-                            const isRead = (msg.readBy || []).some((r: any) => r._id !== currentUserId) || msg.isRead;
+                            const isRead = !!((msg.readBy || []).some((r: any) => r._id !== currentUserId) || msg.isRead);
                             const senderObj = msg.sender as any;
 
                             const prevMsg = messages[index - 1];

@@ -132,6 +132,8 @@ const ChatPage = () => {
     return (otherParticipant.blockedUsers || []).includes(user._id);
   }, [user, otherParticipant]);
 
+  const shouldShowStatus = useMemo(() => !isBlockedByMe && !amIBlocked, [isBlockedByMe, amIBlocked]);
+
   useEffect(() => {
     fetchConversations();
     const socket = getSocket();
@@ -354,10 +356,13 @@ const ChatPage = () => {
                       }} style={{ cursor: activeConversation.isGroup ? 'default' : 'pointer' }}>
                       <span className="chat-header__name">{activeConversation.isGroup ? activeConversation.name : (otherParticipant?.fullName || otherParticipant?.username || "Chat")}</span>
                       {!activeConversation.isGroup && otherParticipant && (
-                        <span className={`chat-header__status ${typingUsers.has(otherParticipant._id) ? 'status-typing' : (onlineUsers.includes(otherParticipant._id) ? 'status-online' : 'status-offline')}`}>
-                          {typingUsers.has(otherParticipant._id) 
+                        <span className={`chat-header__status ${(shouldShowStatus && typingUsers.has(otherParticipant._id)) ? 'status-typing' : ((shouldShowStatus && onlineUsers.includes(otherParticipant._id)) ? 'status-online' : 'status-offline')}`}>
+                          {(shouldShowStatus && typingUsers.has(otherParticipant._id))
                             ? "đang soạn tin..." 
-                            : formatUserStatus(onlineUsers.includes(otherParticipant._id), otherParticipant.lastSeen)}
+                            : (shouldShowStatus 
+                                ? formatUserStatus(onlineUsers.includes(otherParticipant._id), otherParticipant.lastSeen)
+                                : ""
+                              )}
                         </span>
                       )}
                       {activeConversation.isGroup && (

@@ -21,6 +21,24 @@ interface MarkAsReadPayload {
     conversationId: string;
 }
 
+export const emitOnlineUsersForUser = async (userId: string) => {
+    if (!io) return;
+    const activeUsers = Array.from(new Set(userSocketMap.values()));
+    const User = (await import("./models/User")).default;
+
+    const owner = await User.findById(userId).select("blockedUsers").lean();
+    const trackersOfOwner = await User.find({ blockedUsers: userId }).select("_id").lean();
+    
+    // Privacy logic: You can't see someone if you block them OR if they block you
+    const restrictedIds = new Set([
+        ...(owner?.blockedUsers?.map(id => id.toString()) || []),
+        ...trackersOfOwner.map(t => t._id.toString())
+    ]);
+
+    const filteredList = activeUsers.filter(id => !restrictedIds.has(id));
+    io.to(`user_${userId}`).emit(SOCKET_EVENTS.ONLINE_USERS, filteredList);
+};
+
 export const initSocket = (httpServer: HttpServer) => {
     const allowedOrigins = [
         process.env.CLIENT_URL_PROD,
@@ -50,18 +68,20 @@ export const initSocket = (httpServer: HttpServer) => {
         }
     });
 
-    const emitOnlineUsers = () => {
-        const activeUsers = Array.from(new Set(userSocketMap.values()));
-        io.emit(SOCKET_EVENTS.ONLINE_USERS, activeUsers);
+    const emitOnlineUsers = async () => {
+        const activeUserIds = Array.from(new Set(userSocketMap.values()));
+        for (const userId of activeUserIds) {
+            await emitOnlineUsersForUser(userId);
+        }
     };
 
-    io.on(SOCKET_EVENTS.CONNECTION, (rawSocket) => {
+    io.on(SOCKET_EVENTS.CONNECTION, async (rawSocket) => {
         const socket = rawSocket as AuthenticatedSocket;
         const userId = socket.userId!;
 
         socket.join(`user_${userId}`);
         userSocketMap.set(socket.id, userId);
-        emitOnlineUsers();
+        await emitOnlineUsers();
 
         socket.on(SOCKET_EVENTS.TYPING, async ({ conversationId }: { conversationId: string }) => {
             if (userId && conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {

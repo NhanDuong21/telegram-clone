@@ -171,6 +171,11 @@ export const toggleBlockUser = async (req: AuthRequest, res: Response) => {
             isBlockingMe: !isBlocked
         });
 
+        // RE-FETCH ONLINE STATUS (PRIVACY)
+        const { emitOnlineUsersForUser } = await import("../socket");
+        await emitOnlineUsersForUser(userId.toString());
+        await emitOnlineUsersForUser(targetId.toString());
+
         return res.status(200).json({ 
             message: isBlocked ? "Đã bỏ chặn" : "Đã chặn người dùng",
             blockedUsers: user.blockedUsers 

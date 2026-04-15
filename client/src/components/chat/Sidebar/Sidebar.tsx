@@ -373,8 +373,17 @@ const Sidebar = ({
                                             ) : (
                                                 <Avatar user={other} size={54} />
                                             )}
-                                            {other && !conv.isGroup && onlineUsers.includes(other._id) && (
-                                                <div className="online-indicator" />
+                                            {other && !conv.isGroup && (
+                                                (() => {
+                                                    const isBlockedByMe = currentUser?.blockedUsers?.includes(other._id);
+                                                    const amIBlocked = other.blockedUsers?.includes(currentUser?._id || "");
+                                                    const isOnline = onlineUsers.includes(other._id);
+                                                    
+                                                    if (isOnline && !isBlockedByMe && !amIBlocked) {
+                                                        return <div className="online-indicator" />;
+                                                    }
+                                                    return null;
+                                                })()
                                             )}
                                         </div>
                                         <div className="conversation-item__info">

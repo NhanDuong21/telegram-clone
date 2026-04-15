@@ -19,8 +19,9 @@ const Avatar = ({ user, size = 44 }: AvatarProps) => {
     prevAvatar.current = user?.avatar;
   }
 
+  const isLocalImage = user?.avatar?.startsWith('data:') || user?.avatar?.startsWith('blob:');
   const avatarUrl = user?.avatar 
-    ? (user.avatar.includes('?') ? `${user.avatar}&t=${Date.now()}` : `${user.avatar}?t=${Date.now()}`)
+    ? (isLocalImage ? user.avatar : (user.avatar.includes('?') ? `${user.avatar}&t=${Date.now()}` : `${user.avatar}?t=${Date.now()}`))
     : null;
 
   // Fallback to unknown if user is null

@@ -85,6 +85,15 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
             document.body.classList.remove('modal-open');
         };
     }, [isOpen, initialMode, displayUser, userToDisplay]);
+    
+    // Cleanup temporary preview URLs to prevent memory leaks
+    useEffect(() => {
+        return () => {
+            if (localPreview && localPreview.startsWith('blob:')) {
+                URL.revokeObjectURL(localPreview);
+            }
+        };
+    }, [localPreview]);
 
     const calculateAge = (birthDateStr: string) => {
         if (!birthDateStr) return null;
@@ -122,11 +131,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
         }
 
         setAvatarFile(file);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setLocalPreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
+        // Create a temporary URL for instant preview
+        const newPreviewUrl = URL.createObjectURL(file);
+        setLocalPreview(newPreviewUrl);
     };
 
     const handleSave = async () => {

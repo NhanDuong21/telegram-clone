@@ -79,14 +79,13 @@ const MessageItem = ({
     };
 
     const messageVariants = {
-        initial: { opacity: 0, scale: 0.9, y: 10 },
-        animate: { opacity: 1, scale: 1, y: 0 },
-        exit: { opacity: 0, scale: 0.9, transition: { duration: 0.1 } }
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0, transition: { duration: 0.1 } }
     };
 
     return (
         <motion.div
-            layout
             variants={messageVariants}
             initial="initial"
             animate="animate"
@@ -185,6 +184,7 @@ const MessageItem = ({
                                 ) : (
                                     <HighlightText text={msg.text} highlight={searchQuery} />
                                 )}
+                                <span className="metadata-spacer"></span>
                             </span>
                             
                             {!isPureMedia && (

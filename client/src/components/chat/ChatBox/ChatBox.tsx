@@ -181,7 +181,7 @@ const ChatBox = ({
 
                         return (
                             <MessageItem 
-                                key={msg._id}
+                                key={msg.tempId || msg._id}
                                 msg={msg}
                                 isMe={isMe}
                                 isRead={isRead}

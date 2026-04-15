@@ -434,11 +434,14 @@ export const removeFileService = async (messageId: string, userId: string, fileU
     const conversation = await Conversation.findById(message.conversationId).select("participants").lean();
 
     if (!hasContent) {
-        // Delete entire message if empty
-        await Message.deleteOne({ _id: messageId });
+        // Instead of deleting, mark it as deleted to keep conversation history
+        message.isDeleted = true;
+        message.text = "Tin nhắn đã bị xóa";
+        message.imageUrl = "";
+        message.imageUrls = [];
+        await message.save();
         
         if (conversation) {
-            console.log(`📡 Emitting MESSAGE_DELETED for album/message ${messageId} to participants`);
             conversation.participants.forEach((p: any) => {
                 io.to(`user_${p.toString()}`).emit(SOCKET_EVENTS.MESSAGE_DELETED, {
                     messageId,
@@ -447,7 +450,7 @@ export const removeFileService = async (messageId: string, userId: string, fileU
                 });
             });
         }
-        return { deleted: true };
+        return { deleted: true, message };
     } else {
         await message.save();
         const updatedMsg = await Message.findById(messageId).populate("sender", "username fullName avatar");

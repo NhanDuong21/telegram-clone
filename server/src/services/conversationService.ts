@@ -146,7 +146,7 @@ export const getMyConversationsService = async (userId: string) => {
         participants: userId,
     })
     .populate("participants", "username email avatar fullName")
-    .populate("lastMessage", "text imageUrl createdAt isRead")
+    .populate("lastMessage", "text imageUrl type isDeleted createdAt isRead")
     .sort({ updatedAt: -1 })
     .lean();
 

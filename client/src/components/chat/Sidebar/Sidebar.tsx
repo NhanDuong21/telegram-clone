@@ -140,13 +140,30 @@ const Sidebar = ({
     const getOtherUser = (conv: Conversation): User | undefined =>
         conv.participants.find((p) => p._id !== currentUserId);
 
+    const renderLastMessagePreview = (lastMessage: Conversation['lastMessage']) => {
+        if (!lastMessage) return "Gửi tin nhắn đầu tiên";
+        
+        // 1. Check for deletion status first (highest priority)
+        if (lastMessage.isDeleted) {
+            return "Tin nhắn đã bị xóa";
+        }
+        
+        // 2. Then check for message type
+        if (lastMessage.type === 'image' || (!lastMessage.type && (lastMessage as any).imageUrl)) {
+            const caption = lastMessage.text?.trim();
+            return caption ? `[ Hình ảnh ] ${caption}` : "[ Hình ảnh ]";
+        }
+        
+        return lastMessage.text || "Tin nhắn mới";
+    };
+
     const getSubtitle = (user: User) => {
         const existingConv = conversations.find(c => 
             !c.isGroup && c.participants.some(p => p._id === user._id)
         );
 
         if (existingConv?.lastMessage) {
-            return existingConv.lastMessage.text;
+            return renderLastMessagePreview(existingConv.lastMessage);
         }
 
         return onlineUsers.includes(user._id) ? "Online" : "Gửi tin nhắn đầu tiên";
@@ -336,7 +353,7 @@ const Sidebar = ({
                                 const isSelected = conv._id === selectedId;
                                 const unreadCount = unreadCounts[conv._id] !== undefined ? unreadCounts[conv._id] : (conv.unreadCount || 0);
                                 const displayTitle = conv.isGroup ? conv.name : (other?.fullName || other?.username || "Unknown");
-                                const lastMsg = conv.lastMessage?.text || "Gửi tin nhắn đầu tiên";
+                                const lastMsg = renderLastMessagePreview(conv.lastMessage);
                                 const time = conv.lastMessage?.createdAt ? formatTimestamp(conv.lastMessage.createdAt) : "";
 
                                 return (

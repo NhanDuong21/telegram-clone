@@ -21,6 +21,8 @@ export interface Conversation {
     lastMessage?: {
         _id: string;
         text: string;
+        type?: 'text' | 'image' | 'voice' | 'system';
+        isDeleted?: boolean;
         isRead?: boolean;
         createdAt: string;
     } | null;

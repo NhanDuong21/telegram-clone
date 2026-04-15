@@ -62,8 +62,11 @@ export const useChatSocket = ({
                 ...prev[index],
                 lastMessage: { 
                   _id: message._id, 
-                  text: message.text ?? "", 
-                  isRead: false, // Initially unread for others
+                  text: message.text || "", 
+                  type: message.type,
+                  imageUrl: message.imageUrl,
+                  isDeleted: message.isDeleted,
+                  isRead: false,
                   createdAt: message.createdAt
                 },
                 updatedAt: message.createdAt
@@ -100,7 +103,10 @@ export const useChatSocket = ({
             ...prev[index],
             lastMessage: { 
               _id: message._id, 
-              text: message.text ?? "", 
+              text: message.text || "", 
+              type: message.type,
+              imageUrl: message.imageUrl,
+              isDeleted: message.isDeleted,
               isRead: (message.sender._id !== user._id) && (selectedIdRef.current === convId),
               createdAt: message.createdAt
             },
@@ -261,7 +267,13 @@ export const useChatSocket = ({
             if (c._id === deletedConvId && c.lastMessage?._id === messageId) {
               return { 
                 ...c, 
-                lastMessage: c.lastMessage ? { ...c.lastMessage, text: "Tin nhắn đã xóa", isRead: true } : null 
+                lastMessage: c.lastMessage ? { 
+                    ...c.lastMessage, 
+                    isDeleted: true, 
+                    text: "Tin nhắn đã bị xóa", 
+                    imageUrl: "",
+                    isRead: true 
+                } : null 
               };
             }
             return c;
@@ -291,7 +303,16 @@ export const useChatSocket = ({
       // Update sidebar if it's the last message
       setConversations(prev => prev.map(c => 
         c._id === updatedMsg.conversationId && c.lastMessage?._id === updatedMsg._id
-          ? { ...c, lastMessage: c.lastMessage ? { ...c.lastMessage, text: updatedMsg.text || "" } : null }
+          ? { 
+              ...c, 
+              lastMessage: c.lastMessage ? { 
+                  ...c.lastMessage, 
+                  text: updatedMsg.text || "",
+                  type: updatedMsg.type,
+                  imageUrl: updatedMsg.imageUrl,
+                  isDeleted: updatedMsg.isDeleted
+              } : null 
+            }
           : c
       ));
     });

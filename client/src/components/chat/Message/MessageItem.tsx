@@ -178,33 +178,34 @@ const MessageItem = ({
                 
                 {msg.text && (
                     <div className={`message-text-content ${msg.isDeleted ? "message-text--deleted" : ""}`}>
-                        <div className="text-wrapper">
-                            {msg.isDeleted ? (
-                                "Tin nhắn đã bị xóa"
-                            ) : (
-                                <HighlightText text={msg.text} highlight={searchQuery} />
-                            )}
-                            <span className="text-spacer"></span>
-                        </div>
-                        
-                        {!isPureMedia && (
-                            <div className="compact-meta">
-                                {msg.isPinned && <Pin size={10} className="pin-hint-icon" />}
-                                {msg.isEdited && <span className="edited-hint">đã sửa</span>}
-                                <span className="timestamp">{formatTime(msg.createdAt)}</span>
-                                {isMe && !msg.isDeleted && (
-                                    <div className="message-status-icons">
-                                        {msg.isSending ? (
-                                            <Clock size={11} className="status-icon--sending" />
-                                        ) : isRead ? (
-                                            <CheckCheck size={13} className="tick-read" />
-                                        ) : (
-                                            <Check size={13} className="tick-sent" />
-                                        )}
-                                    </div>
+                        <div className="bubble-content">
+                            <span className="message-text">
+                                {msg.isDeleted ? (
+                                    "Tin nhắn đã bị xóa"
+                                ) : (
+                                    <HighlightText text={msg.text} highlight={searchQuery} />
                                 )}
-                            </div>
-                        )}
+                            </span>
+                            
+                            {!isPureMedia && (
+                                <div className="metadata-container">
+                                    {msg.isPinned && <Pin size={10} className="pin-hint-icon" />}
+                                    {msg.isEdited && <span className="edited-hint">đã sửa</span>}
+                                    <span className="time">{formatTime(msg.createdAt)}</span>
+                                    {isMe && !msg.isDeleted && (
+                                        <span className="status">
+                                            {msg.isSending ? (
+                                                <Clock size={11} className="status-icon--sending" />
+                                            ) : isRead ? (
+                                                <CheckCheck size={13} className="tick-read" />
+                                            ) : (
+                                                <Check size={13} className="tick-sent" />
+                                            )}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 

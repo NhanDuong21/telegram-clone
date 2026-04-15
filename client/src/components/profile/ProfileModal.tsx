@@ -60,6 +60,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
     
+    const usernameRegex = /^[a-z0-9_]{5,32}$/;
+    const isUsernameValid = usernameRegex.test(username);
+    
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Sync state when final user state changes or modal opens
@@ -127,8 +130,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     };
 
     const handleSave = async () => {
-        if (!username.trim() || username.trim().length < 2) {
-            setError("Tên người dùng phải có ít nhất 2 ký tự.");
+        if (!isUsernameValid) {
+            setError("Username phải từ 5 đến 32 ký tự, chỉ chứa chữ cái thường, số và dấu gạch dưới.");
             return;
         }
         
@@ -350,9 +353,26 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                                     <input 
                                                         type="text" 
                                                         value={username} 
-                                                        onChange={(e) => setUsername(e.target.value)} 
+                                                        maxLength={32}
+                                                        onChange={(e) => setUsername(e.target.value.toLowerCase())} 
                                                         placeholder="@username"
                                                     />
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                                                        {username !== currentUser?.username && (
+                                                            <div style={{ 
+                                                                fontSize: '11px', 
+                                                                color: isUsernameValid ? '#43a047' : '#e53935',
+                                                                textAlign: 'left'
+                                                            }}>
+                                                                {isUsernameValid 
+                                                                ? "✔ Username hợp lệ" 
+                                                                : "✖ Chỉ dùng a-z, 0-9, _ (5-32 ký tự)"}
+                                                            </div>
+                                                        )}
+                                                        <div style={{ fontSize: '11px', color: '#707579', marginLeft: 'auto' }}>
+                                                            {username.length}/32
+                                                        </div>
+                                                    </div>
                                                 </div>
 
                                                 <div className="edit-input-group">
@@ -383,7 +403,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                                             <button 
                                                 className="profile-save-btn" 
                                                 onClick={handleSave}
-                                                disabled={isSubmitting}
+                                                disabled={isSubmitting || !isUsernameValid}
                                             >
                                                 {isSubmitting ? "Đang lưu..." : "Lưu hồ sơ"}
                                             </button>

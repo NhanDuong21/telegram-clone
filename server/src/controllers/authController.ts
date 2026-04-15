@@ -15,6 +15,13 @@ export async function register(req: Request, res: Response) {
                 message: "vui long nhap day du thong tin va code xac thuc",
             });
         }
+        
+        const usernameRegex = /^[a-z0-9_]{5,32}$/;
+        if (!usernameRegex.test(username)) {
+            return res.status(400).json({
+                message: "Username phải từ 5 đến 32 ký tự, chỉ chứa chữ cái thường, số và dấu gạch dưới."
+            });
+        }
 
         // Verify the token
         const otpDoc = await Otp.findOne({ email, token: verificationToken });

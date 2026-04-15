@@ -34,8 +34,11 @@ const RegisterPage = () => {
     return () => clearInterval(interval);
   }, [timer]);
 
+  const usernameRegex = /^[a-z0-9_]{5,32}$/;
+  const isUsernameValid = usernameRegex.test(username);
+
   const handleSendOtp = async () => {
-    if (!email || isSubmitting) return;
+    if (!email || !isUsernameValid || isSubmitting) return;
     setError("");
     setIsSubmitting(true);
     try {
@@ -67,7 +70,7 @@ const RegisterPage = () => {
   };
 
   const handleRegister = async () => {
-    if (isSubmitting || password.length < 6 || !verificationToken) return;
+    if (isSubmitting || password.length < 6 || !verificationToken || !isUsernameValid) return;
     
     setError("");
     setIsSubmitting(true);
@@ -125,8 +128,25 @@ const RegisterPage = () => {
                   className="auth-input"
                   placeholder="Username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  maxLength={32}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase())}
                 />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  {username.length > 0 && (
+                    <div style={{ 
+                      fontSize: '11px', 
+                      color: isUsernameValid ? '#43a047' : '#e53935',
+                      textAlign: 'left'
+                    }}>
+                      {isUsernameValid 
+                        ? "✔ Username hợp lệ" 
+                        : "✖ Chữ cái thường, số, _ (5-32 ký tự)"}
+                    </div>
+                  )}
+                  <div style={{ fontSize: '11px', color: '#707579', marginLeft: 'auto' }}>
+                    {username.length}/32
+                  </div>
+                </div>
               </div>
               <div className="auth-input-group">
                 <input
@@ -140,7 +160,7 @@ const RegisterPage = () => {
               <button 
                 className="auth-button"
                 onClick={handleSendOtp}
-                disabled={isSubmitting || !email || !username}
+                disabled={isSubmitting || !email || !isUsernameValid}
               >
                 {isSubmitting ? "Đang gửi..." : "TIẾP THEO"}
               </button>

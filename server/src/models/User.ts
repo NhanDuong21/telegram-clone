@@ -18,10 +18,17 @@ const userSchema = new Schema<IUser>(
     {
         username: {
             type: String,
-            required: true,
+            required: [true, "Username là bắt buộc"],
             trim: true,
-            minlength: 2,
-            maxlength: 30,
+            lowercase: true,
+            validate: {
+                validator: function(v: string) {
+                    return /^[a-z0-9_]{5,32}$/.test(v);
+                },
+                message: "Username phải từ 5 đến 32 ký tự, chỉ chứa chữ cái thường, số và dấu gạch dưới."
+            },
+            minlength: [5, "Username phải dài ít nhất 5 ký tự"],
+            maxlength: [32, "Username không được vượt quá 32 ký tự"],
         },
         email: {
             type: String,

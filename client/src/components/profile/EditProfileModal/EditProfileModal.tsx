@@ -88,41 +88,43 @@ const EditProfileModal = ({ onClose }: EditProfileModalProps) => {
           Edit Profile
         </h2>
 
-        <div className="avatar-edit-section">
-           <Avatar user={{ _id: user?._id || "1", username: username || "?", avatar: localPreview }} size={100} />
-           <button
-             onClick={() => fileInputRef.current?.click()}
-             type="button"
-             className="change-avatar-btn"
-           >
-             Thay đổi ảnh đại diện
-           </button>
-           <input 
-             type="file" 
-             ref={fileInputRef} 
-             onChange={handleFileChange} 
-             accept="image/*" 
-             style={{ display: "none" }} 
-           />
-        </div>
-
-        {error && (
-          <div className="error-msg">
-            {error}
-          </div>
-        )}
-
-        <div className="form-group">
-          <div>
-            <label className="form-label">
-              Username
-            </label>
-            <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g. John Doe"
-              className="form-input"
+        <div className="edit-profile-form">
+          <div className="avatar-edit-section">
+            <Avatar user={{ _id: user?._id || "1", username: username || "?", avatar: localPreview }} size={100} />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              type="button"
+              className="change-avatar-btn"
+            >
+              Thay đổi ảnh đại diện
+            </button>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              accept="image/*" 
+              style={{ display: "none" }} 
             />
+          </div>
+
+          {error && (
+            <div className="error-msg">
+              {error}
+            </div>
+          )}
+
+          <div className="form-group">
+            <div>
+              <label className="form-label">
+                Username
+              </label>
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="e.g. John Doe"
+                className="form-input"
+              />
+            </div>
           </div>
         </div>
 

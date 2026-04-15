@@ -54,12 +54,18 @@ const ChatBox = ({
     [messages, currentUserId]);
     const latestPinned = pinnedMessages[pinnedMessages.length - 1];
 
-    useEffect(() => {
+    const markAsRead = () => {
         if (!currentUserId || !conversationId || messages.length === 0) return;
-        
+        if (!document.hasFocus()) return;
+
         const lastMsg = messages[messages.length - 1];
-        // String conversion for safe comparison
-        if (String(lastMsg.sender._id) !== String(currentUserId) && !lastMsg.isRead) {
+        const senderId = (lastMsg.sender as any)._id || lastMsg.sender;
+        
+        // Only mark if the last message is NOT from me and I haven't read it yet
+        const isMe = String(senderId) === String(currentUserId);
+        const alreadyReadByMe = lastMsg.readBy?.some(r => ((r as any)._id || r) === currentUserId);
+
+        if (!isMe && !alreadyReadByMe) {
             console.log("📤 SOCKET EMITTED: mark_as_read for chat:", conversationId);
             const socket = getSocket();
             if (socket) {
@@ -69,7 +75,24 @@ const ChatBox = ({
                 });
             }
         }
-    }, [messages.length, conversationId, currentUserId]);
+    };
+
+    useEffect(() => {
+        markAsRead();
+        
+        // Handlers for mobile interactions to ensure receipts are real
+        const handleInteraction = () => {
+            markAsRead();
+        };
+
+        window.addEventListener('focus', handleInteraction);
+        window.addEventListener('touchstart', handleInteraction, { passive: true });
+        
+        return () => {
+            window.removeEventListener('focus', handleInteraction);
+            window.removeEventListener('touchstart', handleInteraction);
+        };
+    }, [messages.length, conversationId]);
 
     const scrollToMessage = (targetId: string) => {
         const element = document.getElementById(`msg-${targetId}`);

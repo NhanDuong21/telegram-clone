@@ -237,8 +237,8 @@ const RightSidebar = ({
               <div className="profile-hero-avatar">
                 <Avatar 
                   conversation={conversation} 
-                  size={128} 
-                  className="w-32 h-32 aspect-square rounded-full object-cover" 
+                  size={112} 
+                  className="w-28 h-28 aspect-square rounded-full object-cover" 
                 />
               </div>
               <div className="profile-hero-info">

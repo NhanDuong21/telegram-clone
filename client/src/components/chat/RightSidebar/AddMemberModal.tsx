@@ -144,7 +144,7 @@ const AddMemberModal = ({ conversation, onClose, onMembersAdded }: AddMemberModa
                         ) : query && !isSearching ? (
                             <div className="centered-msg">Không tìm thấy ai</div>
                         ) : (
-                            <div className="centered-msg">Nhập tên hoặc @username để tìm người dùng</div>
+                            <div className="centered-msg">Nhập @username để tìm người dùng</div>
                         )}
                     </div>
                 </div>

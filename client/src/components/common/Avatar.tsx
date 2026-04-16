@@ -41,14 +41,17 @@ const Avatar = ({ user, conversation, src, name, id, size = 44, className = "" }
     : null;
 
   const baseStyle = {
-    width: size,
-    height: size,
+    width: `${size}px`,
+    height: `${size}px`,
+    minWidth: `${size}px`,
+    minHeight: `${size}px`,
     borderRadius: "50%",
     flexShrink: 0,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
+    aspectRatio: "1/1",
   };
 
   // If avatar URL exists and hasn't failed loading
@@ -57,7 +60,7 @@ const Avatar = ({ user, conversation, src, name, id, size = 44, className = "" }
       <img
         src={avatarUrl}
         alt={resolvedName}
-        className={`rounded-full object-cover object-center ${className}`}
+        className={`rounded-full object-cover object-center shrink-0 aspect-square ${className}`}
         style={{
           ...baseStyle,
         }}
@@ -83,7 +86,7 @@ const Avatar = ({ user, conversation, src, name, id, size = 44, className = "" }
 
   return (
     <div
-      className={`rounded-full ${className}`}
+      className={`rounded-full shrink-0 aspect-square ${className}`}
       style={{
         ...baseStyle,
         backgroundColor: color,

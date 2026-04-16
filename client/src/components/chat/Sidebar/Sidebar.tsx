@@ -384,9 +384,9 @@ const Sidebar = ({
                                     >
                                         <div className="item-avatar-wrapper">
                                             {conv.isGroup ? (
-                                                <Avatar conversation={conv} size={54} />
+                                                <Avatar conversation={conv} size={48} />
                                             ) : (
-                                                <Avatar user={other} size={54} />
+                                                <Avatar user={other} size={48} />
                                             )}
                                             {other && !conv.isGroup && (
                                                 (() => {

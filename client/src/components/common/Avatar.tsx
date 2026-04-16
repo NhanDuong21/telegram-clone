@@ -1,62 +1,65 @@
 import { useState, useRef } from "react";
 
 interface AvatarProps {
-  user: {
+  user?: {
     _id: string;
     username: string;
     fullName?: string;
     avatar?: string;
-  } | null | undefined;
+  } | null;
+  conversation?: {
+    _id: string;
+    name?: string;
+    imageUrl?: string;
+    isGroup?: boolean;
+  } | null;
+  src?: string;
+  name?: string;
+  id?: string;
   size?: number;
+  className?: string;
 }
 
-const Avatar = ({ user, size = 44 }: AvatarProps) => {
+const Avatar = ({ user, conversation, src, name, id, size = 44, className = "" }: AvatarProps) => {
   const [imgError, setImgError] = useState(false);
-  const prevAvatar = useRef(user?.avatar);
+  
+  // Resolve the source, name, and ID based on props
+  const resolvedSrc = src || user?.avatar || conversation?.imageUrl;
+  const resolvedName = name || user?.fullName || user?.username || conversation?.name || "?";
+  const resolvedId = id || user?._id || conversation?._id || "default";
 
-  if (user?.avatar !== prevAvatar.current) {
+  const prevSrc = useRef(resolvedSrc);
+
+  if (resolvedSrc !== prevSrc.current) {
     setImgError(false);
-    prevAvatar.current = user?.avatar;
+    prevSrc.current = resolvedSrc;
   }
 
-  const isLocalImage = user?.avatar?.startsWith('data:') || user?.avatar?.startsWith('blob:');
-  const avatarUrl = user?.avatar 
-    ? (isLocalImage ? user.avatar : (user.avatar.includes('?') ? `${user.avatar}&t=${Date.now()}` : `${user.avatar}?t=${Date.now()}`))
+  const isLocalImage = resolvedSrc?.startsWith('data:') || resolvedSrc?.startsWith('blob:');
+  const avatarUrl = resolvedSrc 
+    ? (isLocalImage ? resolvedSrc : (resolvedSrc.includes('?') ? `${resolvedSrc}&t=${Date.now()}` : `${resolvedSrc}?t=${Date.now()}`))
     : null;
 
-  // Fallback to unknown if user is null
-  if (!user) {
-    return (
-      <div
-        style={{
-          width: size,
-          height: size,
-          borderRadius: "50%",
-          backgroundColor: "#ccc",
-          color: "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: 700,
-          fontSize: size * 0.4,
-        }}
-      >
-        ?
-      </div>
-    );
-  }
+  const baseStyle = {
+    width: size,
+    height: size,
+    borderRadius: "50%",
+    flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  };
 
   // If avatar URL exists and hasn't failed loading
   if (avatarUrl && !imgError) {
     return (
       <img
         src={avatarUrl}
-        alt={user.username}
+        alt={resolvedName}
+        className={`rounded-full object-cover object-center ${className}`}
         style={{
-          width: size,
-          height: size,
-          borderRadius: "50%",
-          objectFit: "cover",
+          ...baseStyle,
         }}
         onError={() => setImgError(true)}
       />
@@ -69,28 +72,27 @@ const Avatar = ({ user, size = 44 }: AvatarProps) => {
     "#fdcb6e", "#e84393", "#00cec9", "#d63031",
   ];
   let hash = 0;
-  for (let i = 0; i < user._id.length; i++) {
-    hash = user._id.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < resolvedId.length; i++) {
+    hash = resolvedId.charCodeAt(i) + ((hash << 5) - hash);
   }
   const color = avatarColors[Math.abs(hash) % avatarColors.length];
 
+  const initials = conversation?.isGroup && !conversation.imageUrl 
+    ? "👥" 
+    : resolvedName.charAt(0).toUpperCase();
+
   return (
     <div
+      className={`rounded-full ${className}`}
       style={{
-        width: size,
-        height: size,
-        borderRadius: "50%",
+        ...baseStyle,
         backgroundColor: color,
         color: "white",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         fontWeight: 700,
         fontSize: size * 0.4,
-        textTransform: "uppercase",
       }}
     >
-      {(user.fullName || user.username).charAt(0)}
+      {initials}
     </div>
   );
 };

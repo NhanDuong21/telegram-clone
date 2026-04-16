@@ -14,7 +14,7 @@
 }
 
 .right-sidebar {
-    width: 350px; /* Fixed width to prevent content jumping during resize */
+    width: 350px;
     height: 100%;
     background-color: var(--bg-sidebar);
     border-left: 1px solid var(--border-color);
@@ -88,32 +88,47 @@
     background: rgba(0, 0, 0, 0.3);
 }
 
+/* ============================================
+   UNIFIED PROFILE / INFO PANEL STYLES
+   Shared by BOTH 1-on-1 and Group views
+   ============================================ */
+
 .profile-hero {
-    padding: 24px 16px;
+    padding: 32px 16px 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     gap: 16px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-sidebar);
 }
 
-.large-group-avatar {
-    width: 120px;
-    height: 120px;
-    background: var(--accent-color);
-    border-radius: 50%;
+.profile-hero-avatar {
+    width: 100%;
     display: flex;
-    align-items: center;
     justify-content: center;
-    font-size: 48px;
-    color: white;
+}
+
+.profile-hero-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
 }
 
 .profile-hero-info h2 {
-    margin: 0 0 4px;
-    font-size: 20px;
+    margin: 0;
+    font-size: 22px;
     font-weight: 700;
     color: var(--text-main);
+    word-break: break-word;
+    text-align: center;
+    padding: 0 12px;
+}
+
+.profile-hero-info p {
+    margin: 0;
 }
 
 .status-online {
@@ -126,12 +141,17 @@
     font-size: 14px;
 }
 
+/* ============================================
+   UNIFIED ACTION BUTTONS ROW
+   Identical styling for 1-on-1 and Group
+   ============================================ */
+
 .quick-actions-row {
     display: flex;
     justify-content: center;
-    gap: 20px; /* Reduced gap for 4 icons */
-    padding: 0 16px 24px;
-    border-bottom: 8px solid var(--input-bg); /* Section separator */
+    gap: 20px;
+    padding: 16px 16px 24px;
+    border-bottom: 8px solid var(--input-bg);
 }
 
 .q-action-item {
@@ -144,11 +164,15 @@
     cursor: pointer;
     color: var(--accent-color);
     transition: transform 0.2s;
-    width: 64px; /* Fixed width for alignment */
+    width: 64px;
 }
 
 .q-action-item:hover {
     transform: translateY(-2px);
+}
+
+.q-action-item--danger {
+    color: #e53935;
 }
 
 .q-action-icon {
@@ -159,18 +183,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgba(var(--accent-rgb), 0.2);
+    border: 1px solid var(--border-color);
     transition: background 0.2s;
 }
 
 .q-action-item:hover .q-action-icon {
-    background: rgba(var(--accent-rgb), 0.1);
+    background: var(--sidebar-hover);
 }
 
 .q-action-item span {
     font-size: 12px;
     font-weight: 500;
 }
+
+/* ============================================
+   UNIFIED INFO SECTION (Bio / Username / Description)
+   ============================================ */
 
 .info-section {
     padding: 16px;
@@ -182,7 +210,7 @@
 
 .info-item {
     display: flex;
-    align-items: center; /* Center vertically for bio/username */
+    align-items: center;
     gap: 24px;
 }
 
@@ -202,6 +230,11 @@
     color: var(--text-secondary);
     margin-top: 2px;
 }
+
+/* ============================================
+   UNIFIED SHARED MEDIA LIST
+   Used by BOTH 1-on-1 and Group views
+   ============================================ */
 
 .shared-content-section {
     padding: 8px 0;
@@ -230,7 +263,154 @@
     color: var(--text-main);
 }
 
-/* Shared Media Grid Styles */
+/* ============================================
+   MEMBERS SECTION (Group only)
+   ============================================ */
+
+.members-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: var(--input-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.members-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.members-add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--accent-color);
+    background: transparent;
+    border: none;
+    transition: background 0.2s;
+}
+
+.members-add-btn:hover {
+    background: var(--sidebar-hover);
+}
+
+.members-list {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 32px;
+}
+
+.member-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.member-row:hover {
+    background: var(--sidebar-hover);
+}
+
+.member-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.member-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.member-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-main);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.member-name-you {
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-left: 4px;
+}
+
+.member-status {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 1px;
+}
+
+.member-status--online {
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+.member-status--offline {
+    color: var(--text-secondary);
+}
+
+.member-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 6px;
+}
+
+.admin-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    border: 1px solid var(--border-color);
+    padding: 2px 5px;
+    border-radius: 4px;
+    line-height: 1;
+    letter-spacing: 0.3px;
+}
+
+.kick-btn {
+    display: none;
+    padding: 4px;
+    color: #e53935;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s;
+    background: transparent;
+    border: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.member-row:hover .kick-btn {
+    display: flex;
+}
+
+.kick-btn:hover {
+    background: rgba(229, 57, 53, 0.1);
+}
+
+/* ============================================
+   SHARED MEDIA GRID (Photos / Videos Gallery)
+   ============================================ */
+
 .shared-media-grid {
     padding: 2px;
 }
@@ -330,145 +510,9 @@
     font-size: 14px;
 }
 
-/* ======= Group Members List ======= */
-.group-members-section {
-    padding: 8px 0;
-    border-top: 8px solid rgba(0, 0, 0, 0.03);
-}
-
-.dark .group-members-section {
-    border-top-color: rgba(255, 255, 255, 0.04);
-}
-
-.members-section-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #3390ec;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-.members-list {
-    display: flex;
-    flex-direction: column;
-}
-
-.member-list-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 16px;
-    transition: background 0.12s;
-}
-
-.member-list-item:hover {
-    background: rgba(0, 0, 0, 0.04);
-}
-
-.dark .member-list-item:hover {
-    background: rgba(255, 255, 255, 0.04);
-}
-
-.member-avatar-wrapper {
-    position: relative;
-    flex-shrink: 0;
-}
-
-.member-online-dot {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 2px solid white;
-}
-
-.dark .member-online-dot {
-    border-color: #212121;
-}
-
-.member-online-dot.online {
-    background: #4fad2d;
-}
-
-.member-online-dot.offline {
-    background: #999;
-}
-
-.member-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.member-display-name {
-    font-size: 14px;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.member-you-tag {
-    color: #999;
-    font-weight: 400;
-}
-
-.member-role {
-    font-size: 12px;
-    color: #999;
-}
-
-.member-kick-btn {
-    background: none;
-    border: none;
-    color: #e53e3e;
-    padding: 6px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.15s, background 0.15s;
-}
-
-.member-list-item:hover .member-kick-btn {
-    opacity: 1;
-}
-
-.member-kick-btn:hover {
-    background: rgba(229, 62, 62, 0.1);
-}
-
-.leave-group-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: calc(100% - 32px);
-    margin: 8px 16px;
-    padding: 10px 14px;
-    background: none;
-    border: none;
-    border-radius: 8px;
-    color: #e53e3e;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-.leave-group-btn:hover {
-    background: rgba(229, 62, 62, 0.08);
-}
-
-/* Mobile Responsiveness */
+/* ============================================
+   MOBILE RESPONSIVENESS
+   ============================================ */
 @media (max-width: 768px) {
     .right-sidebar-wrapper {
         width: 0 !important;

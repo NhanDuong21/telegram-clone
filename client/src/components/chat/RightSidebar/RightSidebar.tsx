@@ -15,6 +15,9 @@ import {
   Link as LinkIcon,
   Info,
   ArrowLeft,
+  UserMinus,
+  Settings,
+  LogOut
 } from "lucide-react";
 import { toast } from 'react-hot-toast';
 import type { User, Conversation } from "../../../types";
@@ -24,7 +27,6 @@ import { AnimatePresence } from "framer-motion";
 import { connectSocket } from "../../../socket";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
 import { removeFileApi, getSharedMediaApi, removeMemberApi, leaveGroupApi } from "../../../api/chatApi";
-import { UserMinus, LogOut } from "lucide-react";
 import "./RightSidebar.css";
 
 interface RightSidebarProps {
@@ -224,28 +226,172 @@ const RightSidebar = ({
       {renderHeader()}
 
       <div className="right-sidebar-content">
-        {view === 'info' ? (
-          <>
+        {view === 'info' && isGroup && conversation && (
+          <div key="group-info">
+            {/* UNIFIED Header: Same as 1-on-1 */}
             <div className="profile-hero">
               <div className="profile-hero-avatar">
-                {isGroup ? (
-                  <div className="large-group-avatar">
-                    {conversation?.imageUrl ? (
-                      <img src={conversation.imageUrl} alt={conversation.name} />
-                    ) : (
-                      "👥"
-                    )}
-                  </div>
-                ) : (
-                  <Avatar user={user} size={120} />
-                )}
+                <Avatar conversation={conversation} size={120} />
               </div>
               <div className="profile-hero-info">
-                <h2>{mode === 'my-profile' ? (user?.fullName || user?.username) : (isGroup ? conversation?.name : (user?.fullName || user?.username))}</h2>
+                <h2>{conversation.name}</h2>
+                <p className="status-offline">{conversation.participants?.length || 0} thành viên</p>
+              </div>
+            </div>
+
+            {/* UNIFIED Action Buttons: Same circular style as 1-on-1 */}
+            <div className="quick-actions-row">
+              <button
+                className="q-action-item"
+                onClick={() => onToggleMute?.(conversation._id)}
+              >
+                <div className="q-action-icon">
+                  {isMuted ? <BellOff size={22} /> : <Bell size={22} />}
+                </div>
+                <span>{isMuted ? 'Bật âm' : 'Tắt âm'}</span>
+              </button>
+              
+              {conversation.owner === currentUserId && (
+                <button className="q-action-item">
+                  <div className="q-action-icon">
+                    <Settings size={22} />
+                  </div>
+                  <span>Quản lý</span>
+                </button>
+              )}
+
+              <button className="q-action-item">
+                <div className="q-action-icon">
+                  <Users size={22} />
+                </div>
+                <span>Thành viên</span>
+              </button>
+
+              <button
+                className="q-action-item q-action-item--danger"
+                onClick={async () => {
+                  if (!confirm('Bạn có chắc chắn muốn rời nhóm?')) return;
+                  try {
+                    await leaveGroupApi(conversation._id);
+                    toast.success('Đã rời nhóm');
+                    onClose();
+                  } catch (err) {
+                    console.error('Leave group failed:', err);
+                    toast.error('Không thể rời nhóm');
+                  }
+                }}
+              >
+                <div className="q-action-icon">
+                  <LogOut size={22} />
+                </div>
+                <span>Rời khỏi</span>
+              </button>
+            </div>
+
+            {/* UNIFIED Media Stats: Same as 1-on-1 */}
+            <div className="shared-content-section">
+              <div className="shared-item" onClick={() => setView('photos')} style={{ cursor: 'pointer' }}>
+                <ImageIcon size={20} className="shared-icon" />
+                <span className="shared-label">{mediaStats.image || 0} ảnh</span>
+              </div>
+              <div className="shared-item" onClick={() => setView('videos')} style={{ cursor: 'pointer' }}>
+                <Video size={20} className="shared-icon" />
+                <span className="shared-label">{mediaStats.video || 0} video</span>
+              </div>
+              <div className="shared-item">
+                <FileText size={20} className="shared-icon" />
+                <span className="shared-label">{mediaStats.file || 0} tệp tin</span>
+              </div>
+              <div className="shared-item">
+                <Music size={20} className="shared-icon" />
+                <span className="shared-label">{mediaStats.voice || 0} file âm thanh</span>
+              </div>
+              <div className="shared-item">
+                <LinkIcon size={20} className="shared-icon" />
+                <span className="shared-label">{mediaStats.link || 0} liên kết</span>
+              </div>
+            </div>
+
+            {/* Members Section (Group only) */}
+            <div className="members-section-header">
+              <span className="members-section-title">
+                {conversation.participants.length} thành viên
+              </span>
+              <button className="members-add-btn">
+                <UserPlus size={16} />
+              </button>
+            </div>
+
+            <div className="members-list">
+              {conversation.participants.map((p: User) => {
+                const isMemberOnline = onlineUsers.includes(p._id);
+                const isOwner = conversation.owner === p._id;
+                const isCurrentUser = p._id === currentUserId;
+                const amIOwner = conversation.owner === currentUserId;
+
+                return (
+                  <div key={p._id} className="member-row">
+                    <div className="member-avatar">
+                      <Avatar user={p} size={42} />
+                    </div>
+                    
+                    <div className="member-info">
+                      <span className="member-name">
+                        {p.fullName || p.username}
+                        {isCurrentUser && <span className="member-name-you">(Bạn)</span>}
+                      </span>
+                      <span className={`member-status ${isMemberOnline ? 'member-status--online' : 'member-status--offline'}`}>
+                        {isMemberOnline ? 'đang hoạt động' : 'ngoại tuyến'}
+                      </span>
+                    </div>
+                    
+                    <div className="member-actions">
+                      {isOwner && (
+                        <span className="admin-badge">admin</span>
+                      )}
+                      
+                      {amIOwner && !isCurrentUser && (
+                        <button
+                          className="kick-btn"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (!confirm(`Kick ${p.fullName || p.username} khỏi nhóm?`)) return;
+                            try {
+                              const res = await removeMemberApi(conversation._id, p._id);
+                              onGroupUpdated?.(res.data.conversation);
+                              toast.success(`Đã kick ${p.username}`);
+                            } catch (err) {
+                              console.error('Kick failed:', err);
+                              toast.error('Không thể kick thành viên');
+                            }
+                          }}
+                          title="Kick thành viên"
+                        >
+                          <UserMinus size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {view === 'info' && (!isGroup || !conversation) && (
+          <div key="personal-info">
+            {/* 1-on-1: UNIFIED Header */}
+            <div className="profile-hero">
+              <div className="profile-hero-avatar">
+                <Avatar user={user} size={120} />
+              </div>
+              <div className="profile-hero-info">
+                <h2>{mode === 'my-profile' ? (user?.fullName || user?.username) : (user?.fullName || user?.username)}</h2>
                 <p className={isOnline ? "status-online" : "status-offline"}>{statusText}</p>
               </div>
             </div>
 
+            {/* 1-on-1: UNIFIED Action Buttons */}
             <div className="quick-actions-row">
               <button className="q-action-item">
                 <div className="q-action-icon">
@@ -276,8 +422,9 @@ const RightSidebar = ({
               </button>
             </div>
 
+            {/* 1-on-1: Info Section */}
             <div className="info-section">
-              {(!isGroup && user?.bio) && (
+              {user?.bio && (
                 <div className="info-item">
                   <div className="info-icon">
                     <Info size={20} />
@@ -288,11 +435,10 @@ const RightSidebar = ({
                   </div>
                 </div>
               )}
-              {!isGroup && (
-                <div className="info-item" onClick={() => {
-                  const val = `@${user?.username}`;
-                  navigator.clipboard.writeText(val);
-                  toast.success(`Đã sao chép ${val}`);
+              <div className="info-item" onClick={() => {
+                const val = `@${user?.username}`;
+                navigator.clipboard.writeText(val);
+                toast.success(`Đã sao chép ${val}`);
               }} style={{ cursor: 'pointer' }}>
                 <div className="info-icon">
                   <UserPlus size={20} />
@@ -302,18 +448,6 @@ const RightSidebar = ({
                   <div className="info-label">Tên người dùng</div>
                 </div>
               </div>
-              )}
-              {isGroup && conversation?.description && (
-                <div className="info-item">
-                  <div className="info-icon">
-                    <Info size={20} />
-                  </div>
-                  <div className="info-details">
-                    <div className="info-value">{conversation.description}</div>
-                    <div className="info-label">Mô tả nhóm</div>
-                  </div>
-                </div>
-              )}
               {mode === 'my-profile' && (
                 <div className="info-item">
                   <div className="info-icon">
@@ -327,6 +461,7 @@ const RightSidebar = ({
               )}
             </div>
 
+            {/* 1-on-1: UNIFIED Media Stats */}
             <div className="shared-content-section">
               <div className="shared-item" onClick={() => setView('photos')} style={{ cursor: 'pointer' }}>
                 <ImageIcon size={20} className="shared-icon" />
@@ -348,133 +483,60 @@ const RightSidebar = ({
                 <LinkIcon size={20} className="shared-icon" />
                 <span className="shared-label">{mediaStats.link} liên kết</span>
               </div>
-              {!isGroup && (
-                <div className="shared-item">
-                  <Users size={20} className="shared-icon" />
-                  <span className="shared-label">0 nhóm chung</span>
-                </div>
-              )}
+              <div className="shared-item">
+                <Users size={20} className="shared-icon" />
+                <span className="shared-label">0 nhóm chung</span>
+              </div>
             </div>
+          </div>
+        )}
 
-            {/* Group Members List */}
-            {isGroup && conversation && (
-              <div className="group-members-section">
-                <div className="members-section-title">
-                  <Users size={18} />
-                  <span>Thành viên ({conversation.participants.length})</span>
-                </div>
-                <div className="members-list">
-                  {conversation.participants.map((p: User) => {
-                    const isMemberOnline = onlineUsers.includes(p._id);
-                    const isOwner = conversation.owner === p._id;
-                    const isCurrentUser = p._id === currentUserId;
-                    const amIOwner = conversation.owner === currentUserId;
-
-                    return (
-                      <div key={p._id} className="member-list-item">
-                        <div className="member-avatar-wrapper">
-                          <Avatar user={p} size={36} />
-                          <div className={`member-online-dot ${isMemberOnline ? 'online' : 'offline'}`} />
-                        </div>
-                        <div className="member-info">
-                          <span className="member-display-name">
-                            {p.fullName || p.username}
-                            {isCurrentUser && <span className="member-you-tag"> (Bạn)</span>}
-                          </span>
-                          <span className="member-role">
-                            {isOwner ? 'Admin' : (isMemberOnline ? 'Online' : 'Offline')}
-                          </span>
-                        </div>
-                        {amIOwner && !isCurrentUser && (
-                          <button
-                            className="member-kick-btn"
-                            onClick={async () => {
-                              if (!confirm(`Kick ${p.fullName || p.username} khỏi nhóm?`)) return;
-                              try {
-                                const res = await removeMemberApi(conversation._id, p._id);
-                                onGroupUpdated?.(res.data.conversation);
-                                toast.success(`Đã kick ${p.username}`);
-                              } catch (err) {
-                                console.error('Kick failed:', err);
-                                toast.error('Không thể kick thành viên');
-                              }
-                            }}
-                          >
-                            <UserMinus size={16} />
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Leave Group button for non-owners */}
-                {currentUserId && conversation.owner !== currentUserId && (
-                  <button
-                    className="leave-group-btn"
-                    onClick={async () => {
-                      if (!confirm('Bạn có chắc chắn muốn rời nhóm?')) return;
-                      try {
-                        await leaveGroupApi(conversation._id);
-                        toast.success('Đã rời nhóm');
-                        onClose();
-                      } catch (err) {
-                        console.error('Leave group failed:', err);
-                        toast.error('Không thể rời nhóm');
-                      }
-                    }}
+        {view === 'photos' && (
+          <div key="photo-gallery" className="shared-media-grid">
+            {photos.length === 0 ? (
+              <div className="empty-media">
+                <p>Chưa có ảnh nào được chia sẻ</p>
+              </div>
+            ) : (
+              <div className="photo-grid">
+                {photos.map((msg, idx) => (
+                  <div 
+                    key={msg._id || idx} 
+                    className="photo-grid-item"
+                    onClick={() => setPreviewData({ url: msg.imageUrl, messageId: msg._id })}
                   >
-                    <LogOut size={18} />
-                    <span>Rời nhóm</span>
-                  </button>
-                )}
+                    <img src={msg.imageUrl} alt="Shared" loading="lazy" />
+                  </div>
+                ))}
               </div>
             )}
-          </>
-        ) : view === 'photos' ? (
-            <div className="shared-media-grid">
-              {photos.length === 0 ? (
-                <div className="empty-media">
-                  <p>Chưa có ảnh nào được chia sẻ</p>
-                </div>
-              ) : (
-                <div className="photo-grid">
-                  {photos.map((msg, idx) => (
-                    <div 
-                      key={msg._id || idx} 
-                      className="photo-grid-item"
-                      onClick={() => setPreviewData({ url: msg.imageUrl, messageId: msg._id })}
-                    >
-                      <img src={msg.imageUrl} alt="Shared" loading="lazy" />
+          </div>
+        )}
+
+        {view === 'videos' && (
+          <div key="video-gallery" className="shared-media-grid">
+            {videos.length === 0 ? (
+              <div className="empty-media">
+                <p>Chưa có video nào được chia sẻ</p>
+              </div>
+            ) : (
+              <div className="photo-grid">
+                {videos.map((msg, idx) => (
+                  <div 
+                    key={msg._id || idx} 
+                    className="photo-grid-item video-grid-item"
+                    onClick={() => setPreviewData({ url: msg.imageUrl, messageId: msg._id })}
+                  >
+                    <video src={msg.imageUrl} muted />
+                    <div className="video-duration-badge">
+                      {formatDuration(msg.duration)}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-           ) : (
-            <div className="shared-media-grid">
-              {videos.length === 0 ? (
-                <div className="empty-media">
-                  <p>Chưa có video nào được chia sẻ</p>
-                </div>
-              ) : (
-                <div className="photo-grid">
-                  {videos.map((msg, idx) => (
-                    <div 
-                      key={msg._id || idx} 
-                      className="photo-grid-item video-grid-item"
-                      onClick={() => setPreviewData({ url: msg.imageUrl, messageId: msg._id })}
-                    >
-                      <video src={msg.imageUrl} muted />
-                      <div className="video-duration-badge">
-                        {formatDuration(msg.duration)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-           )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <AnimatePresence>

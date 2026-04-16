@@ -6,6 +6,7 @@ import HighlightText from "./HighlightText";
 import ImageAlbum from "./ImageAlbum";
 import VideoMessage from "./VideoMessage";
 import MediaMetaOverlay from "./MediaMetaOverlay";
+import Avatar from "../../common/Avatar";
 import "./MessageItem.css";
 
 interface MessageItemProps {
@@ -125,17 +126,7 @@ const MessageItem = ({
                             }}
                             className="message-avatar"
                         >
-                            {senderObj?.avatar ? (
-                                <img 
-                                    src={senderObj.avatar} 
-                                    alt={senderObj.username || "Avatar"} 
-                                    className="message-avatar-img"
-                                />
-                            ) : (
-                                <div className="message-avatar-fallback">
-                                    {(senderObj?.fullName || senderObj?.username || "?").substring(0, 1).toUpperCase()}
-                                </div>
-                            )}
+                            <Avatar user={senderObj} size={36} />
                         </motion.div>
                     )}
                 </div>

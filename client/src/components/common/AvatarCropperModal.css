@@ -1,0 +1,172 @@
+.cropper-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    z-index: 4000;
+    animation: cropperFadeIn 0.2s ease;
+}
+
+@keyframes cropperFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Header */
+.cropper-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.cropper-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.cropper-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.cropper-close-btn,
+.cropper-done-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.cropper-close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.cropper-done-btn {
+    background: var(--accent-color, #3390ec);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.cropper-done-btn:hover {
+    background: #2b7fcb;
+}
+
+/* Crop Area */
+.cropper-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* Controls */
+.cropper-controls {
+    padding: 16px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.cropper-zoom-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.cropper-zoom-row svg {
+    flex-shrink: 0;
+}
+
+.cropper-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    outline: none;
+}
+
+.cropper-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-color, #3390ec);
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.cropper-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-color, #3390ec);
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.cropper-rotate-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+.cropper-rotate-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.cropper-rotate-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.cropper-rotate-label {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+    min-width: 40px;
+    text-align: center;
+}
+
+/* Override react-easy-crop styles for Telegram look */
+.cropper-area .reactEasyCrop_CropArea {
+    border: 2px solid rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+}
+
+/* Grid lines inside crop area */
+.cropper-area .reactEasyCrop_CropAreaGrid::before,
+.cropper-area .reactEasyCrop_CropAreaGrid::after {
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}

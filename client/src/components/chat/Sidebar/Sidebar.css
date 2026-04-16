@@ -135,6 +135,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
 }
 
 .conversation-item--selected .item-name {
@@ -212,6 +214,17 @@
 .mute-icon {
     color: var(--text-secondary);
     flex-shrink: 0;
+}
+
+.group-indicator-icon {
+    margin-right: 6px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
+.conversation-item--selected .group-indicator-icon {
+    color: #ffffff;
 }
 
 .conversation-item--selected .mute-icon {

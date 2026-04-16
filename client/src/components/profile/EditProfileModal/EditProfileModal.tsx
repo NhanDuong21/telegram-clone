@@ -90,7 +90,7 @@ const EditProfileModal = ({ onClose }: EditProfileModalProps) => {
 
         <div className="edit-profile-form">
           <div className="avatar-edit-section">
-            <Avatar user={{ _id: user?._id || "1", username: username || "?", avatar: localPreview }} size={100} />
+            <Avatar user={{ _id: user?._id || "1", username: username || "?", avatar: localPreview }} size={96} />
             <button
               onClick={() => fileInputRef.current?.click()}
               type="button"

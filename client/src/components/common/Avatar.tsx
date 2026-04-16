@@ -52,6 +52,7 @@ const Avatar = ({ user, conversation, src, name, id, size = 44, className = "" }
     justifyContent: "center",
     overflow: "hidden",
     aspectRatio: "1/1",
+    border: "1px solid rgba(255, 255, 255, 0.05)", // Thin border to define edges in dark mode
   };
 
   // If avatar URL exists and hasn't failed loading
@@ -60,7 +61,7 @@ const Avatar = ({ user, conversation, src, name, id, size = 44, className = "" }
       <img
         src={avatarUrl}
         alt={resolvedName}
-        className={`rounded-full object-cover object-center shrink-0 aspect-square ${className}`}
+        className={`rounded-full object-cover object-center shrink-0 aspect-square border-[0.5px] border-white/10 ${className}`}
         style={{
           ...baseStyle,
         }}
@@ -69,16 +70,21 @@ const Avatar = ({ user, conversation, src, name, id, size = 44, className = "" }
     );
   }
 
-  // Generate a stable color from id
-  const avatarColors = [
-    "#0088cc", "#e17055", "#00b894", "#6c5ce7",
-    "#fdcb6e", "#e84393", "#00cec9", "#d63031",
+  // Telegram-style gradients for placeholders
+  const avatarGradients = [
+    "linear-gradient(135deg, #ff885e 0%, #ff51a4 100%)", // Red/Orange
+    "linear-gradient(135deg, #5bef9a 0%, #3e89fb 100%)", // Green/Blue
+    "linear-gradient(135deg, #af51f9 0%, #5861f4 100%)", // Purple
+    "linear-gradient(135deg, #ffc03d 0%, #ff6036 100%)", // Yellow/Orange
+    "linear-gradient(135deg, #6fb9f3 0%, #328bf2 100%)", // Sky Blue
+    "linear-gradient(135deg, #52cc60 0%, #299a38 100%)", // Green
   ];
+
   let hash = 0;
   for (let i = 0; i < resolvedId.length; i++) {
     hash = resolvedId.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const color = avatarColors[Math.abs(hash) % avatarColors.length];
+  const gradient = avatarGradients[Math.abs(hash) % avatarGradients.length];
 
   const initials = conversation?.isGroup && !conversation.imageUrl 
     ? "👥" 
@@ -86,13 +92,14 @@ const Avatar = ({ user, conversation, src, name, id, size = 44, className = "" }
 
   return (
     <div
-      className={`rounded-full shrink-0 aspect-square ${className}`}
+      className={`rounded-full shrink-0 aspect-square shadow-sm ${className}`}
       style={{
         ...baseStyle,
-        backgroundColor: color,
+        background: gradient,
         color: "white",
-        fontWeight: 700,
-        fontSize: size * 0.4,
+        fontWeight: 600,
+        fontSize: size * 0.45,
+        textShadow: "0 1px 2px rgba(0,0,0,0.1)",
       }}
     >
       {initials}

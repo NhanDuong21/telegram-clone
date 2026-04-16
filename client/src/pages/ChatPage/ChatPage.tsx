@@ -337,9 +337,9 @@ const ChatPage = () => {
                     <ArrowLeft size={24} />
                   </button>
                   {activeConversation.isGroup ? (
-                    <Avatar conversation={activeConversation} size={56} />
+                    <Avatar conversation={activeConversation} size={40} />
                   ) : (
-                    <Avatar user={otherParticipant} size={56} />
+                    <Avatar user={otherParticipant} size={40} />
                   )}
                     <div className="chat-header__text" onClick={(e) => {
                         e.stopPropagation();

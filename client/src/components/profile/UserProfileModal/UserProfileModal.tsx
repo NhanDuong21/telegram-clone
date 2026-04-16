@@ -91,7 +91,7 @@ const UserProfileModal = ({ userId, onClose }: UserProfileModalProps) => {
                 <div className="profile-top">
                     <div className="profile-avatar-wrapper">
                         <div className="profile-avatar-inner">
-                            <Avatar user={user} size={120} />
+                            <Avatar user={user} size={112} />
                         </div>
                     </div>
                     <h2 className="profile-name">

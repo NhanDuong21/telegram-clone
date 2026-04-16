@@ -19,6 +19,7 @@ import { useAuth } from '../../context/AuthContext';
 import { updateProfileApi } from '../../api/userApi';
 import type { User } from '../../types/chat';
 import Avatar from '../common/Avatar';
+import AvatarCropperModal from '../common/AvatarCropperModal';
 import EditEmailView from './EditEmailView';
 import './ProfileModal.css';
 
@@ -59,6 +60,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
+    const [cropperSrc, setCropperSrc] = useState<string | null>(null);
     
     const usernameRegex = /^[a-z0-9_]{5,32}$/;
     const isUsernameValid = usernameRegex.test(username);
@@ -125,15 +127,27 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
             setError("Vui lòng chọn file ảnh hợp lệ.");
             return;
         }
-        if (file.size > 2 * 1024 * 1024) {
-            setError("File ảnh quá lớn (tối đa 2MB).");
+        if (file.size > 5 * 1024 * 1024) {
+            setError("File ảnh quá lớn (tối đa 5MB).");
             return;
         }
 
-        setAvatarFile(file);
-        // Create a temporary URL for instant preview
-        const newPreviewUrl = URL.createObjectURL(file);
-        setLocalPreview(newPreviewUrl);
+        setError("");
+        // Read file as Data URL and open cropper
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setCropperSrc(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+        // Reset so user can re-pick the same file
+        e.target.value = '';
+    };
+
+    const handleCropDone = (croppedBlob: Blob, previewUrl: string) => {
+        const croppedFile = new File([croppedBlob], 'avatar.jpg', { type: 'image/jpeg' });
+        setAvatarFile(croppedFile);
+        setLocalPreview(previewUrl);
+        setCropperSrc(null);
     };
 
     const handleSave = async () => {
@@ -421,6 +435,13 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                         </motion.div>
                     )}
                 </div>
+            )}
+            {cropperSrc && (
+                <AvatarCropperModal
+                    imageSrc={cropperSrc}
+                    onCancel={() => setCropperSrc(null)}
+                    onCropDone={handleCropDone}
+                />
             )}
         </AnimatePresence>,
         document.body

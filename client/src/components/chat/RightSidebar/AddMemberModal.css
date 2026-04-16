@@ -80,8 +80,10 @@
 }
 
 .search-icon {
+    position: absolute;
+    left: 14px;
     color: var(--text-secondary);
-    margin-right: 8px;
+    pointer-events: none;
 }
 
 .search-input-wrapper input {
@@ -91,6 +93,7 @@
     outline: none;
     color: var(--text-main);
     font-size: 14px;
+    padding-left: 28px;
 }
 
 .clear-search {

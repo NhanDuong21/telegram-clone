@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from "react";
+import { memo, useState, useEffect, useRef } from "react";
 import {
   X,
   MessageCircle,
@@ -17,16 +17,18 @@ import {
   UserMinus,
   Settings,
   LogOut,
-  UserPlus
+  UserPlus,
+  Camera
 } from "lucide-react";
 import { toast } from 'react-hot-toast';
 import type { User, Conversation } from "../../../types";
 import Avatar from "../../common/Avatar";
+import ConfirmModal from "../../common/ConfirmModal";
 import ImagePreviewModal from "../ImagePreviewModal/ImagePreviewModal";
 import { AnimatePresence } from "framer-motion";
 import { connectSocket } from "../../../socket";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
-import { removeFileApi, getSharedMediaApi, removeMemberApi, leaveGroupApi } from "../../../api/chatApi";
+import { removeFileApi, getSharedMediaApi, removeMemberApi, leaveGroupApi, updateGroupSettingsApi, uploadImageApi } from "../../../api/chatApi";
 import EditGroupModal from "../EditGroupModal/EditGroupModal";
 import AddMemberModal from "./AddMemberModal";
 import "./RightSidebar.css";
@@ -67,6 +69,12 @@ const RightSidebar = ({
   const [previewData, setPreviewData] = useState<{ url: string, messageId: string } | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [confirmDeletePhoto, setConfirmDeletePhoto] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [confirmKick, setConfirmKick] = useState<User | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const amIOwner = conversation?.owner === currentUserId;
 
   useEffect(() => {
     if (conversation?._id) {
@@ -174,16 +182,45 @@ const RightSidebar = ({
 
   const handleDeletePhoto = async () => {
     if (!previewData || !conversation?._id) return;
-    
-    if (window.confirm("Bạn có chắc muốn xóa ảnh này khỏi cuộc trò chuyện?")) {
-        try {
-            await removeFileApi(previewData.messageId, previewData.url);
-            setPreviewData(null);
-            // State will be updated via socket listener fetchMediaData
-        } catch (error) {
-            console.error("Delete photo failed:", error);
-            alert("Không thể xóa ảnh.");
-        }
+    setConfirmDeletePhoto(true);
+  };
+
+  const executeDeletePhoto = async () => {
+    setConfirmDeletePhoto(false);
+    if (!previewData) return;
+    try {
+      await removeFileApi(previewData.messageId, previewData.url);
+      setPreviewData(null);
+    } catch (error) {
+      console.error("Delete photo failed:", error);
+      toast.error("Không thể xóa ảnh.");
+    }
+  };
+
+  const executeLeaveGroup = async () => {
+    setConfirmLeave(false);
+    if (!conversation) return;
+    try {
+      await leaveGroupApi(conversation._id);
+      toast.success('Đã rời nhóm');
+      onClose();
+    } catch (err) {
+      console.error('Leave group failed:', err);
+      toast.error('Không thể rời nhóm');
+    }
+  };
+
+  const executeKickMember = async () => {
+    if (!confirmKick || !conversation) return;
+    const member = confirmKick;
+    setConfirmKick(null);
+    try {
+      const res = await removeMemberApi(conversation._id, member._id);
+      onGroupUpdated?.(res.data.conversation);
+      toast.success(`Đã kick ${member.fullName || member.username}`);
+    } catch (err) {
+      console.error('Kick failed:', err);
+      toast.error('Không thể kick thành viên');
     }
   };
 
@@ -234,11 +271,42 @@ const RightSidebar = ({
           <div key="group-info">
             {/* UNIFIED Header: Same as 1-on-1 */}
             <div className="profile-hero">
-              <div className="profile-hero-avatar">
+              <div className="profile-hero-avatar" style={{ position: 'relative' }}>
                 <Avatar 
                   conversation={conversation} 
                   size={96} 
                 />
+                {amIOwner && (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={avatarInputRef}
+                      style={{ display: 'none' }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          const res = await uploadImageApi(file);
+                          const newUrl = res.data.imageUrl;
+                          const updateRes = await updateGroupSettingsApi(conversation._id, { imageUrl: newUrl });
+                          onGroupUpdated?.(updateRes.data.conversation);
+                          toast.success('Đã cập nhật avatar nhóm');
+                        } catch (err) {
+                          console.error('Avatar upload failed:', err);
+                          toast.error('Không thể tải ảnh lên');
+                        }
+                      }}
+                    />
+                    <button
+                      className="group-avatar-camera-btn"
+                      onClick={() => avatarInputRef.current?.click()}
+                      title="Đổi ảnh nhóm"
+                    >
+                      <Camera size={18} />
+                    </button>
+                  </>
+                )}
               </div>
               <div className="profile-hero-info">
                 <h2>{conversation.name}</h2>
@@ -272,17 +340,7 @@ const RightSidebar = ({
 
               <button
                 className="q-action-item q-action-item--danger"
-                onClick={async () => {
-                  if (!confirm('Bạn có chắc chắn muốn rời nhóm?')) return;
-                  try {
-                    await leaveGroupApi(conversation._id);
-                    toast.success('Đã rời nhóm');
-                    onClose();
-                  } catch (err) {
-                    console.error('Leave group failed:', err);
-                    toast.error('Không thể rời nhóm');
-                  }
-                }}
+                onClick={() => setConfirmLeave(true)}
               >
                 <div className="q-action-icon">
                   <LogOut size={22} />
@@ -375,17 +433,9 @@ const RightSidebar = ({
                       {amIOwner && !isCurrentUser && (
                         <button
                           className="kick-btn"
-                          onClick={async (e) => {
+                          onClick={(e) => {
                             e.stopPropagation();
-                            if (!confirm(`Kick ${p.fullName || p.username} khỏi nhóm?`)) return;
-                            try {
-                              const res = await removeMemberApi(conversation._id, p._id);
-                              onGroupUpdated?.(res.data.conversation);
-                              toast.success(`Đã kick ${p.username}`);
-                            } catch (err) {
-                              console.error('Kick failed:', err);
-                              toast.error('Không thể kick thành viên');
-                            }
+                            setConfirmKick(p);
                           }}
                           title="Kick thành viên"
                         >
@@ -593,6 +643,39 @@ const RightSidebar = ({
             // Can be handled by socket or callback
             setIsAddMemberOpen(false);
           }}
+        />
+      )}
+
+      {confirmDeletePhoto && (
+        <ConfirmModal
+          title="Xóa ảnh"
+          message="Bạn có chắc muốn xóa ảnh này khỏi cuộc trò chuyện?"
+          confirmLabel="Xóa"
+          isDanger
+          onConfirm={executeDeletePhoto}
+          onCancel={() => setConfirmDeletePhoto(false)}
+        />
+      )}
+
+      {confirmLeave && (
+        <ConfirmModal
+          title="Rời nhóm"
+          message="Bạn có chắc chắn muốn rời khỏi nhóm này?"
+          confirmLabel="Rời nhóm"
+          isDanger
+          onConfirm={executeLeaveGroup}
+          onCancel={() => setConfirmLeave(false)}
+        />
+      )}
+
+      {confirmKick && (
+        <ConfirmModal
+          title="Kick thành viên"
+          message={`Bạn có chắc muốn kick ${confirmKick.fullName || confirmKick.username} khỏi nhóm?`}
+          confirmLabel="Kick"
+          isDanger
+          onConfirm={executeKickMember}
+          onCancel={() => setConfirmKick(null)}
         />
       )}
     </div>

@@ -554,3 +554,27 @@
         width: 100% !important;
     }
 }
+
+/* Group Avatar Camera Overlay */
+.group-avatar-camera-btn {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent-color, #3390ec);
+    color: #fff;
+    border: 2px solid var(--bg-sidebar, #212121);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    z-index: 2;
+}
+
+.group-avatar-camera-btn:hover {
+    background: #2b7fcb;
+    transform: scale(1.08);
+}

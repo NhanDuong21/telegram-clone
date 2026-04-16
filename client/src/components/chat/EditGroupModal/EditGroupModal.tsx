@@ -3,6 +3,7 @@ import { Camera, Smile, History, Users, Shield, Activity, X, ChevronRight, Arrow
 import './EditGroupModal.css';
 import type { Conversation, User } from '../../../types/chat';
 import { updateGroupSettingsApi, deleteGroupApi } from '../../../api/chatApi';
+import ConfirmModal from '../../common/ConfirmModal';
 import toast from 'react-hot-toast';
 
 interface EditGroupModalProps {
@@ -22,6 +23,7 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
   
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [confirmDeleteGroup, setConfirmDeleteGroup] = useState(false);
 
   const isOwner = conversation.owner === currentUserId;
   // MOCK: Suppose we only know owner is admin for now
@@ -80,12 +82,13 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
   };
 
   const handleDeleteGroup = async () => {
-    if (!confirm('Bạn có chắc chắn muốn xóa nhóm vĩnh viễn? Hành động này không thể hoàn tác và sẽ xóa toàn bộ tin nhắn.')) {
-      return;
-    }
+    setConfirmDeleteGroup(true);
+  };
+
+  const executeDeleteGroup = async () => {
+    setConfirmDeleteGroup(false);
     try {
       await deleteGroupApi(conversation._id);
-      // Backend automatically emits GROUP_DELETED which will route the user away.
       toast.success('Nhóm đã bị xóa vĩnh viễn');
       onClose();
     } catch (error) {
@@ -307,7 +310,18 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
             Lưu
           </button>
         </div>
-      </div>
+    </div>
+
+      {confirmDeleteGroup && (
+        <ConfirmModal
+          title="Xóa nhóm vĩnh viễn"
+          message="Bạn có chắc chắn muốn xóa nhóm vĩnh viễn? Hành động này không thể hoàn tác và sẽ xóa toàn bộ tin nhắn."
+          confirmLabel="Xóa vĩnh viễn"
+          isDanger
+          onConfirm={executeDeleteGroup}
+          onCancel={() => setConfirmDeleteGroup(false)}
+        />
+      )}
     </div>
   );
 };

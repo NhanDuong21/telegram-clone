@@ -146,7 +146,22 @@ export const removeMemberService = async (id: string, userId: string, memberId: 
 
     const populated = await conversation.populate("participants", "-password");
 
+    // Create system message for kick notification
+    const kicker = await User.findById(userId);
+    const kickedUser = await User.findById(memberId);
+    const systemText = `${kicker?.fullName || kicker?.username} đã xóa ${kickedUser?.fullName || kickedUser?.username} khỏi nhóm`;
+    const systemMsg = await Message.create({
+        conversationId: id,
+        sender: userId,
+        text: systemText,
+        type: 'system'
+    });
+    const populatedMsg = await systemMsg.populate("sender", "username fullName avatar");
+
     const io = getIO();
+    // Broadcast system message to remaining members
+    io.to(id.toString()).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, populatedMsg);
+
     (populated.participants as unknown as IUser[]).forEach((p) => {
         io.to(`user_${p._id.toString()}`).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
     });

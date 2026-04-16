@@ -188,7 +188,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={onClose}
+                        onMouseDown={() => { if (!cropperSrc) onClose(); }}
                     />
                     {mode === 'EMAIL_EDIT' ? (
                         <EditEmailView 

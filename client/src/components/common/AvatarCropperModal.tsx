@@ -96,16 +96,22 @@ const AvatarCropperModal: React.FC<AvatarCropperModalProps> = ({ imageSrc, onCan
     };
 
     return (
-        <div className="cropper-overlay">
+        <div
+            className="cropper-overlay"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
+        >
             {/* Header */}
             <div className="cropper-header">
                 <div className="cropper-header-left">
-                    <button className="cropper-close-btn" onClick={onCancel}>
+                    <button type="button" className="cropper-close-btn" onClick={onCancel}>
                         <X size={22} />
                     </button>
                     <h3>Căn chỉnh ảnh</h3>
                 </div>
                 <button
+                    type="button"
                     className="cropper-done-btn"
                     onClick={handleDone}
                     disabled={isProcessing}
@@ -151,11 +157,11 @@ const AvatarCropperModal: React.FC<AvatarCropperModalProps> = ({ imageSrc, onCan
 
                 {/* Rotate */}
                 <div className="cropper-rotate-row">
-                    <button className="cropper-rotate-btn" onClick={() => setRotation((r) => r - 90)} title="Xoay trái">
+                    <button type="button" className="cropper-rotate-btn" onClick={() => setRotation((r) => r - 90)} title="Xoay trái">
                         <RotateCcw size={18} />
                     </button>
                     <span className="cropper-rotate-label">{rotation}°</span>
-                    <button className="cropper-rotate-btn" onClick={() => setRotation((r) => r + 90)} title="Xoay phải">
+                    <button type="button" className="cropper-rotate-btn" onClick={() => setRotation((r) => r + 90)} title="Xoay phải">
                         <RotateCw size={18} />
                     </button>
                 </div>

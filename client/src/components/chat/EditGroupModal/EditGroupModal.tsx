@@ -4,6 +4,7 @@ import './EditGroupModal.css';
 import type { Conversation, User } from '../../../types/chat';
 import { updateGroupSettingsApi, deleteGroupApi, uploadImageApi } from '../../../api/chatApi';
 import ConfirmModal from '../../common/ConfirmModal';
+import AvatarCropperModal from '../../common/AvatarCropperModal';
 import toast from 'react-hot-toast';
 
 interface EditGroupModalProps {
@@ -19,14 +20,17 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
   const [name, setName] = useState(conversation.name || '');
   const [description, setDescription] = useState(conversation.description || '');
   const [showHistory, setShowHistory] = useState(conversation.showHistoryForNewMembers ?? true);
-  const [imageUrl, setImageUrl] = useState(conversation.imageUrl || '');
   
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [confirmDeleteGroup, setConfirmDeleteGroup] = useState(false);
 
+  // Avatar state: deferred upload
+  const [localPreview, setLocalPreview] = useState(conversation.imageUrl || '');
+  const [pendingAvatarBlob, setPendingAvatarBlob] = useState<Blob | null>(null);
+  const [cropperSrc, setCropperSrc] = useState<string | null>(null);
+
   const isOwner = conversation.owner === currentUserId;
-  // MOCK: Suppose we only know owner is admin for now
   const adminCount = 1; 
   const memberCount = conversation.participants?.length || 0;
 
@@ -34,7 +38,8 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Step 1: File selected → read as DataURL → open cropper (NO upload here!)
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -43,23 +48,22 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
       return;
     }
 
-    try {
-      setIsUploading(true);
-      const uploadRes = await uploadImageApi(file);
-      const newUrl = uploadRes.data.imageUrl;
-      setImageUrl(newUrl);
-
-      const updateRes = await updateGroupSettingsApi(conversation._id, { imageUrl: newUrl });
-      onGroupUpdated(updateRes.data.conversation);
-      toast.success('Đã cập nhật ảnh nhóm');
-    } catch (err) {
-      console.error('Failed to upload image:', err);
-      toast.error('Lỗi khi tải ảnh lên');
-    } finally {
-      setIsUploading(false);
-    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCropperSrc(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
+  // Step 2: Crop done → save blob locally, show preview (still NO upload!)
+  const handleCropDone = (croppedBlob: Blob, previewUrl: string) => {
+    setPendingAvatarBlob(croppedBlob);
+    setLocalPreview(previewUrl);
+    setCropperSrc(null);
+  };
+
+  // Step 3: "Lưu" button → upload to Cloudinary THEN update settings
   const handleSave = async () => {
     if (!name.trim()) {
       toast.error('Tên nhóm không được để trống');
@@ -67,11 +71,22 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
     }
 
     try {
+      setIsUploading(true);
+
+      let finalImageUrl = conversation.imageUrl || '';
+
+      // Upload cropped avatar if user selected a new one
+      if (pendingAvatarBlob) {
+        const avatarFile = new File([pendingAvatarBlob], 'group-avatar.jpg', { type: 'image/jpeg' });
+        const uploadRes = await uploadImageApi(avatarFile);
+        finalImageUrl = uploadRes.data.imageUrl;
+      }
+
       const res = await updateGroupSettingsApi(conversation._id, {
         name,
         description,
         showHistoryForNewMembers: showHistory,
-        imageUrl,
+        imageUrl: finalImageUrl,
       });
       onGroupUpdated(res.data.conversation);
       toast.success('Cập nhật thông tin nhóm thành công');
@@ -79,6 +94,8 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
     } catch (err) {
       console.error('Update failed:', err);
       toast.error('Không thể cập nhật thông tin nhóm');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -101,7 +118,7 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
   // --- SUB-VIEWS ---
   if (activeView === 'admins') {
     return (
-      <div className="edit-group-overlay" onClick={onClose}>
+      <div className="edit-group-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
         <div className="edit-group-modal" onClick={e => e.stopPropagation()}>
           <div className="edit-group-header">
             <button className="edit-group-close" onClick={() => setActiveView('main')}>
@@ -110,7 +127,6 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
             <h2>Quản trị viên</h2>
           </div>
           <div className="edit-group-body list-view-body">
-            {/* Find owner in participants */}
             {conversation.participants?.filter((p: User) => p._id === conversation.owner).map((p: User) => (
               <div key={p._id} className="sub-list-item">
                 <div className="sub-list-avatar">
@@ -130,7 +146,7 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
 
   if (activeView === 'members') {
     return (
-      <div className="edit-group-overlay" onClick={onClose}>
+      <div className="edit-group-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
         <div className="edit-group-modal" onClick={e => e.stopPropagation()}>
           <div className="edit-group-header">
             <button className="edit-group-close" onClick={() => setActiveView('main')}>
@@ -160,7 +176,7 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
   }
 
   return (
-    <div className="edit-group-overlay" onClick={onClose}>
+    <div className="edit-group-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget && !cropperSrc) onClose(); }}>
       <div className="edit-group-modal" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="edit-group-header">
@@ -174,8 +190,8 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
           {/* Avatar and inputs */}
           <div className="edit-group-hero">
             <div className="avatar-upload-container" onClick={handleAvatarClick}>
-              {imageUrl ? (
-                <img src={imageUrl} alt="Group Avatar" />
+              {localPreview ? (
+                <img src={localPreview} alt="Group Avatar" />
               ) : (
                 <Camera size={24} color="#FFF" />
               )}
@@ -308,7 +324,7 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
             onClick={handleSave}
             disabled={isUploading}
           >
-            Lưu
+            {isUploading ? 'Đang lưu...' : 'Lưu'}
           </button>
         </div>
     </div>
@@ -323,8 +339,17 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
           onCancel={() => setConfirmDeleteGroup(false)}
         />
       )}
+
+      {cropperSrc && (
+        <AvatarCropperModal
+          imageSrc={cropperSrc}
+          onCancel={() => setCropperSrc(null)}
+          onCropDone={handleCropDone}
+        />
+      )}
     </div>
   );
 };
 
 export default EditGroupModal;
+

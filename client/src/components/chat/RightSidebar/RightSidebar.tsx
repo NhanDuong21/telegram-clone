@@ -4,7 +4,6 @@ import {
   MessageCircle,
   Bell,
   BellOff,
-  UserPlus,
   Image as ImageIcon,
   Users,
   Phone,
@@ -17,7 +16,8 @@ import {
   ArrowLeft,
   UserMinus,
   Settings,
-  LogOut
+  LogOut,
+  UserPlus
 } from "lucide-react";
 import { toast } from 'react-hot-toast';
 import type { User, Conversation } from "../../../types";
@@ -235,11 +235,17 @@ const RightSidebar = ({
             {/* UNIFIED Header: Same as 1-on-1 */}
             <div className="profile-hero">
               <div className="profile-hero-avatar">
-                <Avatar conversation={conversation} size={120} />
+                <Avatar 
+                  conversation={conversation} 
+                  size={128} 
+                  className="w-32 h-32 aspect-square rounded-full object-cover" 
+                />
               </div>
               <div className="profile-hero-info">
                 <h2>{conversation.name}</h2>
-                <p className="status-offline">{conversation.participants?.length || 0} thành viên</p>
+                <div className="status-offline">
+                  {conversation.participants?.length || 0} thành viên
+                </div>
               </div>
             </div>
 
@@ -255,29 +261,15 @@ const RightSidebar = ({
                 <span>{isMuted ? 'Bật âm' : 'Tắt âm'}</span>
               </button>
               
-              {conversation.owner === currentUserId && (
-                <button 
-                  className="q-action-item"
-                  onClick={() => setIsEditModalOpen(true)}
-                >
-                  <div className="q-action-icon">
-                    <Settings size={22} />
-                  </div>
-                  <span>Quản lý</span>
-                </button>
-              )}
-
-              {conversation.owner === currentUserId && (
-                <button 
-                  className="q-action-item"
-                  onClick={() => setIsAddMemberOpen(true)}
-                >
-                  <div className="q-action-icon">
-                    <UserPlus size={22} />
-                  </div>
-                  <span>Thêm</span>
-                </button>
-              )}
+              <button 
+                className="q-action-item"
+                onClick={() => setIsEditModalOpen(true)}
+              >
+                <div className="q-action-icon">
+                  <Settings size={22} />
+                </div>
+                <span>Quản lý</span>
+              </button>
 
               <button
                 className="q-action-item q-action-item--danger"
@@ -325,12 +317,31 @@ const RightSidebar = ({
             </div>
 
             {/* Members Section (Group only) */}
-            <div className="members-section-header">
+            <div className="members-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span className="members-section-title">
                 {conversation.participants.length} thành viên
               </span>
-              <button className="members-add-btn">
-                <UserPlus size={16} />
+              <button 
+                className="members-add-btn"
+                onClick={() => setIsAddMemberOpen(true)}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: 'transparent',
+                  color: '#3390ec',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(51, 144, 236, 0.1)'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                title="Thêm thành viên"
+              >
+                <UserPlus size={18} />
               </button>
             </div>
 
@@ -395,7 +406,11 @@ const RightSidebar = ({
             {/* 1-on-1: UNIFIED Header */}
             <div className="profile-hero">
               <div className="profile-hero-avatar">
-                <Avatar user={user} size={120} />
+                <Avatar 
+                  user={user} 
+                  size={128} 
+                  className="w-32 h-32 aspect-square rounded-full object-cover" 
+                />
               </div>
               <div className="profile-hero-info">
                 <h2>{mode === 'my-profile' ? (user?.fullName || user?.username) : (user?.fullName || user?.username)}</h2>

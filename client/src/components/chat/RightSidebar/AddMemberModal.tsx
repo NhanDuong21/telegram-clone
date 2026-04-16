@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Search, Check, X } from "lucide-react";
 import { searchUsersApi } from "../../../api/userApi";
 import { addMembersApi } from "../../../api/chatApi";
@@ -23,8 +23,8 @@ const AddMemberModal = ({ conversation, onClose, onMembersAdded }: AddMemberModa
     // Current members shouldn't be added again
     const currentMemberIds = new Set(conversation.participants.map(p => typeof p === 'string' ? p : p._id));
 
-    const handleSearch = async () => {
-        const trimmed = query.trim();
+    const handleSearch = async (val: string) => {
+        const trimmed = val.trim();
         if (!trimmed) { setResults([]); return; }
         setIsSearching(true);
         try {
@@ -38,6 +38,13 @@ const AddMemberModal = ({ conversation, onClose, onMembersAdded }: AddMemberModa
             setIsSearching(false);
         }
     };
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            if (query) handleSearch(query);
+        }, 500);
+        return () => clearTimeout(timeout);
+    }, [query]);
 
     const toggleUser = (user: User) => {
         if (selectedUsers.find((u) => u._id === user._id)) {
@@ -84,7 +91,7 @@ const AddMemberModal = ({ conversation, onClose, onMembersAdded }: AddMemberModa
                             placeholder="Tìm kiếm người dùng..."
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSearch(query)}
                             autoFocus
                         />
                         {query && (
@@ -136,7 +143,7 @@ const AddMemberModal = ({ conversation, onClose, onMembersAdded }: AddMemberModa
                         ) : query && !isSearching ? (
                             <div className="centered-msg">Không tìm thấy ai</div>
                         ) : (
-                            <div className="centered-msg">Nhập email hoặc tên để tìm người dùng</div>
+                            <div className="centered-msg">Nhập tên hoặc @username để tìm người dùng</div>
                         )}
                     </div>
                 </div>

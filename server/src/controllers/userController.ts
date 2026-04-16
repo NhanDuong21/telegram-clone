@@ -10,20 +10,25 @@ export const searchUsers = async (req: AuthRequest, res: Response) => {
     try {
         const { q } = req.query;
 
-        // Strict search: Only allow searching by @username
-        if (!q || typeof q !== "string" || !q.startsWith('@')) {
+        if (!q || typeof q !== "string") {
             return res.status(200).json({ users: [] });
         }
 
-        const usernameQuery = q.substring(1); // Strip @
+        const searchQuery = q.startsWith('@') 
+            ? { username: new RegExp(q.slice(1), 'i') } 
+            : { 
+                $or: [
+                    { fullName: new RegExp(q, 'i') },
+                    { username: new RegExp(q, 'i') }
+                ]
+              };
 
-        // Find user with exact username match (case-insensitive)
         const users = await User.find({
-            username: new RegExp(`^${usernameQuery}$`, 'i'),
+            ...searchQuery,
             _id: { $ne: req.user!._id },
         })
             .select("username fullName avatar lastSeen")
-            .limit(10); // Still limit to prevent abuse
+            .limit(10);
 
         return res.status(200).json({ users });
     } catch (error: unknown) {

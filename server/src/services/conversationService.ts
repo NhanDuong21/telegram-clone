@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Conversation from "../models/Conversation";
 import Message from "../models/Message";
+import User from "../models/User";
 import { getIO } from "../socket";
 import { SOCKET_EVENTS } from "../utils/socketEvents";
 import { IUser } from "../models/User";
@@ -83,20 +84,40 @@ export const addMembersService = async (id: string, userId: string, participantI
     const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
     if (!conversation) throw new Error("Group không tồn tại hoặc bạn không có quyền");
 
-    if (conversation.owner && conversation.owner.toString() !== userId) {
-        throw new Error("Chỉ Group Owner mới có quyền thêm thành viên");
-    }
-
     const currentIds = conversation.participants.map((p) => p.toString());
-    const newSet = new Set([...currentIds, ...participantIds]);
+    const addedUserIds = participantIds.filter(pid => !currentIds.includes(pid));
+    
+    if (addedUserIds.length === 0) return conversation;
 
-    conversation.participants = Array.from(newSet) as any[];
+    conversation.participants = [...currentIds, ...addedUserIds] as any[];
     await conversation.save();
     
     const populated = await conversation.populate("participants", "-password");
 
+    // Fetch details for system message
+    const adder = await User.findById(userId);
+    const addedUsers = await User.find({ _id: { $in: addedUserIds } });
+
     const io = getIO();
-    (populated.participants as unknown as IUser[]).forEach((p) => {
+
+    // Create system messages
+    for (const addedUser of addedUsers) {
+        const systemText = `${adder?.fullName || adder?.username} đã thêm ${addedUser.fullName || addedUser.username} vào nhóm`;
+        const systemMsg = await Message.create({
+            conversationId: id,
+            sender: userId, // The person who performed the action
+            text: systemText,
+            type: 'system'
+        });
+
+        const populatedMsg = await systemMsg.populate("sender", "username fullName avatar");
+        
+        // Broadcast system message to all room members
+        io.to(id.toString()).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, populatedMsg);
+    }
+
+    // Update the group list for all participants
+    populated.participants.forEach((p: any) => {
         io.to(p._id.toString()).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
     });
 

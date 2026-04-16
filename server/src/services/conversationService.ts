@@ -45,10 +45,6 @@ export const updateGroupSettingsService = async (
     const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
     if (!conversation) throw new Error("Group không tồn tại hoặc bạn không có quyền");
 
-    if (conversation.owner && conversation.owner.toString() !== userId) {
-        throw new Error("Chỉ Group Owner mới có quyền thay đổi thông tin nhóm");
-    }
-
     if (data.name !== undefined) {
         if (data.name.trim() === "") throw new Error("Tên group không hợp lệ");
         conversation.name = data.name.trim();

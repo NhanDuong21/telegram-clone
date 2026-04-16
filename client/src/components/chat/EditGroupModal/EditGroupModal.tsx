@@ -18,7 +18,7 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
   const [name, setName] = useState(conversation.name || '');
   const [description, setDescription] = useState(conversation.description || '');
   const [showHistory, setShowHistory] = useState(conversation.showHistoryForNewMembers ?? true);
-  const [imageUrl, setImageUrl] = useState(conversation.imageUrl || '');
+  const [imageUrl] = useState(conversation.imageUrl || '');
   
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

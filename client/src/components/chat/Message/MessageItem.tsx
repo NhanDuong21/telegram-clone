@@ -63,6 +63,16 @@ const MessageItem = ({
     const isMediaMessage = (msg.type === 'image' || msg.type === 'video' || (msg.imageUrls && msg.imageUrls.length > 0)) && !msg.isDeleted;
     const isPureMedia = isMediaMessage && !msg.text;
 
+    const mediaItems: { id: string; type: 'image' | 'video'; url: string }[] = [];
+    if (!msg.isDeleted) {
+        if (msg.videoUrl) mediaItems.push({ id: `vid-${msg.videoUrl}`, type: 'video', url: msg.videoUrl });
+        if (msg.imageUrls && msg.imageUrls.length > 0) {
+            msg.imageUrls.forEach((url, i) => mediaItems.push({ id: `img-${i}-${url}`, type: 'image', url }));
+        } else if (msg.imageUrl) {
+            mediaItems.push({ id: `img-${msg.imageUrl}`, type: 'image', url: msg.imageUrl });
+        }
+    }
+
     const renderReplySnippet = (replyTo: any) => {
         if (!replyTo) return null;
         return (
@@ -157,9 +167,9 @@ const MessageItem = ({
 
                 {renderReplySnippet(msg.replyTo)}
                 
-                {msg.type === 'video' && msg.videoUrl && !msg.isDeleted && (
+                {mediaItems.length === 1 && mediaItems[0].type === 'video' && !msg.isDeleted && (
                     <VideoMessage 
-                        videoUrl={msg.videoUrl} 
+                        videoUrl={mediaItems[0].url} 
                         videoWidth={msg.videoWidth}
                         videoHeight={msg.videoHeight}
                         createdAt={msg.createdAt}
@@ -173,26 +183,13 @@ const MessageItem = ({
                     />
                 )}
 
-                {msg.imageUrls && msg.imageUrls.length > 0 && !msg.isDeleted ? (
-                    <ImageAlbum 
-                        images={msg.imageUrls} 
-                        isSending={msg.isSending}
-                        isError={msg.isError}
-                        isMe={isMe}
-                        isRead={isRead}
-                        createdAt={msg.createdAt}
-                        progress={uploadProgress?.[msg.tempId || msg._id]}
-                        onImageClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)} 
-                        onContextMenu={(e, _url) => onContextMenu(e, msg)}
-                        onMediaLoad={onMediaLoad}
-                    />
-                ) : msg.imageUrl && !msg.isDeleted && (
+                {mediaItems.length === 1 && mediaItems[0].type === 'image' && !msg.isDeleted && (
                     <div className="single-image-container">
                         <img
-                            src={msg.imageUrl}
+                            src={mediaItems[0].url}
                             alt="Attached"
                             className={`message-image ${isMe ? "message-image--me" : "message-image--other"} ${msg.text ? "message-image--with-text" : ""}`}
-                            onClick={() => onImagePreview?.(msg.imageUrl!, msg._id, (msg.sender as any)._id || msg.sender)}
+                            onClick={() => onImagePreview?.(mediaItems[0].url, msg._id, (msg.sender as any)._id || msg.sender)}
                             onLoad={onMediaLoad}
                         />
                         <MediaMetaOverlay 
@@ -202,6 +199,21 @@ const MessageItem = ({
                             isRead={isRead} 
                         />
                     </div>
+                )}
+
+                {mediaItems.length > 1 && !msg.isDeleted && (
+                    <ImageAlbum 
+                        mediaItems={mediaItems} 
+                        isSending={msg.isSending}
+                        isError={msg.isError}
+                        isMe={isMe}
+                        isRead={isRead}
+                        createdAt={msg.createdAt}
+                        progress={uploadProgress?.[msg.tempId || msg._id]}
+                        onMediaClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)} 
+                        onContextMenu={(e, _url) => onContextMenu(e, msg)}
+                        onMediaLoad={onMediaLoad}
+                    />
                 )}
                 
                 {msg.text && (

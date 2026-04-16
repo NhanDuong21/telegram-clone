@@ -1,14 +1,20 @@
 import { memo } from 'react';
-import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, RefreshCw, Play } from 'lucide-react';
 import MediaMetaOverlay from './MediaMetaOverlay';
 import './ImageAlbum.css';
 
+export interface MediaAttachment {
+    id: string;
+    type: 'image' | 'video';
+    url: string;
+}
+
 interface ImageAlbumProps {
-    images: string[];
+    mediaItems: MediaAttachment[];
     isSending?: boolean;
     isError?: boolean;
-    onImageClick?: (url: string) => void;
-    onContextMenu?: (e: React.MouseEvent, imageUrl: string) => void;
+    onMediaClick?: (url: string, type: 'image' | 'video') => void;
+    onContextMenu?: (e: React.MouseEvent, url: string) => void;
     progress?: number;
     isMe?: boolean;
     isRead?: boolean;
@@ -16,24 +22,31 @@ interface ImageAlbumProps {
     onMediaLoad?: () => void;
 }
 
-const ImageAlbum = ({ images, isSending, isError, onImageClick, onContextMenu, progress, isMe = false, isRead = false, createdAt, onMediaLoad }: ImageAlbumProps) => {
-    const count = Math.min(images.length, 5);
-    
+const ImageAlbum = ({ mediaItems, isSending, isError, onMediaClick, onContextMenu, progress, isMe = false, isRead = false, createdAt, onMediaLoad }: ImageAlbumProps) => {
     return (
-        <div className={`image-album album-grid-${count} ${isSending ? 'is-sending' : ''} ${isError ? 'is-error' : ''}`}>
-            {images.slice(0, 5).map((url, i) => (
+        <div className={`media-grid ${isSending ? 'is-sending' : ''} ${isError ? 'is-error' : ''}`}>
+            {mediaItems.map((item) => (
                 <div 
-                    key={i} 
-                    className={`album-item item-${i}`} 
-                    onClick={() => !isSending && onImageClick?.(url)}
-                    onContextMenu={(e) => !isSending && onContextMenu?.(e, url)}
+                    key={item.id} 
+                    className="media-item" 
+                    onClick={() => !isSending && onMediaClick?.(item.url, item.type)}
+                    onContextMenu={(e) => !isSending && onContextMenu?.(e, item.url)}
                 >
-                    <img src={url} alt={`Shared ${i + 1}`} loading="lazy" onLoad={onMediaLoad} />
+                    {item.type === 'video' ? (
+                        <>
+                            <video src={item.url} onLoadedData={onMediaLoad} />
+                            <div className="media-video-icon">
+                                <Play size={20} fill="currentColor" />
+                            </div>
+                        </>
+                    ) : (
+                        <img src={item.url} alt="Attached" loading="lazy" onLoad={onMediaLoad} />
+                    )}
                 </div>
             ))}
 
             {isSending && (
-                <div className="album-overlay album-overlay--loading">
+                <div className="media-overlay media-overlay--loading">
                     {progress !== undefined && progress < 100 ? (
                         <div className="upload-progress-circle album-progress">
                             <svg viewBox="0 0 36 36" className="circular-chart">
@@ -52,10 +65,10 @@ const ImageAlbum = ({ images, isSending, isError, onImageClick, onContextMenu, p
             )}
 
             {isError && (
-                <div className="album-overlay album-overlay--error">
+                <div className="media-overlay media-overlay--error">
                     <AlertCircle className="error-icon" size={24} />
                     <span>Lỗi tải lên</span>
-                    <button className="retry-album-btn" title="Thử lại">
+                    <button className="retry-media-btn" title="Thử lại">
                         <RefreshCw size={14} />
                     </button>
                 </div>

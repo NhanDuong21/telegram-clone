@@ -70,7 +70,7 @@ export const updateGroupSettingsService = async (
 
     const io = getIO();
     (populated.participants as unknown as IUser[]).forEach((p) => {
-        io.to(p._id.toString()).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
+        io.to(`user_${p._id.toString()}`).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
     });
 
     return populated;
@@ -114,7 +114,7 @@ export const addMembersService = async (id: string, userId: string, participantI
 
     // Update the group list for all participants
     populated.participants.forEach((p: any) => {
-        io.to(p._id.toString()).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
+        io.to(`user_${p._id.toString()}`).emit(SOCKET_EVENTS.GROUP_UPDATED, populated);
     });
 
     return populated;

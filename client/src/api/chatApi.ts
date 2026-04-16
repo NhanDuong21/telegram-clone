@@ -27,7 +27,13 @@ export const createGroupConversationApi = (
 
 export const updateGroupSettingsApi = (
     conversationId: string,
-    data: { name?: string; imageUrl?: string }
+    data: { 
+        name?: string; 
+        imageUrl?: string;
+        description?: string;
+        showHistoryForNewMembers?: boolean;
+        permissions?: any;
+    }
 ): Promise<AxiosResponse<{ conversation: Conversation }>> =>
     axiosClient.put(
         `/conversations/${conversationId}/group-settings`,

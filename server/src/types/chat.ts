@@ -32,6 +32,15 @@ export interface IConversation extends mongoose.Document {
     isGroup: boolean;
     name?: string;
     imageUrl?: string;
+    description?: string;
+    showHistoryForNewMembers?: boolean;
+    permissions?: {
+        sendMessages?: boolean;
+        sendMedia?: boolean;
+        addMembers?: boolean;
+        pinMessages?: boolean;
+        changeGroupInfo?: boolean;
+    };
     lastMessage?: mongoose.Types.ObjectId;
     owner?: mongoose.Types.ObjectId;
     createdAt: Date;

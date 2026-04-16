@@ -32,6 +32,14 @@ export interface Conversation {
     isTemporary?: boolean;
     isPinned?: boolean;
     description?: string;
+    showHistoryForNewMembers?: boolean;
+    permissions?: {
+        sendMessages?: boolean;
+        sendMedia?: boolean;
+        addMembers?: boolean;
+        pinMessages?: boolean;
+        changeGroupInfo?: boolean;
+    };
 }
 
 export interface Message {

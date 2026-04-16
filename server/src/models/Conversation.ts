@@ -27,6 +27,21 @@ const conversationSchema = new Schema<IConversation>(
             ref: "User",
             default: null,
         },
+        description: {
+            type: String,
+            default: "",
+        },
+        showHistoryForNewMembers: {
+            type: Boolean,
+            default: true,
+        },
+        permissions: {
+            sendMessages: { type: Boolean, default: true },
+            sendMedia: { type: Boolean, default: true },
+            addMembers: { type: Boolean, default: true },
+            pinMessages: { type: Boolean, default: false },
+            changeGroupInfo: { type: Boolean, default: false },
+        },
         lastMessage: {
             type: Schema.Types.ObjectId,
             ref: "Message",

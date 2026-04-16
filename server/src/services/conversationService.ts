@@ -30,7 +30,17 @@ export const createGroupService = async (name: string, participantIds: string[],
     return populated;
 };
 
-export const updateGroupSettingsService = async (id: string, userId: string, data: { name?: string, imageUrl?: string }) => {
+export const updateGroupSettingsService = async (
+    id: string, 
+    userId: string, 
+    data: { 
+        name?: string; 
+        imageUrl?: string; 
+        description?: string; 
+        showHistoryForNewMembers?: boolean; 
+        permissions?: any 
+    }
+) => {
     const conversation = await Conversation.findOne({ _id: id, isGroup: true, participants: userId });
     if (!conversation) throw new Error("Group không tồn tại hoặc bạn không có quyền");
 
@@ -44,6 +54,18 @@ export const updateGroupSettingsService = async (id: string, userId: string, dat
     }
     if (data.imageUrl !== undefined) {
         conversation.imageUrl = data.imageUrl.trim();
+    }
+    if (data.description !== undefined) {
+        conversation.description = data.description.trim();
+    }
+    if (data.showHistoryForNewMembers !== undefined) {
+        conversation.showHistoryForNewMembers = data.showHistoryForNewMembers;
+    }
+    if (data.permissions !== undefined) {
+        conversation.permissions = {
+            ...conversation.permissions,
+            ...data.permissions
+        };
     }
 
     await conversation.save();

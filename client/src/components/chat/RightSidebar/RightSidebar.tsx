@@ -27,6 +27,7 @@ import { AnimatePresence } from "framer-motion";
 import { connectSocket } from "../../../socket";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
 import { removeFileApi, getSharedMediaApi, removeMemberApi, leaveGroupApi } from "../../../api/chatApi";
+import EditGroupModal from "../EditGroupModal/EditGroupModal";
 import "./RightSidebar.css";
 
 interface RightSidebarProps {
@@ -63,6 +64,7 @@ const RightSidebar = ({
     voice: 0
   });
   const [previewData, setPreviewData] = useState<{ url: string, messageId: string } | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     if (conversation?._id) {
@@ -252,7 +254,10 @@ const RightSidebar = ({
               </button>
               
               {conversation.owner === currentUserId && (
-                <button className="q-action-item">
+                <button 
+                  className="q-action-item"
+                  onClick={() => setIsEditModalOpen(true)}
+                >
                   <div className="q-action-icon">
                     <Settings size={22} />
                   </div>
@@ -548,6 +553,16 @@ const RightSidebar = ({
           />
         )}
       </AnimatePresence>
+
+      {isEditModalOpen && isGroup && conversation && (
+        <EditGroupModal 
+          conversation={conversation}
+          onClose={() => setIsEditModalOpen(false)}
+          onGroupUpdated={(updated) => {
+             onGroupUpdated?.(updated);
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -27,10 +27,16 @@ export const createGroupConversation = async (req: AuthRequest, res: Response) =
 export const updateGroupSettings = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const { name, imageUrl } = req.body;
+        const { name, imageUrl, description, showHistoryForNewMembers, permissions } = req.body;
         const userId = req.user!._id.toString();
 
-        const conversation = await conversationService.updateGroupSettingsService(id as string, userId, { name, imageUrl });
+        const conversation = await conversationService.updateGroupSettingsService(id as string, userId, { 
+            name, 
+            imageUrl,
+            description,
+            showHistoryForNewMembers,
+            permissions
+        });
         return res.status(200).json({ conversation });
     } catch (error: unknown) {
         console.error("Update group error:", error);

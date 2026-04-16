@@ -41,7 +41,8 @@ const AddMemberModal = ({ conversation, onClose, onMembersAdded }: AddMemberModa
 
     useEffect(() => {
         const timeout = setTimeout(() => {
-            if (query) handleSearch(query);
+            if (query && query !== "@") handleSearch(query);
+            if (!query) setResults([]);
         }, 500);
         return () => clearTimeout(timeout);
     }, [query]);

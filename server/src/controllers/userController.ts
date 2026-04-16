@@ -10,18 +10,24 @@ export const searchUsers = async (req: AuthRequest, res: Response) => {
     try {
         const { q } = req.query;
 
-        if (!q || typeof q !== "string") {
+        if (!q || typeof q !== "string" || q === "@") {
             return res.status(200).json({ users: [] });
         }
 
-        const searchQuery = q.startsWith('@') 
-            ? { username: new RegExp(q.slice(1), 'i') } 
-            : { 
+        let searchQuery;
+        if (q.startsWith('@')) {
+            const username = q.slice(1);
+            // EXACT MATCH for @username
+            searchQuery = { username: username };
+        } else {
+            // Partial match for name/username if no @
+            searchQuery = { 
                 $or: [
                     { fullName: new RegExp(q, 'i') },
                     { username: new RegExp(q, 'i') }
                 ]
-              };
+            };
+        }
 
         const users = await User.find({
             ...searchQuery,

@@ -1,17 +1,20 @@
 import React, { useState, useRef } from 'react';
-import { Camera, Smile, History, Users, Link as LinkIcon, Shield, Activity, X, ChevronRight, MessageSquareHeart } from 'lucide-react';
+import { Camera, Smile, History, Users, Shield, Activity, X, ChevronRight, ArrowLeft, Trash2 } from 'lucide-react';
 import './EditGroupModal.css';
-import type { Conversation } from '../../../types/chat';
-import { updateGroupSettingsApi } from '../../../api/chatApi';
+import type { Conversation, User } from '../../../types/chat';
+import { updateGroupSettingsApi, deleteGroupApi } from '../../../api/chatApi';
 import toast from 'react-hot-toast';
 
 interface EditGroupModalProps {
   conversation: Conversation;
+  currentUserId: string;
   onClose: () => void;
   onGroupUpdated: (conversation: Conversation) => void;
 }
 
-const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, onClose, onGroupUpdated }) => {
+const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUserId, onClose, onGroupUpdated }) => {
+  const [activeView, setActiveView] = useState<'main' | 'admins' | 'members'>('main');
+
   const [name, setName] = useState(conversation.name || '');
   const [description, setDescription] = useState(conversation.description || '');
   const [showHistory, setShowHistory] = useState(conversation.showHistoryForNewMembers ?? true);
@@ -20,14 +23,10 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, onClose, 
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const adminCount = 1; // Assuming owner is the only admin for now
+  const isOwner = conversation.owner === currentUserId;
+  // MOCK: Suppose we only know owner is admin for now
+  const adminCount = 1; 
   const memberCount = conversation.participants?.length || 0;
-
-  // Permissions count (just mocked display based on object)
-  const perms = conversation.permissions || {};
-  const activePermsCount = Object.values(perms).filter(Boolean).length;
-  // Let's assume 14 total permissions in fake Telegram, but our DB holds only 5. Let's just hardcode "9/14" or calculate 
-  const displayPermsCount = `${activePermsCount + 4}/14`; // mock to look like telegram 
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -79,6 +78,82 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, onClose, 
       toast.error('Không thể cập nhật thông tin nhóm');
     }
   };
+
+  const handleDeleteGroup = async () => {
+    if (!confirm('Bạn có chắc chắn muốn xóa nhóm vĩnh viễn? Hành động này không thể hoàn tác và sẽ xóa toàn bộ tin nhắn.')) {
+      return;
+    }
+    try {
+      await deleteGroupApi(conversation._id);
+      // Backend automatically emits GROUP_DELETED which will route the user away.
+      toast.success('Nhóm đã bị xóa vĩnh viễn');
+      onClose();
+    } catch (error) {
+      console.error('Delete group failed:', error);
+      toast.error('Không thể xóa nhóm');
+    }
+  };
+
+  // --- SUB-VIEWS ---
+  if (activeView === 'admins') {
+    return (
+      <div className="edit-group-overlay" onClick={onClose}>
+        <div className="edit-group-modal" onClick={e => e.stopPropagation()}>
+          <div className="edit-group-header">
+            <button className="edit-group-close" onClick={() => setActiveView('main')}>
+              <ArrowLeft size={20} />
+            </button>
+            <h2>Quản trị viên</h2>
+          </div>
+          <div className="edit-group-body list-view-body">
+            {/* Find owner in participants */}
+            {conversation.participants?.filter((p: User) => p._id === conversation.owner).map((p: User) => (
+              <div key={p._id} className="sub-list-item">
+                <div className="sub-list-avatar">
+                   {p.avatar ? <img src={p.avatar} alt="Admin" /> : <div className="avatar-placeholder">{p.fullName?.charAt(0) || p.username.charAt(0)}</div>}
+                </div>
+                <div className="sub-list-info">
+                   <span className="sub-list-name">{p.fullName || p.username}</span>
+                   <span className="sub-list-role">Chủ sở hữu</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeView === 'members') {
+    return (
+      <div className="edit-group-overlay" onClick={onClose}>
+        <div className="edit-group-modal" onClick={e => e.stopPropagation()}>
+          <div className="edit-group-header">
+            <button className="edit-group-close" onClick={() => setActiveView('main')}>
+              <ArrowLeft size={20} />
+            </button>
+            <h2>Thành viên</h2>
+          </div>
+          <div className="edit-group-body list-view-body">
+            {conversation.participants?.map((p: User) => {
+               const isPOwner = p._id === conversation.owner;
+               return (
+                <div key={p._id} className="sub-list-item">
+                  <div className="sub-list-avatar">
+                     {p.avatar ? <img src={p.avatar} alt="Member" /> : <div className="avatar-placeholder">{p.fullName?.charAt(0) || p.username.charAt(0)}</div>}
+                  </div>
+                  <div className="sub-list-info">
+                     <span className="sub-list-name">{p.fullName || p.username}</span>
+                     {isPOwner ? <span className="sub-list-role">Chủ sở hữu</span> : <span className="sub-list-role">Thành viên</span>}
+                  </div>
+                </div>
+               );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="edit-group-overlay" onClick={onClose}>
@@ -155,57 +230,9 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, onClose, 
                 <ChevronRight size={20} />
               </div>
             </button>
-            
             <div className="edit-group-separator" style={{ height: '8px' }}></div>
 
-            <button className="edit-menu-item">
-              <div className="edit-menu-item-left">
-                <div className="edit-menu-item-icon">
-                  <MessageSquareHeart size={20} />
-                </div>
-                <div className="edit-menu-item-text">
-                  Biểu tượng cảm xúc
-                </div>
-              </div>
-              <div className="edit-menu-item-right">
-                <span className="edit-menu-item-right-value">9/73</span>
-                <ChevronRight size={20} />
-              </div>
-            </button>
-
-            <button className="edit-menu-item">
-              <div className="edit-menu-item-left">
-                <div className="edit-menu-item-icon">
-                  <Shield size={20} />
-                </div>
-                <div className="edit-menu-item-text">
-                  Quyền
-                </div>
-              </div>
-              <div className="edit-menu-item-right">
-                <span className="edit-menu-item-right-value">{displayPermsCount}</span>
-                <ChevronRight size={20} />
-              </div>
-            </button>
-
-            <button className="edit-menu-item">
-              <div className="edit-menu-item-left">
-                <div className="edit-menu-item-icon">
-                  <LinkIcon size={20} />
-                </div>
-                <div className="edit-menu-item-text">
-                  Liên kết mời
-                </div>
-              </div>
-              <div className="edit-menu-item-right">
-                <span>0</span>
-                <ChevronRight size={20} />
-              </div>
-            </button>
-
-            <div className="edit-group-separator" style={{ height: '8px' }}></div>
-
-            <button className="edit-menu-item">
+            <button className="edit-menu-item" onClick={() => setActiveView('admins')}>
               <div className="edit-menu-item-left">
                 <div className="edit-menu-item-icon">
                   <Shield size={20} />
@@ -220,7 +247,7 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, onClose, 
               </div>
             </button>
 
-            <button className="edit-menu-item">
+            <button className="edit-menu-item" onClick={() => setActiveView('members')}>
               <div className="edit-menu-item-left">
                 <div className="edit-menu-item-icon">
                   <Users size={20} />
@@ -250,6 +277,22 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, onClose, 
                 <ChevronRight size={20} />
               </div>
             </button>
+
+            {isOwner && (
+              <>
+                <div className="edit-group-separator" style={{ height: '8px' }}></div>
+                <button className="edit-menu-item edit-menu-item-danger" onClick={handleDeleteGroup}>
+                  <div className="edit-menu-item-left">
+                    <div className="edit-menu-item-icon text-red">
+                      <Trash2 size={20} />
+                    </div>
+                    <div className="edit-menu-item-text text-red">
+                      Xóa nhóm vĩnh viễn
+                    </div>
+                  </div>
+                </button>
+              </>
+            )}
           </div>
         </div>
 

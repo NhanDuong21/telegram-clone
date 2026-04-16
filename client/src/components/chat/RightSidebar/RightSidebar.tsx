@@ -28,6 +28,7 @@ import { connectSocket } from "../../../socket";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
 import { removeFileApi, getSharedMediaApi, removeMemberApi, leaveGroupApi } from "../../../api/chatApi";
 import EditGroupModal from "../EditGroupModal/EditGroupModal";
+import AddMemberModal from "./AddMemberModal";
 import "./RightSidebar.css";
 
 interface RightSidebarProps {
@@ -65,6 +66,7 @@ const RightSidebar = ({
   });
   const [previewData, setPreviewData] = useState<{ url: string, messageId: string } | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 
   useEffect(() => {
     if (conversation?._id) {
@@ -265,12 +267,17 @@ const RightSidebar = ({
                 </button>
               )}
 
-              <button className="q-action-item">
-                <div className="q-action-icon">
-                  <Users size={22} />
-                </div>
-                <span>Thành viên</span>
-              </button>
+              {conversation.owner === currentUserId && (
+                <button 
+                  className="q-action-item"
+                  onClick={() => setIsAddMemberOpen(true)}
+                >
+                  <div className="q-action-icon">
+                    <UserPlus size={22} />
+                  </div>
+                  <span>Thêm</span>
+                </button>
+              )}
 
               <button
                 className="q-action-item q-action-item--danger"
@@ -557,9 +564,20 @@ const RightSidebar = ({
       {isEditModalOpen && isGroup && conversation && (
         <EditGroupModal 
           conversation={conversation}
+          currentUserId={currentUserId || ''}
           onClose={() => setIsEditModalOpen(false)}
           onGroupUpdated={(updated) => {
              onGroupUpdated?.(updated);
+          }}
+        />
+      )}
+      {isAddMemberOpen && isGroup && conversation && (
+        <AddMemberModal
+          conversation={conversation}
+          onClose={() => setIsAddMemberOpen(false)}
+          onMembersAdded={() => {
+            // Can be handled by socket or callback
+            setIsAddMemberOpen(false);
           }}
         />
       )}

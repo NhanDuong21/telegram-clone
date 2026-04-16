@@ -10,7 +10,7 @@ import Avatar from "../../components/common/Avatar";
 import HeaderMenu from "../../components/chat/ChatBox/HeaderMenu";
 import DeleteConfirmModal from "../../components/chat/Modals/DeleteConfirmModal";
 import RightSidebar from "../../components/chat/RightSidebar/RightSidebar";
-import GroupSettingsModal from "../../components/chat/GroupSettingsModal/GroupSettingsModal";
+import EditGroupModal from "../../components/chat/EditGroupModal/EditGroupModal";
 import ProfileModal from "../../components/profile/ProfileModal";
 import type { ProfileMode } from "../../components/profile/ProfileModal";
 import ImagePreviewModal from "../../components/chat/ImagePreviewModal/ImagePreviewModal";
@@ -484,11 +484,11 @@ const ChatPage = () => {
 
               <AnimatePresence>
                 {showGroupSettings && activeConversation.isGroup && (
-                  <GroupSettingsModal
+                  <EditGroupModal
                     conversation={activeConversation}
                     currentUserId={user?._id ?? ""}
                     onClose={() => setShowGroupSettings(false)}
-                    onUpdated={(updatedConv) => setConversations(prev => prev.map(c => c._id === updatedConv._id ? updatedConv : c))}
+                    onGroupUpdated={(updatedConv) => setConversations(prev => prev.map(c => c._id === updatedConv._id ? updatedConv : c))}
                   />
                 )}
               </AnimatePresence>

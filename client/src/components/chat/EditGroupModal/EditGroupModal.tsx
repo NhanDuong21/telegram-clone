@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Camera, Smile, History, Users, Shield, Activity, X, ChevronRight, ArrowLeft, Trash2 } from 'lucide-react';
 import './EditGroupModal.css';
 import type { Conversation, User } from '../../../types/chat';
-import { updateGroupSettingsApi, deleteGroupApi } from '../../../api/chatApi';
+import { updateGroupSettingsApi, deleteGroupApi, uploadImageApi } from '../../../api/chatApi';
 import ConfirmModal from '../../common/ConfirmModal';
 import toast from 'react-hot-toast';
 
@@ -19,7 +19,7 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
   const [name, setName] = useState(conversation.name || '');
   const [description, setDescription] = useState(conversation.description || '');
   const [showHistory, setShowHistory] = useState(conversation.showHistoryForNewMembers ?? true);
-  const [imageUrl] = useState(conversation.imageUrl || '');
+  const [imageUrl, setImageUrl] = useState(conversation.imageUrl || '');
   
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,16 +45,17 @@ const EditGroupModal: React.FC<EditGroupModalProps> = ({ conversation, currentUs
 
     try {
       setIsUploading(true);
-      // Simulate file upload or use existing upload handler that belongs to another module.
-      // Usually, there is an upload handler logic here, but since messageApi is missing,
-      // we just show a toast reminder.
-      setTimeout(() => {
-         toast.error('Chức năng tải ảnh lên cần được cấu hình Backend.');
-         setIsUploading(false);
-      }, 500);
+      const uploadRes = await uploadImageApi(file);
+      const newUrl = uploadRes.data.imageUrl;
+      setImageUrl(newUrl);
+
+      const updateRes = await updateGroupSettingsApi(conversation._id, { imageUrl: newUrl });
+      onGroupUpdated(updateRes.data.conversation);
+      toast.success('Đã cập nhật ảnh nhóm');
     } catch (err) {
       console.error('Failed to upload image:', err);
       toast.error('Lỗi khi tải ảnh lên');
+    } finally {
       setIsUploading(false);
     }
   };

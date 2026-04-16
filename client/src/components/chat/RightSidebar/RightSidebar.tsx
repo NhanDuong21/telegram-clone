@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useRef } from "react";
+import { memo, useState, useEffect } from "react";
 import {
   X,
   MessageCircle,
@@ -17,8 +17,7 @@ import {
   UserMinus,
   Settings,
   LogOut,
-  UserPlus,
-  Camera
+  UserPlus
 } from "lucide-react";
 import { toast } from 'react-hot-toast';
 import type { User, Conversation } from "../../../types";
@@ -28,7 +27,7 @@ import ImagePreviewModal from "../ImagePreviewModal/ImagePreviewModal";
 import { AnimatePresence } from "framer-motion";
 import { connectSocket } from "../../../socket";
 import { SOCKET_EVENTS } from "../../../constants/socketEvents";
-import { removeFileApi, getSharedMediaApi, removeMemberApi, leaveGroupApi, updateGroupSettingsApi, uploadImageApi } from "../../../api/chatApi";
+import { removeFileApi, getSharedMediaApi, removeMemberApi, leaveGroupApi } from "../../../api/chatApi";
 import EditGroupModal from "../EditGroupModal/EditGroupModal";
 import AddMemberModal from "./AddMemberModal";
 import "./RightSidebar.css";
@@ -72,9 +71,6 @@ const RightSidebar = ({
   const [confirmDeletePhoto, setConfirmDeletePhoto] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [confirmKick, setConfirmKick] = useState<User | null>(null);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
-
-  const amIOwner = conversation?.owner === currentUserId;
 
   useEffect(() => {
     if (conversation?._id) {
@@ -271,42 +267,11 @@ const RightSidebar = ({
           <div key="group-info">
             {/* UNIFIED Header: Same as 1-on-1 */}
             <div className="profile-hero">
-              <div className="profile-hero-avatar" style={{ position: 'relative' }}>
+              <div className="profile-hero-avatar">
                 <Avatar 
                   conversation={conversation} 
                   size={96} 
                 />
-                {amIOwner && (
-                  <>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      ref={avatarInputRef}
-                      style={{ display: 'none' }}
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        try {
-                          const res = await uploadImageApi(file);
-                          const newUrl = res.data.imageUrl;
-                          const updateRes = await updateGroupSettingsApi(conversation._id, { imageUrl: newUrl });
-                          onGroupUpdated?.(updateRes.data.conversation);
-                          toast.success('Đã cập nhật avatar nhóm');
-                        } catch (err) {
-                          console.error('Avatar upload failed:', err);
-                          toast.error('Không thể tải ảnh lên');
-                        }
-                      }}
-                    />
-                    <button
-                      className="group-avatar-camera-btn"
-                      onClick={() => avatarInputRef.current?.click()}
-                      title="Đổi ảnh nhóm"
-                    >
-                      <Camera size={18} />
-                    </button>
-                  </>
-                )}
               </div>
               <div className="profile-hero-info">
                 <h2>{conversation.name}</h2>

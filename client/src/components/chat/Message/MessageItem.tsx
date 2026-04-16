@@ -167,54 +167,56 @@ const MessageItem = ({
 
                 {renderReplySnippet(msg.replyTo)}
                 
-                {mediaItems.length === 1 && mediaItems[0].type === 'video' && !msg.isDeleted && (
-                    <VideoMessage 
-                        videoUrl={mediaItems[0].url} 
-                        videoWidth={msg.videoWidth}
-                        videoHeight={msg.videoHeight}
-                        createdAt={msg.createdAt}
-                        isSending={msg.isSending}
-                        isError={msg.isError}
-                        isMe={isMe}
-                        isRead={isRead}
-                        progress={uploadProgress?.[msg.tempId || msg._id]}
-                        onVideoClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)}
-                        onMediaLoad={onMediaLoad}
-                    />
-                )}
-
-                {mediaItems.length === 1 && mediaItems[0].type === 'image' && !msg.isDeleted && (
-                    <div className="single-image-container">
-                        <img
-                            src={mediaItems[0].url}
-                            alt="Attached"
-                            className={`message-image ${isMe ? "message-image--me" : "message-image--other"} ${msg.text ? "message-image--with-text" : ""}`}
-                            onClick={() => onImagePreview?.(mediaItems[0].url, msg._id, (msg.sender as any)._id || msg.sender)}
-                            onLoad={onMediaLoad}
+                <div className={`flex w-full mb-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                    {mediaItems.length === 1 && mediaItems[0].type === 'video' && !msg.isDeleted && (
+                        <VideoMessage 
+                            videoUrl={mediaItems[0].url} 
+                            videoWidth={msg.videoWidth}
+                            videoHeight={msg.videoHeight}
+                            createdAt={msg.createdAt}
+                            isSending={msg.isSending}
+                            isError={msg.isError}
+                            isMe={isMe}
+                            isRead={isRead}
+                            progress={uploadProgress?.[msg.tempId || msg._id]}
+                            onVideoClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)}
+                            onMediaLoad={onMediaLoad}
                         />
-                        <MediaMetaOverlay 
-                            createdAt={msg.createdAt} 
-                            isMe={isMe} 
-                            isSending={msg.isSending} 
-                            isRead={isRead} 
-                        />
-                    </div>
-                )}
+                    )}
 
-                {mediaItems.length > 1 && !msg.isDeleted && (
-                    <ImageAlbum 
-                        mediaItems={mediaItems} 
-                        isSending={msg.isSending}
-                        isError={msg.isError}
-                        isMe={isMe}
-                        isRead={isRead}
-                        createdAt={msg.createdAt}
-                        progress={uploadProgress?.[msg.tempId || msg._id]}
-                        onMediaClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)} 
-                        onContextMenu={(e, _url) => onContextMenu(e, msg)}
-                        onMediaLoad={onMediaLoad}
-                    />
-                )}
+                    {mediaItems.length === 1 && mediaItems[0].type === 'image' && !msg.isDeleted && (
+                        <div className="single-image-container w-fit">
+                            <img
+                                src={mediaItems[0].url}
+                                alt="Attached"
+                                className={`message-image ${isMe ? "message-image--me" : "message-image--other"} ${msg.text ? "message-image--with-text" : ""}`}
+                                onClick={() => onImagePreview?.(mediaItems[0].url, msg._id, (msg.sender as any)._id || msg.sender)}
+                                onLoad={onMediaLoad}
+                            />
+                            <MediaMetaOverlay 
+                                createdAt={msg.createdAt} 
+                                isMe={isMe} 
+                                isSending={msg.isSending} 
+                                isRead={isRead} 
+                            />
+                        </div>
+                    )}
+
+                    {mediaItems.length > 1 && !msg.isDeleted && (
+                        <ImageAlbum 
+                            mediaItems={mediaItems} 
+                            isSending={msg.isSending}
+                            isError={msg.isError}
+                            isMe={isMe}
+                            isRead={isRead}
+                            createdAt={msg.createdAt}
+                            progress={uploadProgress?.[msg.tempId || msg._id]}
+                            onMediaClick={(url) => onImagePreview?.(url, msg._id, (msg.sender as any)._id || msg.sender)} 
+                            onContextMenu={(e, _url) => onContextMenu(e, msg)}
+                            onMediaLoad={onMediaLoad}
+                        />
+                    )}
+                </div>
                 
                 {msg.text && (
                     <div className={`message-text-content ${msg.isDeleted ? "message-text--deleted" : ""}`}>

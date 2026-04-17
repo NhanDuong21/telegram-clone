@@ -189,6 +189,7 @@ const MessageItem = ({
                             <img
                                 src={mediaItems[0].url}
                                 alt="Attached"
+                                loading="lazy"
                                 className={`message-image ${isMe ? "message-image--me" : "message-image--other"} ${msg.text ? "message-image--with-text" : ""}`}
                                 onClick={() => onImagePreview?.(mediaItems[0].url, msg._id, (msg.sender as any)._id || msg.sender)}
                                 onLoad={onMediaLoad}

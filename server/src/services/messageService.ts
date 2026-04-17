@@ -96,6 +96,7 @@ export const sendMessageService = async (
 };
 
 export const getMessagesService = async (conversationId: string, userId: string, page: number = 1, limit: number = 30) => {
+    console.log(`[Backend] Fetching messages for ${conversationId}, page ${page}`);
     const conversation = await Conversation.findOne({
         _id: conversationId,
         participants: userId,
@@ -111,6 +112,9 @@ export const getMessagesService = async (conversationId: string, userId: string,
     };
 
     const messages = await Message.find(query)
+        .sort({ createdAt: -1 }) // Sort first
+        .skip((page - 1) * limit) // Then skip
+        .limit(limit + 1) // Then limit
         .populate("sender", "username avatar fullName")
         .populate({
             path: "replyTo",
@@ -118,9 +122,6 @@ export const getMessagesService = async (conversationId: string, userId: string,
             select: "text imageUrl sender"
         })
         .populate("forwardFrom", "username avatar fullName")
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit + 1)
         .lean();
 
     const hasMore = messages.length > limit;

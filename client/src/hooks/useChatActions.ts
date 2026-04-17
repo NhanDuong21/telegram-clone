@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { Message, Conversation, User } from "../types";
 import {
   getConversationsApi,
@@ -18,6 +18,7 @@ export const useChatActions = (user: User | null) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const fetchingId = useRef<string | null>(null);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -29,6 +30,10 @@ export const useChatActions = (user: User | null) => {
   }, []);
 
   const fetchMessages = useCallback(async (conversationId: string) => {
+    if (fetchingId.current === conversationId) return;
+    fetchingId.current = conversationId;
+    
+    console.log(`[Frontend] Fetching initial messages for ${conversationId}`);
     try {
       setPage(1); // Reset page on new chat
       const res = await getMessagesApi(conversationId, 1);
@@ -48,6 +53,8 @@ export const useChatActions = (user: User | null) => {
     } catch (error) {
       console.error("Failed to load messages:", error);
       throw error;
+    } finally {
+        fetchingId.current = null;
     }
   }, [user]);
 

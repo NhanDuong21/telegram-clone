@@ -37,7 +37,7 @@ const Avatar = ({ user, conversation, src, name, id, size = 44, className = "" }
 
   const isLocalImage = resolvedSrc?.startsWith('data:') || resolvedSrc?.startsWith('blob:');
   const avatarUrl = resolvedSrc 
-    ? (isLocalImage ? resolvedSrc : (resolvedSrc.includes('?') ? `${resolvedSrc}&t=${Date.now()}` : `${resolvedSrc}?t=${Date.now()}`))
+    ? (isLocalImage ? resolvedSrc : resolvedSrc)
     : null;
 
   const baseStyle = {
@@ -61,6 +61,7 @@ const Avatar = ({ user, conversation, src, name, id, size = 44, className = "" }
       <img
         src={avatarUrl}
         alt={resolvedName}
+        loading="lazy"
         className={`rounded-full object-cover object-center shrink-0 aspect-square border-[0.5px] border-white/10 ${className}`}
         style={{
           ...baseStyle,

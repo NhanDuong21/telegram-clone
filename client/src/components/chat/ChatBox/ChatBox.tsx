@@ -142,15 +142,21 @@ const ChatBox = ({
 
     // --- INFINITE SCROLL OBSERVER ---
     useEffect(() => {
-        if (!hasMore || loadingMore || !onLoadMore) return;
+        if (!hasMore || loadingMore || !onLoadMore || !containerRef.current) return;
+
+        console.log(`[ChatBox] Setting up observer. hasMore: ${hasMore}, loadingMore: ${loadingMore}`);
 
         const observer = new IntersectionObserver(
             (entries) => {
-                if (entries[0].isIntersecting) {
+                if (entries[0].isIntersecting && hasMore && !loadingMore) {
+                    console.log("[ChatBox] Top sentinel intersected! Loading more...");
                     onLoadMore();
                 }
             },
-            { threshold: 0.1 }
+            { 
+                root: containerRef.current, // Observe within the scrollable container
+                threshold: 0.1 
+            }
         );
 
         if (topObserverRef.current) {
@@ -158,7 +164,7 @@ const ChatBox = ({
         }
 
         return () => observer.disconnect();
-    }, [hasMore, loadingMore, onLoadMore]);
+    }, [hasMore, loadingMore, onLoadMore, conversationId]); // Added conversationId to reset on switch
 
     // --- DETECT PREPEND VS APPEND ---
     useEffect(() => {
@@ -236,9 +242,6 @@ const ChatBox = ({
 
     return (
             <div className="chat-box-area">
-                {/* Sentinel for infinite scroll */}
-                <div ref={topObserverRef} className="chat-box-top-sentinel" style={{ height: '1px', width: '100%', position: 'absolute', top: 0, pointerEvents: 'none' }} />
-                
                 <AnimatePresence initial={false}>
                     {latestPinned && (
                         <motion.div 
@@ -279,7 +282,11 @@ const ChatBox = ({
                         exit={{ opacity: 0, scale: 1.02, y: -5 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
                         className="chat-box"
+                        style={{ position: 'relative' }}
                     >
+                        {/* Sentinel for infinite scroll - MUST be inside the scrollable container */}
+                        <div ref={topObserverRef} className="chat-box-top-sentinel" style={{ height: '1px', width: '100%', pointerEvents: 'none' }} />
+                        
                         {messages.length === 0 && (
                             <div className="chat-box--empty">
                                 <span className="chat-box__empty-icon">👋</span>

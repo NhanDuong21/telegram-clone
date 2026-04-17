@@ -259,4 +259,36 @@ const MessageItem = ({
     );
 };
 
-export default memo(MessageItem);
+const arePropsEqual = (prevProps: MessageItemProps, nextProps: MessageItemProps) => {
+    if (prevProps.isMe !== nextProps.isMe) return false;
+    if (prevProps.isRead !== nextProps.isRead) return false;
+    if (prevProps.isGroupConversation !== nextProps.isGroupConversation) return false;
+    if (prevProps.isFirst !== nextProps.isFirst) return false;
+    if (prevProps.isLast !== nextProps.isLast) return false;
+    if (prevProps.showAvatar !== nextProps.showAvatar) return false;
+    if (prevProps.currentUserId !== nextProps.currentUserId) return false;
+    if (prevProps.searchQuery !== nextProps.searchQuery) return false;
+
+    const pMsg = prevProps.msg;
+    const nMsg = nextProps.msg;
+    if (pMsg._id !== nMsg._id) return false;
+    if (pMsg.text !== nMsg.text) return false;
+    if (pMsg.isDeleted !== nMsg.isDeleted) return false;
+    if (pMsg.isPinned !== nMsg.isPinned) return false;
+    if (pMsg.isEdited !== nMsg.isEdited) return false;
+    if (pMsg.isSending !== nMsg.isSending) return false;
+    
+    // Compare reactions
+    const pReacts = prevProps.reactions || [];
+    const nReacts = nextProps.reactions || [];
+    if (pReacts.length !== nReacts.length) return false;
+    if (JSON.stringify(pReacts) !== JSON.stringify(nReacts)) return false;
+
+    // Compare upload progress specific to this message
+    const msgId = pMsg.tempId || pMsg._id;
+    if (prevProps.uploadProgress?.[msgId] !== nextProps.uploadProgress?.[msgId]) return false;
+
+    return true;
+};
+
+export default memo(MessageItem, arePropsEqual);

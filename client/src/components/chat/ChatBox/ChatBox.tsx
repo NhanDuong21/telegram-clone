@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo, memo, useLayoutEffect, useState } from "react";
+import { useEffect, useRef, useMemo, memo, useLayoutEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pin, X } from "lucide-react";
 import type { Message } from "../../../types";
@@ -111,14 +111,20 @@ const ChatBox = ({
     };
 
     // --- SMART SCROLL LOGIC ---
-    const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
         const container = containerRef.current;
         if (!container) return;
         container.scrollTo({
             top: container.scrollHeight,
             behavior
         });
-    };
+    }, []);
+
+    const handleMediaLoad = useCallback(() => {
+        if (wasAtBottom.current) {
+            scrollToBottom('smooth');
+        }
+    }, [scrollToBottom]);
 
     const handleScroll = () => {
         const container = containerRef.current;
@@ -351,11 +357,7 @@ const ChatBox = ({
                                     onReplySnippetClick={scrollToMessage}
                                     uploadProgress={uploadProgress}
                                     reactions={msg.reactions}
-                                    onMediaLoad={() => {
-                                        if (wasAtBottom.current) {
-                                            scrollToBottom('smooth');
-                                        }
-                                    }}
+                                    onMediaLoad={handleMediaLoad}
                                 />
                             );
                         })}

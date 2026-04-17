@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, memo } from "react";
+import { useEffect, useMemo, useState, memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Phone, MoreVertical, PanelRight, ArrowLeft } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -241,6 +241,44 @@ const ChatPage = () => {
     }
   };
 
+  const handleLoadMore = useCallback(() => {
+    if (selectedConversationId) {
+      loadOlderMessages(selectedConversationId);
+    }
+  }, [loadOlderMessages, selectedConversationId]);
+
+  const handleImagePreview = useCallback((url: string, msgId?: string, senderId?: string) => {
+    if (url && msgId && senderId) {
+      setPreviewImageData({ url, messageId: msgId, senderId });
+    }
+  }, []);
+
+  const handleDeleteMessage = useCallback((msg: Message, fileUrl?: string) => {
+    setMessageToDelete({ msg, fileUrl });
+  }, []);
+
+  const handleReplyMessage = useCallback((msg: Message) => {
+    setEditTarget(null);
+    setReplyTarget(msg);
+  }, []);
+
+  const handleEditMessage = useCallback((msg: Message) => {
+    setReplyTarget(null);
+    setEditTarget(msg);
+  }, []);
+
+  const handlePinMessage = useCallback((msg: Message) => {
+    setMessageToPin(msg);
+  }, []);
+
+  const handleUnpinMessage = useCallback((msg: Message) => {
+    updateMessage(msg._id, { isPinned: false });
+  }, [updateMessage]);
+
+  const handleForwardMessage = useCallback((msg: Message) => {
+    setMessageToForward(msg);
+  }, []);
+
   return (
     <div className="chat-page-container" style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
       <div className={`sidebar-wrapper ${selectedConversationId ? 'hidden-on-mobile' : ''}`}>
@@ -429,18 +467,18 @@ const ChatPage = () => {
                   messages={messages}
                   currentUserId={user?._id ?? ""}
                   searchQuery={searchQuery}
-                  onLoadMore={() => loadOlderMessages(selectedConversationId!)}
+                  onLoadMore={handleLoadMore}
                   hasMore={hasMore}
                   loadingMore={loadingMore}
                   isGroup={activeConversation.isGroup ?? false}
-                  onImagePreview={(url, msgId, senderId) => setPreviewImageData(url && msgId && senderId ? { url, messageId: msgId, senderId } : null)}
-                  onDeleteMessage={(msg, fileUrl) => setMessageToDelete({ msg, fileUrl })}
+                  onImagePreview={handleImagePreview}
+                  onDeleteMessage={handleDeleteMessage}
                   onReactMessage={handleReactMessage}
-                  onReplyMessage={(msg) => { setEditTarget(null); setReplyTarget(msg); }}
-                  onEditMessage={(msg) => { setReplyTarget(null); setEditTarget(msg); }}
-                  onPinMessage={setMessageToPin}
-                  onUnpinMessage={(msg) => updateMessage(msg._id, { isPinned: false })}
-                  onForwardMessage={setMessageToForward}
+                  onReplyMessage={handleReplyMessage}
+                  onEditMessage={handleEditMessage}
+                  onPinMessage={handlePinMessage}
+                  onUnpinMessage={handleUnpinMessage}
+                  onForwardMessage={handleForwardMessage}
                   conversationId={activeConversation._id}
                   uploadProgress={uploadProgress}
                 />

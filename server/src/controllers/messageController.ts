@@ -105,10 +105,10 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
     try {
         const { conversationId } = req.params;
         const userId = req.user!._id;
-        const { before } = req.query;
+        const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 30;
 
-        const result = await messageService.getMessagesService(conversationId as string, userId.toString(), before as string, limit);
+        const result = await messageService.getMessagesService(conversationId as string, userId.toString(), page, limit);
         return res.status(200).json(result);
     } catch (error: unknown) {
         console.error("Get messages error:", error);

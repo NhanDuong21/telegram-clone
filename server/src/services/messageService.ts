@@ -95,7 +95,7 @@ export const sendMessageService = async (
     return populated;
 };
 
-export const getMessagesService = async (conversationId: string, userId: string, before?: string, limit: number = 30) => {
+export const getMessagesService = async (conversationId: string, userId: string, page: number = 1, limit: number = 30) => {
     const conversation = await Conversation.findOne({
         _id: conversationId,
         participants: userId,
@@ -109,9 +109,6 @@ export const getMessagesService = async (conversationId: string, userId: string,
         conversationId,
         deletedFor: { $ne: userId }
     };
-    if (before) {
-        query.createdAt = { $lt: new Date(before) };
-    }
 
     const messages = await Message.find(query)
         .populate("sender", "username avatar fullName")
@@ -122,6 +119,7 @@ export const getMessagesService = async (conversationId: string, userId: string,
         })
         .populate("forwardFrom", "username avatar fullName")
         .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
         .limit(limit + 1)
         .lean();
 

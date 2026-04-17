@@ -429,7 +429,7 @@ const ChatPage = () => {
                   messages={messages}
                   currentUserId={user?._id ?? ""}
                   searchQuery={searchQuery}
-                  onLoadMore={() => loadOlderMessages(selectedConversationId!, messages[0].createdAt)}
+                  onLoadMore={() => loadOlderMessages(selectedConversationId!)}
                   hasMore={hasMore}
                   loadingMore={loadingMore}
                   isGroup={activeConversation.isGroup ?? false}

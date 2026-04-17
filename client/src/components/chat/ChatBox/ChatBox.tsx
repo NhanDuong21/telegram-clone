@@ -46,6 +46,7 @@ const ChatBox = ({
     const prevConvId = useRef<string | null>(null);
     const prevMessagesLength = useRef<number>(0);
     const prevScrollHeight = useRef<number>(0);
+    const topObserverRef = useRef<HTMLDivElement>(null);
     const isPrepending = useRef<boolean>(false);
     const wasAtBottom = useRef<boolean>(true);
 
@@ -139,6 +140,26 @@ const ChatBox = ({
         }
     }, []);
 
+    // --- INFINITE SCROLL OBSERVER ---
+    useEffect(() => {
+        if (!hasMore || loadingMore || !onLoadMore) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    onLoadMore();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (topObserverRef.current) {
+            observer.observe(topObserverRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasMore, loadingMore, onLoadMore]);
+
     // --- DETECT PREPEND VS APPEND ---
     useEffect(() => {
         const container = containerRef.current;
@@ -214,65 +235,67 @@ const ChatBox = ({
     // renderReplySnippet is now inside MessageItem
 
     return (
-        <div className="chat-box-area">
-            <AnimatePresence initial={false}>
-                {latestPinned && (
-                    <motion.div 
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2, ease: "easeInOut" }}
-                        className="pinned-messages-bar"
-                        style={{ overflow: 'hidden' }}
-                        onClick={() => scrollToMessage(latestPinned._id)}
-                    >
-                        <div className="pinned-bar-main">
-                            <Pin size={16} className="pinned-bar-icon" />
-                            <div className="pinned-bar-content">
-                                <div className="pinned-bar-title">Tin nhắn đã ghim</div>
-                                <div className="pinned-bar-text">{latestPinned.text || "Hình ảnh"}</div>
-                            </div>
-                        </div>
-                        <button 
-                            className="pinned-bar-unpin"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onUnpinMessage?.(latestPinned);
-                            }}
+            <div className="chat-box-area">
+                {/* Sentinel for infinite scroll */}
+                <div ref={topObserverRef} className="chat-box-top-sentinel" style={{ height: '1px', width: '100%', position: 'absolute', top: 0, pointerEvents: 'none' }} />
+                
+                <AnimatePresence initial={false}>
+                    {latestPinned && (
+                        <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: "easeInOut" }}
+                            className="pinned-messages-bar"
+                            style={{ overflow: 'hidden' }}
+                            onClick={() => scrollToMessage(latestPinned._id)}
                         >
-                            <X size={18} />
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <AnimatePresence mode="wait">
-                <motion.div
-                    ref={containerRef}
-                    key={conversationId}
-                    initial={{ opacity: 0, scale: 0.98, y: 5 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 1.02, y: -5 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="chat-box"
-                >
-                    {messages.length === 0 && (
-                        <div className="chat-box--empty">
-                            <span className="chat-box__empty-icon">👋</span>
-                            Chưa có tin nhắn nào. Hãy nói lời chào!
-                        </div>
-                    )}
-                    {hasMore && messages.length > 0 && (
-                        <div className="chat-box__load-more">
-                            <button
-                                onClick={onLoadMore}
-                                disabled={loadingMore}
-                                className="chat-box__load-more-btn"
+                            <div className="pinned-bar-main">
+                                <Pin size={16} className="pinned-bar-icon" />
+                                <div className="pinned-bar-content">
+                                    <div className="pinned-bar-title">Tin nhắn đã ghim</div>
+                                    <div className="pinned-bar-text">{latestPinned.text || "Hình ảnh"}</div>
+                                </div>
+                            </div>
+                            <button 
+                                className="pinned-bar-unpin"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onUnpinMessage?.(latestPinned);
+                                }}
                             >
-                                {loadingMore ? "Đang tải..." : "Tải thêm tin nhắn cũ"}
+                                <X size={18} />
                             </button>
-                        </div>
+                        </motion.div>
                     )}
+                </AnimatePresence>
+
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        ref={containerRef}
+                        key={conversationId}
+                        initial={{ opacity: 0, scale: 0.98, y: 5 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 1.02, y: -5 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="chat-box"
+                    >
+                        {messages.length === 0 && (
+                            <div className="chat-box--empty">
+                                <span className="chat-box__empty-icon">👋</span>
+                                Chưa có tin nhắn nào. Hãy nói lời chào!
+                            </div>
+                        )}
+                        
+                        {(loadingMore || (hasMore && messages.length > 0)) && (
+                            <div className="chat-box__load-more">
+                                {loadingMore ? (
+                                    <div className="loading-spinner">Đang tải tin nhắn cũ...</div>
+                                ) : (
+                                    <div className="chat-box__load-more-hint">Cuộn lên để xem thêm</div>
+                                )}
+                            </div>
+                        )}
                     
                     <AnimatePresence initial={false} mode="popLayout">
                         {messages.map((msg, index) => {

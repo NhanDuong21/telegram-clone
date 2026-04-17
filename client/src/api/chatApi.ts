@@ -71,12 +71,10 @@ export const deleteConversationApi = (conversationId: string, deleteForBoth: boo
 
 export const getMessagesApi = (
     conversationId: string,
-    before?: string,
+    page: number = 1,
     limit: number = 30
 ): Promise<AxiosResponse<{ messages: Message[]; hasMore: boolean }>> => {
-    let url = `/messages/${conversationId}?limit=${limit}`;
-    if (before) url += `&before=${encodeURIComponent(before)}`;
-    return axiosClient.get(url, getAuthHeader());
+    return axiosClient.get(`/messages/${conversationId}?page=${page}&limit=${limit}`, getAuthHeader());
 };
 
 export const sendMessageApi = (

@@ -242,23 +242,43 @@
 
 .chat-box__load-more {
     text-align: center;
-    margin: 10px 0;
+    margin: 10px 0 20px 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.chat-box__load-more-btn {
-    padding: 6px 16px;
-    border-radius: 16px;
-    border: none;
-    background: var(--input-bg);
+.chat-box__load-more-hint {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-style: italic;
+}
+
+[data-theme='dark'] .chat-box__load-more-hint {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.loading-spinner {
     color: var(--accent-color);
-    cursor: pointer;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.chat-box__load-more-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.7;
+.loading-spinner::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--accent-color);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: rotate 0.8s linear infinite;
 }
 
 .message-row {

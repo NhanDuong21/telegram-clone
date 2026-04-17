@@ -15,6 +15,7 @@ import { SOCKET_EVENTS } from "../constants/socketEvents";
 export const useChatActions = (user: User | null) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
 
@@ -29,7 +30,8 @@ export const useChatActions = (user: User | null) => {
 
   const fetchMessages = useCallback(async (conversationId: string) => {
     try {
-      const res = await getMessagesApi(conversationId);
+      setPage(1); // Reset page on new chat
+      const res = await getMessagesApi(conversationId, 1);
       const fetchedMessages = res.data.messages;
       setMessages(fetchedMessages);
       setHasMore(res.data.hasMore);
@@ -49,19 +51,21 @@ export const useChatActions = (user: User | null) => {
     }
   }, [user]);
 
-  const loadOlderMessages = useCallback(async (conversationId: string, oldestTime: string) => {
+  const loadOlderMessages = useCallback(async (conversationId: string) => {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
+    const nextPage = page + 1;
     try {
-      const res = await getMessagesApi(conversationId, oldestTime);
+      const res = await getMessagesApi(conversationId, nextPage);
       setMessages((prev) => [...res.data.messages, ...prev]);
       setHasMore(res.data.hasMore);
+      setPage(nextPage);
     } catch (error) {
       console.error("Failed to load older messages:", error);
     } finally {
       setLoadingMore(false);
     }
-  }, [hasMore, loadingMore]);
+  }, [hasMore, loadingMore, page]);
 
   const clearChat = async (conversationId: string, deleteForBoth: boolean = false) => {
     try {

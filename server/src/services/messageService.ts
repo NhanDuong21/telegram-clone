@@ -71,7 +71,7 @@ export const sendMessageService = async (
 
     // 1. Emit ngay lập tức sau khi tạo xong Message (Không đợi update Conversation)
     const populated = await newMessage.populate([
-        { path: "sender", select: "username avatar email fullName" },
+        { path: "sender", select: "username avatar fullName" },
         {
             path: "replyTo",
             populate: { path: "sender", select: "username fullName" },

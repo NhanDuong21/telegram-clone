@@ -177,12 +177,12 @@ const ChatPage = () => {
     updateUser,
   });
 
-  const handleSelectConversation = (conv: Conversation) => {
+  const handleSelectConversation = useCallback((conv: Conversation) => {
     setSelectedConversationId(conv._id);
     setUnreadCounts(prev => ({ ...prev, [conv._id]: 0 }));
-  };
+  }, [setSelectedConversationId, setUnreadCounts]);
 
-  const handleMessageSent = (message: Message) => {
+  const handleMessageSent = useCallback((message: Message) => {
     setMessages((prev) => {
       const alreadyHasReal = prev.some(m => m._id === message._id);
       
@@ -207,14 +207,14 @@ const ChatPage = () => {
       next.splice(index, 1);
       return [updatedConv, ...next] as Conversation[];
     });
-  };
+  }, [setMessages, setConversations]);
 
-  const handleReactMessage = (msg: Message, emoji: string) => {
+  const handleReactMessage = useCallback((msg: Message, emoji: string) => {
     const socket = getSocket();
     socket?.emit(SOCKET_EVENTS.SEND_REACTION, { messageId: msg._id, emoji });
-  };
+  }, []);
 
-  const handleScrollToMessage = (messageId: string) => {
+  const handleScrollToMessage = useCallback((messageId: string) => {
     const element = document.getElementById(`msg-${messageId}`);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -224,22 +224,22 @@ const ChatPage = () => {
       // Possible scenario: message not in history chunk
       alert("Tin nhắn này ở xa quá, chưa tải lên kịp! Hãy cuộn lên để xem thêm.");
     }
-  };
+  }, []);
 
-  const handleOpenMyProfile = () => {
+  const handleOpenMyProfile = useCallback(() => {
     setProfileModalUser(null);
     setProfileModalMode('VIEW');
     setIsProfileModalOpen(true);
-  };
+  }, []);
 
-  const handleDeletePreviewImage = async () => {
+  const handleDeletePreviewImage = useCallback(async () => {
     if (!previewImageData) return;
     
     const msg = messages.find(m => m._id === previewImageData.messageId);
     if (msg) {
         setMessageToDelete({ msg, fileUrl: previewImageData.url });
     }
-  };
+  }, [previewImageData, messages]);
 
   const handleLoadMore = useCallback(() => {
     if (selectedConversationId) {

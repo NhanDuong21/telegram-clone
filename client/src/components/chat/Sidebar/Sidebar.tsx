@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, memo } from "react";
 import { Menu, Search as SearchIcon, ArrowLeft, BellOff, Pin, Users } from "lucide-react";
 import { searchUsersApi } from "../../../api/userApi";
 import Avatar from "../../common/Avatar";
@@ -458,4 +458,4 @@ const Sidebar = ({
     );
 };
 
-export default Sidebar;
+export default memo(Sidebar);

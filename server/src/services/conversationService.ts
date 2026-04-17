@@ -20,7 +20,7 @@ export const createGroupService = async (name: string, participantIds: string[],
         owner: new mongoose.Types.ObjectId(ownerId)
     });
 
-    const populated = await newGroup.populate("participants", "-password");
+    const populated = await newGroup.populate("participants", "username avatar fullName");
 
     // Notify all participants so the group appears in their sidebar instantly
     const io = getIO();
@@ -66,7 +66,7 @@ export const updateGroupSettingsService = async (
     }
 
     await conversation.save();
-    const populated = await conversation.populate("participants", "-password");
+    const populated = await conversation.populate("participants", "username avatar fullName");
 
     const io = getIO();
     (populated.participants as unknown as IUser[]).forEach((p) => {
@@ -88,7 +88,7 @@ export const addMembersService = async (id: string, userId: string, participantI
     conversation.participants = [...currentIds, ...addedUserIds] as any[];
     await conversation.save();
     
-    const populated = await conversation.populate("participants", "-password");
+    const populated = await conversation.populate("participants", "username avatar fullName");
 
     // Fetch details for system message
     const adder = await User.findById(userId);
@@ -140,7 +140,7 @@ export const removeMemberService = async (id: string, userId: string, memberId: 
     conversation.participants = currentIds.filter(pid => pid !== memberId) as any[];
     await conversation.save();
 
-    const populated = await conversation.populate("participants", "-password");
+    const populated = await conversation.populate("participants", "username avatar fullName");
 
     // Create system message for kick notification
     const kicker = await User.findById(userId);
@@ -216,7 +216,7 @@ export const leaveGroupService = async (id: string, userId: string) => {
     conversation.participants = remaining as any[];
     await conversation.save();
 
-    const populated = await conversation.populate("participants", "-password");
+    const populated = await conversation.populate("participants", "username avatar fullName");
 
     const io = getIO();
     (populated.participants as unknown as IUser[]).forEach((p) => {
@@ -233,7 +233,7 @@ export const createOrGetConversationService = async (senderId: string, receiverI
 
     const existingConversation = await Conversation.findOne({
         participants: { $all: [senderId, receiverId], $size: 2 },
-    }).populate("participants", "username email avatar fullName").lean();
+    }).populate("participants", "username avatar fullName").lean();
 
     if (existingConversation) return existingConversation;
 
@@ -241,14 +241,14 @@ export const createOrGetConversationService = async (senderId: string, receiverI
         participants: [senderId, receiverId],
     });
 
-    return await newConversation.populate("participants", "-password");
+    return await newConversation.populate("participants", "username avatar fullName");
 };
 
 export const getMyConversationsService = async (userId: string) => {
     const conversations = await Conversation.find({
         participants: userId,
     })
-    .populate("participants", "username email avatar fullName")
+    .populate("participants", "username avatar fullName")
     .populate("lastMessage", "text imageUrl type isDeleted createdAt isRead")
     .sort({ updatedAt: -1 })
     .lean();

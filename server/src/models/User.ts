@@ -19,6 +19,7 @@ const userSchema = new Schema<IUser>(
         username: {
             type: String,
             required: [true, "Username là bắt buộc"],
+            unique: true,
             trim: true,
             lowercase: true,
             validate: {

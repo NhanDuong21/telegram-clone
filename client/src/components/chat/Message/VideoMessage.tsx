@@ -55,7 +55,13 @@ const VideoMessage = ({
             onClick={handleContainerClick}
         >
             <div className="video-blurred-bg">
-                <img src={posterUrl} alt="" className="blurred-img" onLoad={onMediaLoad} />
+                <img 
+                    src={posterUrl} 
+                    alt="" 
+                    className="blurred-img" 
+                    onLoad={onMediaLoad} 
+                    loading="lazy"
+                />
             </div>
 
             <video 
